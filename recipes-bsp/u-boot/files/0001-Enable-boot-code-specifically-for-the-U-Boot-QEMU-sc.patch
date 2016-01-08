@@ -1,0 +1,30 @@
+From a4eee558cb790f4bef3b2e8794a3913db0473313 Mon Sep 17 00:00:00 2001
+From: Kristian Amlie <kristian.amlie@mender.io>
+Date: Thu, 7 Jan 2016 14:43:11 +0100
+Subject: [PATCH] Enable boot code specifically for the U-Boot / QEMU
+ scenario.
+
+---
+ include/configs/vexpress_common.h |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/include/configs/vexpress_common.h b/include/configs/vexpress_common.h
+index cec510c..c67068f 100644
+--- a/include/configs/vexpress_common.h
++++ b/include/configs/vexpress_common.h
+@@ -190,8 +190,10 @@
+ 
+ /* Basic environment settings */
+ #define CONFIG_BOOTCOMMAND \
+-	"run distro_bootcmd; " \
+-	"run bootflash; "
++	"load mmc 0:1 70000000 /boot/zImage; " \
++	"load mmc 0:1 6fc00000 /boot/vexpress-v2p-ca9.dtb; " \
++	"env set bootargs root=/dev/mmcblk0p1; " \
++	"bootz 70000000 - 6fc00000"
+ 
+ #define BOOT_TARGET_DEVICES(func) \
+         func(MMC, mmc, 1) \
+-- 
+1.7.9.5
+
