@@ -1,4 +1,4 @@
-This README file contains information on building the meta-vexpress
+This README file contains information on building the meta-mender-qemu
 BSP layer, and booting the images contained in the /binary directory.
 Please see the corresponding sections below for details.
 
@@ -34,11 +34,11 @@ Please see the meta-xxxx/MAINTAINERS file for more details.
 Table of Contents
 =================
 
-  I. Building the meta-vexpress BSP layer
+  I. Building the meta-mender-qemu BSP layer
  II. Booting the images in /binary
 
 
-I. Building the meta-vexpress BSP layer
+I. Building the meta-mender-qemu BSP layer
 ========================================
 
 --- replace with specific instructions for your layer ---
@@ -49,18 +49,18 @@ Package (BSP) Downloads' page of the Yocto Project website.
 
 Having done that, and assuming you extracted the BSP tarball contents
 at the top-level of your yocto build tree, you can build a
-vexpress image by adding the location of the meta-vexpress
+vexpress-qemu image by adding the location of the meta-mender-qemu
 layer to bblayers.conf, along with any other layers needed (to access
 common metadata shared between BSPs) e.g.:
 
   yocto/meta-xxxx \
-  yocto/meta-xxxx/meta-vexpress \
+  yocto/meta-xxxx/meta-mender-qemu \
 
-To enable the vexpress layer, add the vexpress MACHINE to local.conf:
+To enable the meta-mender-qemu layer, add the vexpress-qemu MACHINE to local.conf:
 
-  MACHINE ?= "vexpress"
+  MACHINE ?= "vexpress-qemu"
 
-You should then be able to build a vexpress image as such:
+You should then be able to build a vexpress-qemu image as such:
 
   $ source oe-init-build-env
   $ bitbake core-image-sato
@@ -92,7 +92,7 @@ Under Linux, insert a USB flash drive.  Assuming the USB flash drive
 takes device /dev/sdf, use dd to copy the live image to it.  For
 example:
 
-# dd if=core-image-sato-vexpress-20101207053738.hddimg of=/dev/sdf
+# dd if=core-image-sato-vexpress-qemu-20101207053738.hddimg of=/dev/sdf
 # sync
 # eject /dev/sdf
 
