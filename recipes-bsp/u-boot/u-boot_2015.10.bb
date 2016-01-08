@@ -7,8 +7,6 @@ DEPENDS += "dtc-native"
 # repo during parse
 SRCREV = "5ec0003b19cbdf06ccd6941237cbc0d1c3468e2d"
 
-SRC_URI += "file://0001-Enable-boot-code-specifically-for-the-U-Boot-QEMU-sc.patch"
-
 PV = "v2015.10+git${SRCPV}"
 
 EXTRA_OEMAKE_append = " KCFLAGS=-fgnu89-inline"
