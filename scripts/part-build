@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -x
+
+rm part.dat
+dd if=/dev/zero of=part.dat bs=1M count=0 seek=300
+fdisk part.dat <<EOF
+o
+n
+p
+1
+2048
+100000
+n
+p
+2
+100001
+350000
+n
+p
+3
+350001
+614399
+t
+1
+c
+p
+w
+EOF
+dd if=/dev/zero of=fat.dat bs=1M count=0 seek=10
+mkfs.vfat fat.dat
+dd if=fat.dat of=part.dat bs=512 seek=2048 conv=notrunc
+dd if=tmp/deploy/images/vexpress/core-image-full-cmdline-vexpress.ext4 of=part.dat bs=512 seek=100001 conv=notrunc
+dd if=tmp/deploy/images/vexpress/core-image-full-cmdline-vexpress.ext4 of=part.dat bs=512 seek=350001 conv=notrunc
