@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+set -x
+
+"`dirname $0`"/../../build/tmp/sysroots/x86_64-linux/usr/bin/qemu-system-arm \
+    -M vexpress-a9 \
+    -m 1G \
+    -kernel "`dirname $0`"/../../build/tmp/deploy/images/vexpress-qemu/u-boot.elf \
+    -drive file=part.dat,if=sd,format=raw \
+    "$@"
