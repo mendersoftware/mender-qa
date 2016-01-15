@@ -8,4 +8,6 @@ set -x
     -m 1G \
     -kernel "`dirname $0`"/../../build/tmp/deploy/images/vexpress-qemu/u-boot.elf \
     -drive file=part.dat,if=sd,format=raw \
+    -net nic \
+    -net user,hostfwd=tcp::8822-:22 \
     "$@"
