@@ -3,7 +3,7 @@ require go-cross.inc
 #Please fill USERNAME, PASSWORD below.
 
 # SRC_URI = "git://github.com/mendersoftware/mender;branch=master;protocol=https;user=<USERNAME>:<PASSWORD>"
-SRC_URI = "git:////home/jenkins/workspace/yoctobuild/mender/"
+SRC_URI = "git:///home/jenkins/workspace/yoctobuild/mender/"
 SRCREV = "${AUTOREV}"
 
 LICENSE = "MIT"
