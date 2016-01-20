@@ -37,5 +37,5 @@ dd if=/dev/zero of=fat.dat bs=1M count=0 seek=10
 mkfs.vfat fat.dat
 dd if=fat.dat of=part.dat bs=512 seek=2048 conv=notrunc
 
-gzip -dc tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext3.gz | dd of=part.dat bs=512 seek=100001 conv=notrunc
-gzip -dc tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext3.gz | dd of=part.dat bs=512 seek=350001 conv=notrunc
+dd if=tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext3 of=part.dat bs=512 seek=100001 conv=notrunc
+dd if=tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext3 of=part.dat bs=512 seek=350001 conv=notrunc
