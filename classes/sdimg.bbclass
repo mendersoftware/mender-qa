@@ -94,9 +94,9 @@ IMAGE_CMD_sdimg () {
 
     ) | fdisk --compatibility=nondos --units=sectors ${SDIMG}
 
-    dd if=/dev/zero of=fat.dat bs=1M count=0 seek=10
+    dd if=/dev/zero of=fat.dat count=${PART1_SIZE}
     mkfs.vfat fat.dat
-    dd if=fat.dat of=${SDIMG} bs=512 seek=2048 conv=notrunc
+    dd if=fat.dat of=${SDIMG} seek=${PART1_START} conv=notrunc
     rm -f fat.dat
 
     dd if=${IMAGE_NAME}.rootfs.ext3 of=${SDIMG} seek=${PART2_START} conv=notrunc
