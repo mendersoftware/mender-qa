@@ -9,6 +9,7 @@ SDIMG_PART1_SIZE_MB ?= "128"
 
 IMAGE_TYPEDEP_sdimg = "ext3"
 
+IMAGE_DEPENDS_sdimg = " mtools-native"
 
 IMAGE_CMD_sdimg () {
 
