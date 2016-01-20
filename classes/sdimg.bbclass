@@ -96,6 +96,12 @@ IMAGE_CMD_sdimg () {
 
     dd if=/dev/zero of=fat.dat count=${PART1_SIZE}
     mkfs.vfat fat.dat
+
+    # Create empty environment. Just so that the file is available.
+    dd if=/dev/zero of=uboot.env count=0 bs=1K seek=256
+    mcopy -i fat.dat -v uboot.env ::
+    rm -f uboot.env
+    
     dd if=fat.dat of=${SDIMG} seek=${PART1_START} conv=notrunc
     rm -f fat.dat
 
