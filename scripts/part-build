@@ -1,8 +1,13 @@
 #!/bin/bash
 
 set -x
+set -e
+set -o pipefail                       # Exit if part of a pipeline fails
 
-rm part.dat
+# fdisk and mkfs are not in the common path
+PATH=$PATH:/sbin:/usr/sbin
+
+rm part.dat   || true
 dd if=/dev/zero of=part.dat bs=1M count=0 seek=300
 fdisk part.dat <<EOF
 o
@@ -27,8 +32,10 @@ c
 p
 w
 EOF
+
 dd if=/dev/zero of=fat.dat bs=1M count=0 seek=10
 mkfs.vfat fat.dat
 dd if=fat.dat of=part.dat bs=512 seek=2048 conv=notrunc
-dd if=tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 of=part.dat bs=512 seek=100001 conv=notrunc
-dd if=tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 of=part.dat bs=512 seek=350001 conv=notrunc
+
+dd if=tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext3 of=part.dat bs=512 seek=100001 conv=notrunc
+dd if=tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext3 of=part.dat bs=512 seek=350001 conv=notrunc
