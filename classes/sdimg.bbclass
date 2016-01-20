@@ -7,9 +7,14 @@ SDIMG_PART1_SIZE_MB ?= "128"
 # CONFIGURATION END
 
 
+# util-linux: fdisk
+# dosfstools: mkfs.vfat
+# mtools:     mcopy
+IMAGE_DEPENDS_sdimg = "util-linux-native dosfstools-native mtools-native"
+
+# We need to have the ext3 image generated already
 IMAGE_TYPEDEP_sdimg = "ext3"
 
-IMAGE_DEPENDS_sdimg = " mtools-native"
 
 IMAGE_CMD_sdimg () {
 
@@ -24,10 +29,6 @@ IMAGE_CMD_sdimg () {
     test -e  ${IMAGE_NAME}.rootfs.ext3
     SDIMG=${IMAGE_NAME}.rootfs.sdimg
     rm -f ${SDIMG}
-
-    # fdisk and mkfs are not in the common path
-    PATH=$PATH:/sbin:/usr/sbin
-
 
     # Compute partition borders and sizes, EVERYTHING IN SECTORS (512 bytes)
 
@@ -102,7 +103,7 @@ IMAGE_CMD_sdimg () {
     dd if=/dev/zero of=uboot.env count=0 bs=1K seek=256
     mcopy -i fat.dat -v uboot.env ::
     rm -f uboot.env
-    
+
     dd if=fat.dat of=${SDIMG} seek=${PART1_START} conv=notrunc
     rm -f fat.dat
 
