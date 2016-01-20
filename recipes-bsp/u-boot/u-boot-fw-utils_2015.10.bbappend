@@ -14,9 +14,3 @@ EOF
 }
 addtask do_configure_fw_printenv before do_package after do_install
 
-do_deploy () {
-    # Create empty environment. Just so that the file is available.
-    dd if=/dev/zero of=${DEPLOYDIR}/uboot.env bs=1K count=0 seek=256
-}
-
-addtask do_deploy after do_install
