@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# NOTE: current settings forward
+#           ssh: port 8822
+#           VNC: port 5923
+#           serial console: stdio
+
 set -e
 set -x
 
@@ -13,4 +18,6 @@ QEMU_AUDIO_DRV=none \
     -drive file=${BUILDDIR}/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg,if=sd,format=raw \
     -net nic \
     -net user,hostfwd=tcp::8822-:22 \
+    -display vnc=:23 \
+    -serial stdio \
     "$@"
