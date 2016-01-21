@@ -1,16 +1,45 @@
-# CONFIGURATION START - YOU CAN (SHOULD) OVERRIDE THE DEFAULT VALUES
+# Class that creates an SD card image that boots under qemu's emulation
+# for vexpress-a9 board. See the script mender-qemu for an example of
+# how to boot the image.
 
+# The partitioning scheme is:
+#    part1: FAT partition with bootloader
+#    part2: first rootfs, active
+#    part3: second rootfs, inactive, mirror of first,
+#           available as failsafe for when some update fails
+
+
+########## CONFIGURATION START - you can override these default
+##########                       values in your local.conf
+
+
+# Total size of the SD card. The two rootfs partition sizes are
+# auto-determined to fill the space of the SD card.
 SDIMG_SIZE_MB ?= "1000"
-SDIMG_PARTITION_ALIGNMENT_MB ?= "8"
+
+# Size of the first (FAT) partition, that contains the bootloader
 SDIMG_PART1_SIZE_MB ?= "128"
 
-# CONFIGURATION END
+# For performance reasons, we try to align the partitions to the SD
+# card's erase block. It is impossible to know this information with
+# certainty, but one way to find out is to run the "flashbench" tool on
+# your SD card and study the results. If you do, feel free to override
+# this default.
+#
+# 8MB alignment is a safe setting that might waste some space if the
+# erase block is smaller.
+SDIMG_PARTITION_ALIGNMENT_MB ?= "8"
 
 
-# util-linux: fdisk
-# dosfstools: mkfs.vfat
-# mtools:     mcopy
-IMAGE_DEPENDS_sdimg = "util-linux-native dosfstools-native mtools-native"
+########## CONFIGURATION END ##########
+
+
+# This script depends on:
+#     util-linux (fdisk)
+#     dosfstools (mkfs.vfat)
+#     mtools     (mcopy)
+#     e2fsprogs  (resize2fs)
+IMAGE_DEPENDS_sdimg = "util-linux-native dosfstools-native mtools-native e2fsprogs-native"
 
 # We need to have the ext3 image generated already
 IMAGE_TYPEDEP_sdimg = "ext3"
@@ -25,10 +54,11 @@ IMAGE_CMD_sdimg () {
     # set -o pipefail                             # don't hide pipeline errors
 
     cd ${DEPLOY_DIR_IMAGE}
-    # Assert rootfs has been correctly generated
-    test -e  ${IMAGE_NAME}.rootfs.ext3
+    ROOTFS_IMG=${IMAGE_NAME}.rootfs.ext3
     SDIMG=${IMAGE_NAME}.rootfs.sdimg
-    rm -f ${SDIMG}
+
+    # Assert rootfs has been correctly generated
+    test -e ${ROOTFS_IMG}
 
     # Compute partition borders and sizes, EVERYTHING IN SECTORS (512 bytes)
 
@@ -48,9 +78,12 @@ IMAGE_CMD_sdimg () {
     # Assert we are not past the limits of the SD card size
     test ${PART3_END} -lt ${SDIMG_SIZE_SECTORS}
 
+    # Resize rootfs to be as big as the partitions 2 and 3
+    resize2fs ${ROOTFS_IMG} ${PART23_SIZE}s
+
     # Assert that the rootfs size is smaller than PART23_SIZE
-    ROOTFS_SIZE=$(wc -c ${IMAGE_NAME}.rootfs.ext3 | cut -d\  -f1 )
-    test ${ROOTFS_SIZE} -lt $(expr ${PART23_SIZE} \* 512)
+    ROOTFS_SIZE=$(wc -c ${ROOTFS_IMG} | cut -d\  -f1 )
+    test ${ROOTFS_SIZE} -le $(expr ${PART23_SIZE} \* 512)
 
     dd if=/dev/zero of=${SDIMG} count=0 seek=${SDIMG_SIZE_SECTORS}
     export PART1_START PART1_END PART2_START PART2_END PART3_START PART3_END
@@ -107,8 +140,8 @@ IMAGE_CMD_sdimg () {
     dd if=fat.dat of=${SDIMG} seek=${PART1_START} conv=notrunc
     rm -f fat.dat
 
-    dd if=${IMAGE_NAME}.rootfs.ext3 of=${SDIMG} seek=${PART2_START} conv=notrunc
-    dd if=${IMAGE_NAME}.rootfs.ext3 of=${SDIMG} seek=${PART3_START} conv=notrunc
+    dd if=${ROOTFS_IMG} of=${SDIMG} seek=${PART2_START} conv=notrunc
+    dd if=${ROOTFS_IMG} of=${SDIMG} seek=${PART3_START} conv=notrunc
 
     # Print partition table, assert partitions are aligned and as expected
     #TODO
