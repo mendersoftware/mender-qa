@@ -1,16 +1,44 @@
-# CONFIGURATION START - YOU CAN (SHOULD) OVERRIDE THE DEFAULT VALUES
+# Class that creates an SD card image that boots under qemu's emulation
+# for vexpress-a9 board. See the script mender-qemu for an example of
+# how to boot the image.
 
+# The partitioning scheme is:
+#    part1: FAT partition with bootloader
+#    part2: first rootfs, active
+#    part3: second rootfs, inactive, mirror of first,
+#           available as failsafe for when some update fails
+
+
+########## CONFIGURATION START - you can override these default
+##########                       values in your local.conf
+
+
+# Total size of the SD card. The two rootfs partition sizes are
+# auto-determined to fill the space of the SD card.
 SDIMG_SIZE_MB ?= "1000"
-SDIMG_PARTITION_ALIGNMENT_MB ?= "8"
+
+# Size of the first (FAT) partition, that contains the bootloader
 SDIMG_PART1_SIZE_MB ?= "128"
 
-# CONFIGURATION END
+# For performance reasons, we try to align the partitions to the SD
+# card's erase block. It is impossible to know this information with
+# certainty, but one way to find out is to run the "flashbench" tool on
+# your SD card and study the results. If you do, feel free to override
+# this default.
+#
+# 8MB alignment is a safe setting that might waste some space if the
+# erase block is smaller.
+SDIMG_PARTITION_ALIGNMENT_MB ?= "8"
 
 
-# util-linux: fdisk
-# dosfstools: mkfs.vfat
-# mtools:     mcopy
-# e2fsprogs:  resize2fs
+########## CONFIGURATION END ##########
+
+
+# This script depends on:
+#     util-linux (fdisk)
+#     dosfstools (mkfs.vfat)
+#     mtools     (mcopy)
+#     e2fsprogs  (resize2fs)
 IMAGE_DEPENDS_sdimg = "util-linux-native dosfstools-native mtools-native e2fsprogs-native"
 
 # We need to have the ext3 image generated already
