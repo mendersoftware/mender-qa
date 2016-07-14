@@ -1,6 +1,6 @@
 #!/bin/bash
 shopt -s extglob
-#set -x
+set -x
 export PATH=$WORKSPACE/scripts:$WORKSPACE/bitbake/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
 
 rm -rf "$WORKSPACE/build/tmp/"
