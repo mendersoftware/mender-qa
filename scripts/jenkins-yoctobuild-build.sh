@@ -28,6 +28,7 @@ else
   /bin/rm -f build/conf/local.conf
   echo $?
   /bin/cp meta-mender-qemu/build-conf/bblayers.conf  build/conf/bblayers.conf
+  sed -i -- "s,/home/jenkins/workspace/yoctobuild,$WORKSPACE,g" build/conf/bblayers.conf
   echo $?
   /bin/cp meta-mender-qemu/build-conf/local.conf  build/conf/local.conf
   echo $?
