@@ -23,6 +23,8 @@ do
     sleep 10
 done
 
+cat /var/log/cloud-init-output.log || true
+
 if [ -f $HOME/proxy-target.txt ]
 then
     ret=0
