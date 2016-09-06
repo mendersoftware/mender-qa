@@ -13,15 +13,23 @@
 # accepted yet, and it will give up. However, if we keep port 222 closed until
 # we know it's ready, it will keep trying and eventually succeed.
 
+# Make sure error detection and verbose output is on, if they aren't already.
+set -x -e
+
+# Add jenkins user and copy credentials.
 useradd -m jenkins
 mkdir -p /home/jenkins/.ssh
 cp /root/.ssh/authorized_keys /home/jenkins/.ssh
 
+# Enable sudo access for jenkins.
 echo "jenkins ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
+
 # Disable TTY requirement.
 sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
 
+# Make sure everything in jenkins' folder has right owner.
 chown -R jenkins:jenkins /home/jenkins
 
+# Open SSH port on 222.
 iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
 iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22

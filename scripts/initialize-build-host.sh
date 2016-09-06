@@ -21,6 +21,9 @@
 # The script is expected to be sourced early in the init-script phase after
 # provisioning.
 
+# Make sure error detection and verbose output is on, if they aren't already.
+set -x -e
+
 while pgrep cloud-init >/dev/null 2>&1
 do
     # Wait until the cloud-init stage is done.
