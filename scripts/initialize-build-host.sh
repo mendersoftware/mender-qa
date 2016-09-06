@@ -45,7 +45,7 @@ then
 
     login="$(cat $HOME/proxy-target.txt)"
     # Put our currently executing script on the proxy target.
-    rsync -cze "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$0" $login:commands.sh
+    rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$0" $login:commands.sh
     # And the important parts of the environment.
     for var in \
         BUILD_CAUSE \
@@ -77,15 +77,15 @@ then
         eval "echo $var=\\\"\$$var\\\""
         echo "export $var"
     done > env.sh
-    rsync -cze "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" env.sh $login:.
+    rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" env.sh $login:.
     # And the helper tools, including this script.
-    rsync --delete -czrlpe "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/mender-qa $login:.
+    rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/mender-qa $login:.
     # Copy the workspace. If there is no workspace defined, we are not in the
     # job section yet.
     if [ -n "$WORKSPACE" ]
     then
         ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p "$WORKSPACE"
-        rsync --delete -czrlpe "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$WORKSPACE"/ $login:"$WORKSPACE"/
+        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$WORKSPACE"/ $login:"$WORKSPACE"/
     fi
 
     # Run the actual job.
@@ -95,7 +95,7 @@ then
     # Copy the workspace back after job has ended.
     if [ -n "$WORKSPACE" ]
     then
-        rsync --delete -czrlpe "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:"$WORKSPACE"/ "$WORKSPACE"/
+        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:"$WORKSPACE"/ "$WORKSPACE"/
     fi
     # Return the error code from the job.
     exit $ret
