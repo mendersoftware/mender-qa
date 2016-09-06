@@ -13,6 +13,9 @@
 # accepted yet, and it will give up. However, if we keep port 222 closed until
 # we know it's ready, it will keep trying and eventually succeed.
 
+# Make sure error detection and verbose output is on, if they aren't already.
+set -x -e
+
 useradd -m jenkins
 mkdir -p /home/jenkins/.ssh
 cp /root/.ssh/authorized_keys /home/jenkins/.ssh
