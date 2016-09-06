@@ -64,16 +64,40 @@ sudo mkdir -p /mnt/vm
 success=0
 for i in 1 2 3 4 5
 do
-    sudo mount /dev/nbd0p$i /mnt/vm || continue
+    VG=
+    if sudo file -sL /dev/nbd0p$i | grep -q 'Logical Volume'
+    then
+        # This is relying on there being no volume group on the parent host.
+        VG=`sudo vgs --noheadings | awk '{print $1}'`
+        sudo vgchange -ay $VG
+        for LV in /dev/mapper/${VG/-/--}-*
+        do
+            if sudo file -sL $LV | grep -q 'ext[234]'
+            then
+                sudo mount $LV /mnt/vm || continue
+                break
+            fi
+        done
+    else
+        sudo mount /dev/nbd0p$i /mnt/vm || continue
+    fi
     if [ ! -d /mnt/vm/usr ]
     then
        sudo umount /mnt/vm
+       if [ -n "$VG" ]
+       then
+           sudo vgchange -an $VG
+       fi
        continue
     fi
 
     sudo mkdir -p /mnt/vm/root/.ssh
     sudo bash -c "cat $HOME/.ssh/id_rsa.pub $HOME/.ssh/authorized_keys >> /mnt/vm/root/.ssh/authorized_keys"
     sudo umount /mnt/vm
+    if [ -n "$VG" ]
+    then
+        sudo vgchange -an $VG
+    fi
     success=1
     break
 done
