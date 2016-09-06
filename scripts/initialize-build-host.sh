@@ -2,26 +2,32 @@
 
 # This file should be sourced, not run.
 
-# When sourced, will attempt to run the current script (that being the script
-# that sourced this one) on the proxy slave, if a login for that slave exists in
-# $HOME/proxy-target.txt. If not, the script does nothing and execution
-# continues on the current host.
-
-# $HOME/proxy-target.txt - If this exists, we are on the proxy host, and the
-# file contains the login to the slave host.  If it doesn't exist, we are on the
-# build slave.
-
-# After figuring that stuff out, this script will run either on_proxy() or
-# on_slave(), depending on which of those is true. Any remaining script commands
-# before this script was sourced are also run, but only on the slave, not on the
-# proxy. Note that commands that were executed *before* this script was sourced
-# will run on both hosts, so make sure this is sourced early.
+# When sourced, this script will do several things:
+#
+# 1. Will wait for the cloud-init service to finish running, in order to enforce
+#    serial execution of initialization steps. It will post the output when
+#    finished, if any.
+#
+# 2. If $HOME/proxy-target.txt exists, it means this is a proxy host, and the
+#    real build machine is on the host specified by the login details inside
+#    that file. If the file does not exist, we are on the build slave itself.
+#    After figuring that stuff out, this script will run either on_proxy() or
+#    on_slave(), depending on which of those is true (both must be defined prior
+#    to sourcing this script). Any remaining script commands before this script
+#    was sourced are also run, but only on the slave, not on the proxy. Note
+#    that commands that were executed *before* this script was sourced will run
+#    on both hosts, so make sure this is sourced early.
+#
+# The script is expected to be sourced early in the init-script phase after
+# provisioning.
 
 while pgrep cloud-init >/dev/null 2>&1
 do
     # Wait until the cloud-init stage is done.
     sleep 10
 done
+
+cat /var/log/cloud-init-output.log || true
 
 if [ -f $HOME/proxy-target.txt ]
 then
@@ -33,7 +39,6 @@ then
     then
         exit $ret
     fi
-    # Else continue.
 
     login="$(cat $HOME/proxy-target.txt)"
     # Put our currently executing script on the proxy target.

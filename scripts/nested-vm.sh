@@ -6,12 +6,7 @@
 # proxy-target.txt file which can be used to automatically enter the host later
 # using enter-proxy-target.sh.
 
-# After the VM is launched, two login ports are available:
-# Port 222  - Login to the proxy. This is equivalent to port 22, but the reason
-#             this is necessary is to stop Jenkins from logging in too early. If
-#             it tries to login too early, it will find the port open, but the
-#             key for the jenkins user might not be accepted yet, and it will
-#             give up. However, if we keep the port closed, it will keep trying.
+# After the VM is launched, an extra login port is available on the proxy host:
 # Port 2222 - Login to the proxy target, IOW the build slave. This won't be used
 #             by Jenkins, but is useful for debugging.
 
@@ -117,9 +112,7 @@ do
 done
 echo "jenkins@$IP" > $HOME/proxy-target.txt
 
-# Port forward to this host on port 222, and new host on port 2222.
-sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
-sudo iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
+# Port forward to new host on port 2222.
 sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 2222 -j DNAT --to-dest $IP:22
 sudo iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 2222 -j DNAT --to-dest $IP:22
 sudo iptables -I FORWARD 1 -p tcp --dport 22 -j ACCEPT
