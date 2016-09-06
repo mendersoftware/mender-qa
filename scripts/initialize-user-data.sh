@@ -27,6 +27,9 @@ echo "jenkins ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
 # Disable TTY requirement.
 sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
 
+# Copy the mender-qa repository to jenkins user.
+cp -r /root/mender-qa /home/jenkins
+
 # Make sure everything in jenkins' folder has right owner.
 chown -R jenkins:jenkins /home/jenkins
 
