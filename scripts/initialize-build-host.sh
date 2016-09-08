@@ -32,6 +32,17 @@ done
 
 cat /var/log/cloud-init-output.log || true
 
+# Disable TTY requirement. This normally happens in initialize-user-data.sh, but
+# for hosts that do not support cloud user data, it may not have happened
+# yet. These hosts are always using root as login, since they cannot create any
+# new users without the user data section. We still need to disable the TTY
+# requirement, since even root will use sudo inside the scripts. If we are not
+# root, we cannot do anything.
+if [ "$(id -u)" = 0 ]
+then
+    sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
+fi
+
 if [ -f $HOME/proxy-target.txt ]
 then
     ret=0
