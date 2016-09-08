@@ -67,6 +67,10 @@ do
     VG=
     if sudo file -sL /dev/nbd0p$i | grep -q 'Logical Volume'
     then
+        # The VM is using LVM. This makes things a bit more complicated, we need
+        # to find the right volume. This just looks for the first ext[234]
+        # filesystem ATM.
+
         # This is relying on there being no volume group on the parent host.
         VG=`sudo vgs --noheadings | awk '{print $1}'`
         sudo vgchange -ay $VG
@@ -79,8 +83,10 @@ do
             fi
         done
     else
+        # Normal partitions.
         sudo mount /dev/nbd0p$i /mnt/vm || continue
     fi
+    # Look for /usr directory to identify Linux partition.
     if [ ! -d /mnt/vm/usr ]
     then
        sudo umount /mnt/vm
@@ -91,6 +97,7 @@ do
        continue
     fi
 
+    # Install keys.
     sudo mkdir -p /mnt/vm/root/.ssh
     sudo bash -c "cat $HOME/.ssh/id_rsa.pub $HOME/.ssh/authorized_keys >> /mnt/vm/root/.ssh/authorized_keys"
     sudo umount /mnt/vm
