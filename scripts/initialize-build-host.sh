@@ -101,6 +101,16 @@ then
 
     # Run the actual job.
     ret=0
+    echo "Host .ssh/"
+
+    ls -al "$HOME/.ssh/"
+
+    echo "Authorized Keys"
+    cat "$HOME/.ssh/authorized_keys"
+
+    echo "id_rsa.pub"
+    cat "$HOME/.ssh/id_rsa.pub"
+
     echo "Commands.sh inside the nested vm:"
     ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "cat $HOME/commands.sh"
     echo "========================================================================\n"
