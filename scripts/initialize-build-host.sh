@@ -101,6 +101,9 @@ then
 
     # Run the actual job.
     ret=0
+    echo "Commands.sh inside the nested vm:"
+    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "cat $HOME/commands.sh"
+    echo "========================================================================\n"
     echo "Running Job"
     ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login ". env.sh && cd $WORKSPACE && $HOME/commands.sh" "$@" || ret=$?
 
