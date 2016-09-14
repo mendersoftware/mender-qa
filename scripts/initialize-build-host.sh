@@ -101,13 +101,15 @@ then
 
 #+Caption: Nicks hacky debugging
 #+BEGIN_SRC 
-    echo "Host trusting own id_rsa.pub"
-    cat "$HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys"
+    echo "Host .ssh/"
+    ls -al "$HOME/.ssh/"
+    #echo "Host trusting own id_rsa.pub"
+    #cat "$HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys"
 
-    echo "Host sending id_rsa to nested vm"
-    cat "$HOME/.ssh/id_rsa" | ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "cat > $HOME/.ssh/id_rsa"
-    echo "Ensuring proper permission on nested vm private key"
-    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "chmod 600 $HOME/.ssh/id_rsa"
+    #echo "Host sending id_rsa to nested vm"
+    #cat "$HOME/.ssh/id_rsa" | ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "cat > $HOME/.ssh/id_rsa"
+    #echo "Ensuring proper permission on nested vm private key"
+    #ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "chmod 600 $HOME/.ssh/id_rsa"
 #+END_SRC
 
     # Run the actual job.
