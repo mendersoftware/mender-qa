@@ -101,6 +101,7 @@ then
 
     # Run the actual job.
     ret=0
+    echo "Running Job"
     ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login ". env.sh && cd $WORKSPACE && $HOME/commands.sh" "$@" || ret=$?
 
     # Copy the workspace back after job has ended.
