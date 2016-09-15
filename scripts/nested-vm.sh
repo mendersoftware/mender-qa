@@ -43,8 +43,8 @@ test "`cat /sys/module/kvm_intel/parameters/nested`" = "Y"
 egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 
 # Install KVM and other tools.
-sudo apt -y update
-sudo apt -y install libvirt-bin rsync
+sudo apt -qy update
+sudo apt -qy install libvirt-bin rsync
 
 # Enable nbd devices to have partitions.
 sudo modprobe -r nbd
@@ -167,6 +167,6 @@ ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP cp .ssh/authorized_key
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP chown -R jenkins:jenkins /home/jenkins/.ssh
 PKG_MANAGER=apt-get
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "test -x /usr/bin/yum" && PKG_MANAGER=yum
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "$PKG_MANAGER -y update && $PKG_MANAGER -y install rsync"
+ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "$PKG_MANAGER -qy update && $PKG_MANAGER -qy install rsync"
 
 exit 0
