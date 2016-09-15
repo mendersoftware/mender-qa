@@ -33,6 +33,9 @@ cp -r /root/mender-qa /home/jenkins
 # Make sure everything in jenkins' folder has right owner.
 chown -R jenkins:jenkins /home/jenkins
 
+# fix sudo complaining "unable to resolve host digitalocean"
+sed -i 's/127\.0\.0\.1.*/& digitalocean/'  /etc/hosts
+
 # Open SSH port on 222.
 iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
 iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
