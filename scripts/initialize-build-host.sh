@@ -101,17 +101,20 @@ then
 
 #+Caption: Nicks hacky debugging
 #+BEGIN_SRC sh
+    echo "Whats the WORKSPACE?"
+    echo "$WORKSPACE"
+
     echo "Host .ssh/"
     ls -al "$HOME/.ssh/"
 
-    echo "Host trusting own id_rsa.pub"
-    cat "$HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys"
+    #echo "Host trusting own id_rsa.pub"
+    #cat "$HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys"
 
     echo "Nested VM $HOME/.ssh/"
     ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "ls -al $HOME/.ssh/"
 
-    echo "Host sending id_rsa to nested vm"
-    cat "$HOME/.ssh/id_rsa" | ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "cat > $HOME/.ssh/id_rsa"
+    #echo "Host sending id_rsa to nested vm"
+    #cat "$HOME/.ssh/id_rsa" | ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "cat > $HOME/.ssh/id_rsa"
 
     echo "Ensuring proper permission on nested vm private key"
     ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "chmod 600 $HOME/.ssh/id_rsa"
@@ -119,6 +122,8 @@ then
     echo "Whats inside the nested VMs .ssh?"
     ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "ls -al $HOME/.ssh/"
 
+    echo "What is in the nested vms $HOME/commands.sh"
+    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login "cat $HOME/commands.sh"
 #+END_SRC
 
     # Run the actual job.
