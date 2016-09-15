@@ -30,7 +30,9 @@ do
     sleep 10
 done
 
-cat /var/log/cloud-init-output.log || true
+echo '========================================= PRINTING CLOUD-INIT LOG ==================================================='
+sed 's/^.*/>>> &/' /var/log/cloud-init-output.log || true
+echo '======================================= DONE PRINTING CLOUD-INIT LOG ================================================'
 
 # Disable TTY requirement. This normally happens in initialize-user-data.sh, but
 # for hosts that do not support cloud user data, it may not have happened
