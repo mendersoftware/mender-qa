@@ -165,8 +165,8 @@ ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP useradd -m -d /home/je
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP mkdir -p /home/jenkins/.ssh
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP cp .ssh/authorized_keys /home/jenkins/.ssh/authorized_keys
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP chown -R jenkins:jenkins /home/jenkins/.ssh
-PKG_MANAGER=apt-get
+PKG_MANAGER="apt-get -q"
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "test -x /usr/bin/yum" && PKG_MANAGER=yum
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "$PKG_MANAGER -qy update && $PKG_MANAGER -qy install rsync"
+ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "$PKG_MANAGER -y update && $PKG_MANAGER -y install rsync"
 
 exit 0
