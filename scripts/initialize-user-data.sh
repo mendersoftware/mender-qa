@@ -36,6 +36,12 @@ chown -R jenkins:jenkins /home/jenkins
 # fix sudo complaining "unable to resolve host digitalocean"
 sed -i 's/127\.0\.0\.1.*/& digitalocean/'  /etc/hosts
 
+# Add 512MB swap space, java needs it, and jenkins stops complaining
+dd if=/dev/zero of=/swapfile bs=1M count=512
+chmod 0600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+
 # Open SSH port on 222.
 iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
 iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
