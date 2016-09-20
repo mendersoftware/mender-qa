@@ -56,9 +56,15 @@ then
         exit $ret
     fi
 
+    # --------------------------------------------------------------------------
+    # Populate build host.
+    # --------------------------------------------------------------------------
+
     login="$(cat $HOME/proxy-target.txt)"
+
     # Put our currently executing script on the proxy target.
     rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$0" $login:commands.sh
+
     # And the important parts of the environment.
     for var in \
         BUILD_CAUSE \
@@ -91,8 +97,10 @@ then
         echo "export $var"
     done > env.sh
     rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" env.sh $login:.
+
     # And the helper tools, including this script.
     rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/mender-qa $login:.
+
     # Copy the workspace. If there is no workspace defined, we are not in the
     # job section yet.
     if [ -n "$WORKSPACE" ]
@@ -101,15 +109,30 @@ then
         rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$WORKSPACE"/ $login:"$WORKSPACE"/
     fi
 
+    # Copy the build cache.
+    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p .cache
+    rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/.cache/cfengine-buildscripts-distfiles/ $login:.cache/cfengine-buildscripts-distfiles/
+    rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/.cache/cfengine-buildscripts-pkgs/ $login:.cache/cfengine-buildscripts-pkgs/
+
+    # --------------------------------------------------------------------------
     # Run the actual job.
+    # --------------------------------------------------------------------------
     ret=0
     ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login ". env.sh && cd $WORKSPACE && $HOME/commands.sh" "$@" || ret=$?
 
+    # --------------------------------------------------------------------------
+    # Collect artifacts and cleanup.
+    # --------------------------------------------------------------------------
     # Copy the workspace back after job has ended.
     if [ -n "$WORKSPACE" ]
     then
         rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:"$WORKSPACE"/ "$WORKSPACE"/
     fi
+
+    # Copy the build cache back in order to be preserved.
+    rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:.cache/cfengine-buildscripts-distfiles/ $HOME/.cache/cfengine-buildscripts-distfiles/
+    rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:.cache/cfengine-buildscripts-pkgs/ $HOME/.cache/cfengine-buildscripts-pkgs/
+
     # Return the error code from the job.
     exit $ret
 else
