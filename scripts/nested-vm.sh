@@ -164,6 +164,7 @@ done
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP useradd -m -d /home/jenkins jenkins || true
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP mkdir -p /home/jenkins/.ssh
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP cp .ssh/authorized_keys /home/jenkins/.ssh/authorized_keys
+rsync --delete -czlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" /home/jenkins/.ssh/id_rsa* root@$IP:/home/jenkins/.ssh/
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP chown -R jenkins:jenkins /home/jenkins/.ssh
 PKG_MANAGER="apt-get -q"
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "test -x /usr/bin/yum" && PKG_MANAGER=yum
