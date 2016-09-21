@@ -24,9 +24,12 @@
 # Make sure error detection and verbose output is on, if they aren't already.
 set -x -e
 
+# In the "user-data" script, i.e. the one that runs on VM boot by
+# cloud-init process, there are a bunch of commands running even *after*
+# the 222 port has been opened. Wait for it to complete.
 while pgrep cloud-init >/dev/null 2>&1
 do
-    # Wait until the cloud-init stage is done.
+    echo "Waiting 10 seconds until the cloud-init stage is done..."
     sleep 10
 done
 
