@@ -50,10 +50,10 @@ fi
 
 # Add 512MB swap space, java needs it, and jenkins stops complaining.
 # This will happen on both hosts, if there is a proxy and a build host.
-dd if=/dev/zero of=/swapfile bs=1M count=512
-chmod 0600 /swapfile
-mkswap /swapfile
-swapon /swapfile
+sudo dd if=/dev/zero of=/swapfile bs=1M count=512
+sudo chmod 0600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
 
 if [ -f $HOME/proxy-target.txt ]
 then
