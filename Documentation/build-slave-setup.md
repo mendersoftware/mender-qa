@@ -443,6 +443,28 @@ Tips and lessons learned
   vice versa. You can recover lost changes in the jenkins-jobs private
   repository, but this is tedious.
 
+* If you find the launching stage hard to debug, a very useful way to debug it
+  is this:
+
+  1. Launch an image on DigitalOcean manually, using the same OS as what you're
+     debugging.
+
+  2. Log in as root.
+
+  3. Put the contents from the "user data" section in the Jenkins configuration
+     in a script (for example with vi), and execute it.
+
+  4. Log out.
+
+  5. Log in as jenkins.
+
+  6. Put the contents from the "init script" section in the Jenkins
+     configuration in a script (for example with vi), and execute it.
+
+  This replicates the host exactly, and allows you to see where the script is
+  going wrong in a controlled environment, instead of using the (somewhat
+  unreliable) log from the Jenkins plugin.
+
 Notes
 -----
 
