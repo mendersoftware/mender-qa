@@ -102,7 +102,14 @@ then
     rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" env.sh $login:.
 
     # And the helper tools, including this script.
-    rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/mender-qa $login:.
+    # Note that only provisioned hosts will have this in HOME, since they use
+    # the repository in provisioning. Permanent hosts don't keep it in HOME,
+    # in order to avoid it getting stale, and will have it in the WORKSPACE
+    # instead, synced separately below.
+    if [ -d $HOME/mender-qa ]
+    then
+        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/mender-qa $login:.
+    fi
 
     # Copy the workspace. If there is no workspace defined, we are not in the
     # job section yet.
