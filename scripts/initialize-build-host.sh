@@ -96,8 +96,19 @@ then
         WORKSPACE \
         label
     do
-        eval "echo $var=\\\"\$$var\\\""
-        echo "export $var"
+        case "$var" in
+            WORKSPACE)
+                # Special handling for WORKSPACE, because local and remote home
+                # directory might not be the same.
+                WORKSPACE_REMOTE="$(echo "$WORKSPACE" | sed -e "s,^$HOME/*,,")"
+                echo "WORKSPACE=\"\$HOME/$WORKSPACE_REMOTE\""
+                echo "export WORKSPACE"
+                ;;
+            *)
+                eval "echo $var=\\\"\$$var\\\""
+                echo "export $var"
+                ;;
+        esac
     done > env.sh
     rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" env.sh $login:.
 
@@ -115,8 +126,8 @@ then
     # job section yet.
     if [ -n "$WORKSPACE" ]
     then
-        ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p "$WORKSPACE"
-        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$WORKSPACE"/ $login:"$WORKSPACE"/
+        ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p "$WORKSPACE_REMOTE"
+        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$WORKSPACE"/ $login:"$WORKSPACE_REMOTE"/
     fi
 
     # Copy the build cache.
@@ -138,7 +149,7 @@ then
     # Run the actual job.
     # --------------------------------------------------------------------------
     ret=0
-    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login ". env.sh && cd $WORKSPACE && $HOME/commands.sh" "$@" || ret=$?
+    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login '. env.sh && cd $WORKSPACE && $HOME/commands.sh' "$@" || ret=$?
 
     # --------------------------------------------------------------------------
     # Collect artifacts and cleanup.
@@ -146,7 +157,7 @@ then
     # Copy the workspace back after job has ended.
     if [ -n "$WORKSPACE" ]
     then
-        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:"$WORKSPACE"/ "$WORKSPACE"/
+        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:"$WORKSPACE_REMOTE"/ "$WORKSPACE"/
     fi
 
     # Copy the build cache back in order to be preserved.
