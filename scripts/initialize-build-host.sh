@@ -130,19 +130,26 @@ then
         rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$WORKSPACE"/ $login:"$WORKSPACE_REMOTE"/
     fi
 
-    # Copy the build cache.
-    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p .cache
-    rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/.cache/cfengine-buildscripts-distfiles/ $login:.cache/cfengine-buildscripts-distfiles/
-    # Only copy packages if this node has a known label.
+    # Copy the build cache, if there is one, and only if the node has a known
+    # label.
     if [ -n "$NODE_LABELS" ]
     then
-        # There can be multiple labels, pick the first one.
-        # The last one is usually the node name.
-        label=${NODE_LABELS%% *}
+        if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
+        then
+            ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p .cache
+            rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/.cache/cfengine-buildscripts-distfiles/ $login:.cache/cfengine-buildscripts-distfiles/
+        fi
 
-        mkdir -p $HOME/.cache/cfengine-buildscripts-pkgs/$label
-        ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p .cache/cfengine-buildscripts-pkgs/$label
-        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/.cache/cfengine-buildscripts-pkgs/$label/ $login:.cache/cfengine-buildscripts-pkgs/$label/
+        if [ -d $HOME/.cache/cfengine-buildscripts-pkgs ]
+        then
+            # There can be multiple labels, pick the first one.
+            # The last one is usually the node name.
+            label=${NODE_LABELS%% *}
+
+            mkdir -p $HOME/.cache/cfengine-buildscripts-pkgs/$label
+            ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p .cache/cfengine-buildscripts-pkgs/$label
+            rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/.cache/cfengine-buildscripts-pkgs/$label/ $login:.cache/cfengine-buildscripts-pkgs/$label/
+        fi
     fi
 
     # --------------------------------------------------------------------------
@@ -161,11 +168,18 @@ then
     fi
 
     # Copy the build cache back in order to be preserved.
-    rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:.cache/cfengine-buildscripts-distfiles/ $HOME/.cache/cfengine-buildscripts-distfiles/
     if [ -n "$NODE_LABELS" ]
     then
-        label=${NODE_LABELS%% *}
-        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:.cache/cfengine-buildscripts-pkgs/$label/ $HOME/.cache/cfengine-buildscripts-pkgs/$label/
+        if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
+        then
+            rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:.cache/cfengine-buildscripts-distfiles/ $HOME/.cache/cfengine-buildscripts-distfiles/
+        fi
+
+        if [ -d $HOME/.cache/cfengine-buildscripts-pkgs ]
+        then
+            label=${NODE_LABELS%% *}
+            rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:.cache/cfengine-buildscripts-pkgs/$label/ $HOME/.cache/cfengine-buildscripts-pkgs/$label/
+        fi
     fi
 
     # Return the error code from the job.
