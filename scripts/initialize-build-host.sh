@@ -20,6 +20,28 @@
 # The script is expected to be sourced early in the init-script phase after
 # provisioning.
 
+#
+# Detect and replace non-POSIX shell
+#
+try_exec() {
+    type "$1" > /dev/null 2>&1 && exec "$@"
+}
+
+broken_posix_shell()
+{
+    unset foo
+    local foo=1 || true
+    test "$foo" != "1" || return $?
+    return 0
+}
+
+if broken_posix_shell >/dev/null 2>&1; then
+    try_exec /usr/xpg4/bin/sh "$0" "$@"
+    echo "No compatible shell script interpreter found."
+    echo "Please find a POSIX shell for your system."
+    exit 42
+fi
+
 # Make sure error detection and verbose output is on, if they aren't already.
 set -x -e
 
