@@ -12,11 +12,10 @@
 #    real build machine is on the host specified by the login details inside
 #    that file. If the file does not exist, we are on the build slave itself.
 #    After figuring that stuff out, this script will run either on_proxy() or
-#    on_slave(), depending on which of those is true (both must be defined prior
-#    to sourcing this script). Any remaining script commands before this script
-#    was sourced are also run, but only on the slave, not on the proxy. Note
-#    that commands that were executed *before* this script was sourced will run
-#    on both hosts, so make sure this is sourced early.
+#    the rest of the original script that sourced this file, depending on
+#    whether we are on the proxy or build host, respectively. Note that commands
+#    that are specified *before* this script is sourced will run on both hosts,
+#    so make sure this is sourced early, but after on_proxy() is defined.
 #
 # The script is expected to be sourced early in the init-script phase after
 # provisioning.
@@ -184,14 +183,6 @@ then
 
     # Return the error code from the job.
     exit $ret
-else
-    ret=0
-    on_slave || ret=$?
-    # Failure to find a function returns 127, so check for that specifically,
-    # otherwise there was an error inside the function.
-    if [ $ret -ne 0 -a $ret -ne 127 ]
-    then
-        exit $ret
-    fi
-    # Else continue.
 fi
+
+# Else continue executing rest of calling script.
