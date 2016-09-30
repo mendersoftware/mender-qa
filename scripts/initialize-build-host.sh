@@ -20,6 +20,7 @@
 # The script is expected to be sourced early in the init-script phase after
 # provisioning.
 
+
 # Keys that you can use to log in to the build slaves.
 SSH_KEYS='
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDXzoc7eDTKoxfuz2Q0syRh7Z7J/N1YN7kA/J8HmpAmsKCUxrgFpL0eUSk92Ki6yGop3zhO+oEXsmKZAxCk9NAF9Pm4cf8eCn0hTRgz60RHS7rGSDSt7ceCLqimrTj/BWRC2JH1NSgD1L5g2zIJ6kYfBBLw0yOIBUz1ZESbOC3s3yAMfXzYqf0qL75ajqOuzdnynWc5FeJc8dJheQAh7ANDiXJ6XjPJJh0dvuMszmLMfacbILacfoGzz4UnIco1iI1kmNzuHs6XcJgXWzC1LBJwlDBWV75+f23NIynOtCyXRFxlC1K3Nj1X18ddGUdXCIVApr0HZWhMZXMZlRDbmMeRbyykzsm5ZDDerczQyfGPa/CANqxExrmun0peCeMSDj4HeDhpZWyI76w5sDAbv+aw5LlicOOKk8k/cox+vxpsXqUrdxRbKF376lX270ptzJHQ+AZfS3q4ZZiGTnOX7nTd4b29Yr3DTsJOZDW1maOjmCO0TYvndh1bNWVxXod7tJFFI1xZ7Zc4HJXy7QE2SIZG5BOOuyMN6LKJM1fpeIb3auLGMV+w4JDcd0JWeaJIVcimAhd8EEQehWLUDKuhRQkjG/XJHWxKL42ymNp/6waH3i7EkyNRzEisza60Px1SPXCy8TG+ERUL6sIirlg6rc0ChyxYvW1CFrPyE2xQg5sfVw== sub@krutt.org
@@ -54,10 +55,16 @@ fi
 # Make sure error detection and verbose output is on, if they aren't already.
 set -x -e
 
+
 echo "Current user: $USER"
 echo "IP information:"
 /sbin/ifconfig -a || true
 /sbin/ip addr || true
+
+
+RSYNC="rsync --delete -czrlpt"
+RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
+
 
 # In the "user-data" script, i.e. the one that runs on VM boot by
 # cloud-init process, there are a bunch of commands running even *after*
@@ -101,7 +108,7 @@ then
     login="$(cat $HOME/proxy-target.txt)"
 
     # Put our currently executing script on the proxy target.
-    rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$0" $login:commands-from-proxy.sh
+    $RSYNC -e "$RSH"   "$0"  $login:commands-from-proxy.sh
 
     # And the important parts of the environment.
     for var in \
@@ -145,7 +152,7 @@ then
                 ;;
         esac
     done > env.sh
-    rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" env.sh $login:.
+    $RSYNC -e "$RSH"    env.sh  $login:.
 
     # And the helper tools, including this script.
     # Note that only provisioned hosts will have this in HOME, since they use
@@ -154,15 +161,15 @@ then
     # instead, synced separately below.
     if [ -d $HOME/mender-qa ]
     then
-        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/mender-qa $login:.
+        $RSYNC -e "$RSH"    $HOME/mender-qa  $login:.
     fi
 
     # Copy the workspace. If there is no workspace defined, we are not in the
     # job section yet.
     if [ -n "$WORKSPACE" ]
     then
-        ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p "$WORKSPACE_REMOTE"
-        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$WORKSPACE"/ $login:"$WORKSPACE_REMOTE"/
+        $RSH  $login  mkdir -p "$WORKSPACE_REMOTE"
+        $RSYNC -e "$RSH"    "$WORKSPACE"/  $login:"$WORKSPACE_REMOTE"/
     fi
 
     # Copy the build cache, if there is one, and only if the node has a known
@@ -171,8 +178,8 @@ then
     then
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
-            ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p .cache
-            rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/.cache/cfengine-buildscripts-distfiles/ $login:.cache/cfengine-buildscripts-distfiles/
+            $RSH  $login  mkdir -p .cache
+            $RSYNC -e "$RSH"   $HOME/.cache/cfengine-buildscripts-distfiles/  $login:.cache/cfengine-buildscripts-distfiles/
         fi
 
         if [ -d $HOME/.cache/cfengine-buildscripts-pkgs ]
@@ -182,8 +189,8 @@ then
             label=${NODE_LABELS%% *}
 
             mkdir -p $HOME/.cache/cfengine-buildscripts-pkgs/$label
-            ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login mkdir -p .cache/cfengine-buildscripts-pkgs/$label
-            rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $HOME/.cache/cfengine-buildscripts-pkgs/$label/ $login:.cache/cfengine-buildscripts-pkgs/$label/
+            $RSH  $login  mkdir -p .cache/cfengine-buildscripts-pkgs/$label
+            $RSYNC -e "$RSH"    $HOME/.cache/cfengine-buildscripts-pkgs/$label/  $login:.cache/cfengine-buildscripts-pkgs/$label/
         fi
     fi
 
@@ -191,7 +198,9 @@ then
     # Run the actual job.
     # --------------------------------------------------------------------------
     ret=0
-    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login '. ./env.sh && cd $WORKSPACE && sh $HOME/commands-from-proxy.sh' "$@" || ret=$?
+    $RSH  $login \
+        '. ./env.sh && cd $WORKSPACE && sh $HOME/commands-from-proxy.sh' "$@" \
+        || ret=$?
 
     # --------------------------------------------------------------------------
     # Collect artifacts and cleanup.
@@ -199,7 +208,7 @@ then
     # Copy the workspace back after job has ended.
     if [ -n "$WORKSPACE" ]
     then
-        rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:"$WORKSPACE_REMOTE"/ "$WORKSPACE"/
+        $RSYNC -e "$RSH"    $login:"$WORKSPACE_REMOTE"/  "$WORKSPACE"/
     fi
 
     # Copy the build cache back in order to be preserved.
@@ -207,13 +216,13 @@ then
     then
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
-            rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:.cache/cfengine-buildscripts-distfiles/ $HOME/.cache/cfengine-buildscripts-distfiles/
+            $RSYNC -e "$RSH"    $login:.cache/cfengine-buildscripts-distfiles/  $HOME/.cache/cfengine-buildscripts-distfiles/
         fi
 
         if [ -d $HOME/.cache/cfengine-buildscripts-pkgs ]
         then
             label=${NODE_LABELS%% *}
-            rsync --delete -czrlpte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" $login:.cache/cfengine-buildscripts-pkgs/$label/ $HOME/.cache/cfengine-buildscripts-pkgs/$label/
+            $RSYNC -e "$RSH"    $login:.cache/cfengine-buildscripts-pkgs/$label/  $HOME/.cache/cfengine-buildscripts-pkgs/$label/
         fi
     fi
 
