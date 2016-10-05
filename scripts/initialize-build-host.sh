@@ -64,7 +64,7 @@ echo '======================================= DONE PRINTING CLOUD-INIT LOG =====
 # new users without the user data section. We still need to disable the TTY
 # requirement, since even root will use sudo inside the scripts. If we are not
 # root, we cannot do anything.
-if [ "$(id -u)" = 0 ]
+if [ "$(id -u)" = 0 ] && [ -f /etc/sudoers ]
 then
     sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
 fi
