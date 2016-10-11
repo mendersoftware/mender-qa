@@ -20,6 +20,15 @@
 # The script is expected to be sourced early in the init-script phase after
 # provisioning.
 
+# Keys that you can use to log in to the build slaves.
+SSH_KEYS='
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDXzoc7eDTKoxfuz2Q0syRh7Z7J/N1YN7kA/J8HmpAmsKCUxrgFpL0eUSk92Ki6yGop3zhO+oEXsmKZAxCk9NAF9Pm4cf8eCn0hTRgz60RHS7rGSDSt7ceCLqimrTj/BWRC2JH1NSgD1L5g2zIJ6kYfBBLw0yOIBUz1ZESbOC3s3yAMfXzYqf0qL75ajqOuzdnynWc5FeJc8dJheQAh7ANDiXJ6XjPJJh0dvuMszmLMfacbILacfoGzz4UnIco1iI1kmNzuHs6XcJgXWzC1LBJwlDBWV75+f23NIynOtCyXRFxlC1K3Nj1X18ddGUdXCIVApr0HZWhMZXMZlRDbmMeRbyykzsm5ZDDerczQyfGPa/CANqxExrmun0peCeMSDj4HeDhpZWyI76w5sDAbv+aw5LlicOOKk8k/cox+vxpsXqUrdxRbKF376lX270ptzJHQ+AZfS3q4ZZiGTnOX7nTd4b29Yr3DTsJOZDW1maOjmCO0TYvndh1bNWVxXod7tJFFI1xZ7Zc4HJXy7QE2SIZG5BOOuyMN6LKJM1fpeIb3auLGMV+w4JDcd0JWeaJIVcimAhd8EEQehWLUDKuhRQkjG/XJHWxKL42ymNp/6waH3i7EkyNRzEisza60Px1SPXCy8TG+ERUL6sIirlg6rc0ChyxYvW1CFrPyE2xQg5sfVw== sub@krutt.org
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC6D4Pz1bR67BzEiPkEO0bTQ6aQU+U3fxOc9BDGhLgCIc5BzYIwe0DR+vEHcP92gIicnOs+k+noRcwbU11p2xcmi4SmjZdluKi2RVee8S0utiHB49oTEoPVe6C+1d/OmCYtao5mnarsJGOLMuAo7nQLUBkoeduYjqFdpILg3JjiD/RgYYJpu850SHJgIbpLHTABqPRG/fPaetJTrqAeKchm9y87EXWnC5eXl1+Lgqg3Lkbp1c+89bSQmjNdMlT9uPJJppqnzDtS71xJOp+AJIb3QqW2ZiOo9gKHv5Z8CfBREgv8wLHU/5cuXnHYrXAaoEAvZM1xZV0Tbwo+TpAknQgBERXIYsE/+ifNQ47hPPM9pBMoUod7SpdMH1Z+pdnodHswnYFUhQE40DmwFpqyEiUU9Q45KjOCLwneAxJvlfafqYmDLjei39EVconZufFo3K0uZ0P8Is1NDpYuqqAS3D9LM/kRkdX9+tO+oXudkWrFbdhL+YRikajucbWzp1pioJXDXgpKRs/FRfAVehqAVeE5PX9YrUZt+ANxH3K8Cia4TdWrwN1oSNLwehhPp/48MqxCRzYXQ4v1SayXIUf9EIai1N4q5q6x1yrrkOSrhJXmYOOFyeGqeGY+PPp55At22KY4SX8VqNZokEMs/3sZpEeDRGvEoAnGUgRc9EQIbSTfiw== greg@greg-ws
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDtfMHZ+GXw/10nSCuCZAYvMS7LElvjMGUd0wjTzQ7m4XaVmDY6SMpeW2ZHk2YXHmQDw5oUTWZ+pBQVk9J/iXrQfghtGS+akvnqDKy/OrNb2pXWToxGu9vaBkIp9VHgXsZAzCMs7vOZyXJSQgiMrL0oj9smcNsVr1+9+yFzuRgRgRRQ67JZWhb7J2A2DL8SAFfJUXpAdx1Sdzhx3C0tZ8Ptgz0bd0CoWVXBDva4z6MJq3jD4zM6MTmWfm0HGz1IOtVeUlEt7T30j8yIcSzxIlKT3Bs7EavlK2JJbU/7rb7sG/O2ih/Ovr23pgPsq0D7CGaWe01+Z9ivk0Ycp+cFGDZV dimitrios.apostolou@cfengine.com
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDDmlwzo9m1ypsusAp9cVj+XgmDBsZMPdZzIt15pM7Ay2Ie4dl0TtVpj/H9S5O5NsHkQ/fPEaWCpZGgbRrOsrb3wgMg0qM6pA5fvbmCBKxvdvCwp03FyATY0yC+OnvmnWtLOshdZX1gZjzQwiEG/UFyl0N5p/wu8cJv+ODWJ+EOLWs0yTie8oCV2XXFiRsby9qCwDCQIvXrbp1amZJOYNW49GNPKEoJgq6D9fZ5mYE/ozoUdW2ecIOWRWDMI+4AKv48JYPN/wtYJnUs/JmRHUc4HTZ7P9wsXLSc8F+9eVEWzGIZL8WuCS3L8V1n3tPJIxZhQKe3R8DcjER07M+0J9HP a10040@cflu-10040
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAy6vrcU1d/80WMFqzumFHG/dllkhakswezvKfX7KupQwpc55JyyUNpnjxLy76leuJnlTTZTaxq1CcW3lIH9CjG/rJVQLN/PLjQPLZgfvzHqS8HuVCtKynwp0Sgw9tRmrN1KcXRiQMWs3plVDJwB4HFQpb7NsC0f5fskpgxr2KRNPn058oe6VYx183Err/0Uawy64aFSiowRgvHgXgelhSDWUVkOoviKR1zB11EZ8Xr5d4s/yXDE9ehlgv2EBFdhZrqsMmhs7KdPPNDD6/El2dID7V7LKHblbtVO009VS/dlq1XUGE0IUl153ZaVm/dt4+2+NriGpI7COAU4cLxhpj9w== cmdln@tp
+'
+
 #
 # Detect and replace non-POSIX shell
 #
@@ -45,6 +54,11 @@ fi
 # Make sure error detection and verbose output is on, if they aren't already.
 set -x -e
 
+echo "Current user: $USER"
+echo "IP information:"
+/sbin/ifconfig -a || true
+/sbin/ip addr || true
+
 # In the "user-data" script, i.e. the one that runs on VM boot by
 # cloud-init process, there are a bunch of commands running even *after*
 # the 222 port has been opened. Wait for it to complete.
@@ -64,7 +78,7 @@ echo '======================================= DONE PRINTING CLOUD-INIT LOG =====
 # new users without the user data section. We still need to disable the TTY
 # requirement, since even root will use sudo inside the scripts. If we are not
 # root, we cannot do anything.
-if [ "$(id -u)" = 0 ]
+if [ "$(id -u)" = 0 ] && [ -f /etc/sudoers ]
 then
     sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
 fi
@@ -87,7 +101,7 @@ then
     login="$(cat $HOME/proxy-target.txt)"
 
     # Put our currently executing script on the proxy target.
-    rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$0" $login:commands.sh
+    rsync -czte "ssh -o BatchMode=yes -o StrictHostKeyChecking=no" "$0" $login:commands-from-proxy.sh
 
     # And the important parts of the environment.
     for var in \
@@ -177,7 +191,7 @@ then
     # Run the actual job.
     # --------------------------------------------------------------------------
     ret=0
-    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login '. ./env.sh && cd $WORKSPACE && sh $HOME/commands.sh' "$@" || ret=$?
+    ssh -o BatchMode=yes -o StrictHostKeyChecking=no $login '. ./env.sh && cd $WORKSPACE && sh $HOME/commands-from-proxy.sh' "$@" || ret=$?
 
     # --------------------------------------------------------------------------
     # Collect artifacts and cleanup.
@@ -204,6 +218,40 @@ then
     fi
 
     # Return the error code from the job.
+    exit $ret
+elif [ -z "$INIT_BUILD_HOST_SUB_INVOKATION" ]
+then
+    (
+        # Switch to newline as token separator.
+        IFS='
+'
+        # Add key, but avoid adding it more than once (important for always-on
+        # build slaves).
+        for key in $SSH_KEYS
+        do
+            if ! fgrep "$key" ~/.ssh/authorized_keys > /dev/null
+            then
+                echo "$key" >> ~/.ssh/authorized_keys
+            fi
+        done
+    )
+
+    # Reexecute script in order to be able to collect the return code, and
+    # potentially stop the slave.
+    rsync -czt "$0" $HOME/commands.sh
+    ret=0
+    env INIT_BUILD_HOST_SUB_INVOKATION=1 sh $HOME/commands.sh || ret=$?
+
+    if [ -f "$HOME/stop_slave" ]
+    then
+        echo "Stopping slave due to $HOME/stop_slave."
+        echo "Will keep it stopped until the file is removed."
+        while [ -f "$HOME/stop_slave" ]
+        do
+            sleep 10
+        done
+    fi
+
     exit $ret
 fi
 
