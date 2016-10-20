@@ -193,14 +193,18 @@ then
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
             $RSH  $login  mkdir -p .cache
-            $RSYNC -e "$RSH"   $HOME/.cache/cfengine-buildscripts-distfiles/  $login:.cache/cfengine-buildscripts-distfiles/
+            $RSYNC -e "$RSH"                                        \
+                   $HOME/.cache/cfengine-buildscripts-distfiles/    \
+                  $login:.cache/cfengine-buildscripts-distfiles/
         fi
 
         if [ -d $HOME/.cache/cfengine-buildscripts-pkgs ]
         then
             mkdir -p $HOME/.cache/cfengine-buildscripts-pkgs/$label
             $RSH  $login  mkdir -p .cache/cfengine-buildscripts-pkgs/$label
-            $RSYNC -e "$RSH"    $HOME/.cache/cfengine-buildscripts-pkgs/$label/  $login:.cache/cfengine-buildscripts-pkgs/$label/
+            $RSYNC -e "$RSH"                                          \
+                   $HOME/.cache/cfengine-buildscripts-pkgs/$label/    \
+                  $login:.cache/cfengine-buildscripts-pkgs/$label/
         fi
     fi
 
