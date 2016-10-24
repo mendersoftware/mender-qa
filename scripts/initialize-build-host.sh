@@ -65,6 +65,13 @@ echo "IP information:"
 RSYNC="rsync --delete -czrlpt"
 RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
 
+# Support launching scripts that were initially launched under bash.
+if [ -n "$BASH_VERSION" ]
+then
+    SUBSHELL=bash
+else
+    SUBSHELL=sh
+fi
 
 # In the "user-data" script, i.e. the one that runs on VM boot by
 # cloud-init process, there are a bunch of commands running even *after*
@@ -213,7 +220,7 @@ then
     # --------------------------------------------------------------------------
     ret=0
     $RSH  $login \
-        '. ./env.sh && cd $WORKSPACE && sh $HOME/commands-from-proxy.sh' "$@" \
+        '. ./env.sh && cd $WORKSPACE && $SUBSHELL $HOME/commands-from-proxy.sh' "$@" \
         || ret=$?
 
     # --------------------------------------------------------------------------
@@ -262,7 +269,7 @@ then
     # potentially stop the slave.
     rsync -czt "$0" $HOME/commands.sh
     ret=0
-    env INIT_BUILD_HOST_SUB_INVOKATION=1 sh $HOME/commands.sh || ret=$?
+    env INIT_BUILD_HOST_SUB_INVOKATION=1 $SUBSHELL $HOME/commands.sh || ret=$?
 
     if [ -f "$HOME/stop_slave" ]
     then
