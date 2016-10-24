@@ -220,7 +220,7 @@ then
     # --------------------------------------------------------------------------
     ret=0
     $RSH  $login \
-        '. ./env.sh && cd $WORKSPACE && $SUBSHELL $HOME/commands-from-proxy.sh' "$@" \
+        ". ./env.sh && cd $WORKSPACE && $SUBSHELL \$HOME/commands-from-proxy.sh" "$@" \
         || ret=$?
 
     # --------------------------------------------------------------------------
