@@ -218,10 +218,12 @@ then
     # --------------------------------------------------------------------------
     # Run the actual job.
     # --------------------------------------------------------------------------
+    echo "Entering proxy target $login"
     ret=0
     $RSH  $login \
         ". ./env.sh && cd \$WORKSPACE && $SUBSHELL \$HOME/commands-from-proxy.sh" "$@" \
         || ret=$?
+    echo "Leaving proxy target $login"
 
     # --------------------------------------------------------------------------
     # Collect artifacts and cleanup.
