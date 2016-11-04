@@ -39,3 +39,32 @@ sed -i 's/127\.0\.0\.1.*/& digitalocean/'  /etc/hosts
 # Open SSH port on 222.
 iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
 iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
+
+apt-get() {
+    # Work around apt-get not waiting for a lock if it's taken. We want to wait
+    # for it instead of bailing out. No good return code to check unfortunately,
+    # so we just have to look inside the log.
+
+    pid=$$
+    # Maximum five minute wait (30 * 10 seconds)
+    attempts=30
+
+    while true
+    do
+        ( /usr/bin/apt-get "$@" 2>&1 ; echo $? > /tmp/apt-get-return-code.$pid.txt ) | tee /tmp/apt-get.$pid.log
+        if [ $attempts -gt 0 ] && \
+               [ "$(cat /tmp/apt-get-return-code.$pid.txt)" -ne 0 ] && \
+               fgrep "Could not get lock" /tmp/apt-get.$pid.log > /dev/null
+        then
+            attempts=$(expr $attempts - 1)
+            sleep 10
+        else
+            break
+        fi
+    done
+
+    rm -f /tmp/apt-get-return-code.$pid.txt /tmp/apt-get.$pid.log
+
+    return "$(cat /tmp/apt-get-return-code.$pid.txt)"
+}
+alias apt=apt-get
