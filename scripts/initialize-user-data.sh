@@ -40,7 +40,7 @@ sed -i 's/127\.0\.0\.1.*/& digitalocean/'  /etc/hosts
 iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
 iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
 
-apt-get() {
+apt_get() {
     # Work around apt-get not waiting for a lock if it's taken. We want to wait
     # for it instead of bailing out. No good return code to check unfortunately,
     # so we just have to look inside the log.
@@ -67,4 +67,5 @@ apt-get() {
 
     return "$(cat /tmp/apt-get-return-code.$pid.txt)"
 }
-alias apt=apt-get
+alias apt=apt_get
+alias apt-get=apt_get

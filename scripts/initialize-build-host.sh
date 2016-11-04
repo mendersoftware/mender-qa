@@ -101,7 +101,7 @@ then
     sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
 fi
 
-apt-get() {
+apt_get() {
     # Work around apt-get not waiting for a lock if it's taken. We want to wait
     # for it instead of bailing out. No good return code to check unfortunately,
     # so we just have to look inside the log.
@@ -128,7 +128,8 @@ apt-get() {
 
     return "$(cat /tmp/apt-get-return-code.$pid.txt)"
 }
-alias apt=apt-get
+alias apt=apt_get
+alias apt-get=apt_get
 
 if [ -f $HOME/proxy-target.txt ]
 then
