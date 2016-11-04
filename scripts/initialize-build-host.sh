@@ -86,6 +86,10 @@ echo '========================================= PRINTING CLOUD-INIT LOG ========
 sed 's/^.*/>>> &/' /var/log/cloud-init-output.log || true
 echo '======================================= DONE PRINTING CLOUD-INIT LOG ================================================'
 
+echo '=========================================== CURRENT ENVIRONMENT ====================================================='
+export
+echo '========================================= CURRENT ENVIRONMENT END ==================================================='
+
 # Disable TTY requirement. This normally happens in initialize-user-data.sh, but
 # for hosts that do not support cloud user data, it may not have happened
 # yet. These hosts are always using root as login, since they cannot create any
