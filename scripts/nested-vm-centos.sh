@@ -134,7 +134,7 @@ sudo virsh create $XML
 
 # Find IP of the newly launched host.
 IP=
-attempts=10
+attempts=60
 while [ -z "$IP" ]
 do
     attempts=$(($attempts - 1))
