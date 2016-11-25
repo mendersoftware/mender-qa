@@ -128,6 +128,9 @@ sed -i -e "s,[^']*/$BASEDISK,$HOME/$BASEDISK," $XML
 chmod go+rx $HOME
 sudo chown qemu:qemu $DISK $XML
 
+# Start libvirt
+sudo systemctl start libvirtd
+
 # Start the VM
 sudo virsh net-start default || true
 sudo virsh create $XML
