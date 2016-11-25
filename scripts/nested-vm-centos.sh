@@ -158,7 +158,7 @@ sudo iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 2222 -j DNAT --t
 sudo iptables -I FORWARD 1 -p tcp --dport 22 -j ACCEPT
 
 # Create jenkins user on slave VM and copy keys.
-attempts=10
+attempts=30
 while ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP true
 do
     attempts=$(($attempts - 1))
