@@ -46,15 +46,15 @@ egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 # sudo apt -qy update
 # sudo apt -qy install libvirt-bin rsync
 
-yum -y update
-yum -y install epel-release
-yum -y install qemu-kvm.x86_64 qemu-system-x86 libvirt rsync
+sudo yum -y update
+sudo yum -y install epel-release
+sudo yum -y install qemu-kvm.x86_64 qemu-system-x86 libvirt rsync
 
 
 
 # Enable nbd devices to have partitions.
-sudo modprobe -r nbd
-sudo modprobe nbd max_part=16
+# sudo modprobe -r nbd
+# sudo modprobe nbd max_part=16
 
 ## Make temporary keys for logging into nested VM from this host.
 ## Saves having to keep the standard private keys here.
@@ -126,7 +126,7 @@ sudo modprobe nbd max_part=16
 sed -i -e "s,[^']*/$BASEDISK,$HOME/$BASEDISK," $XML
 
 chmod go+rx $HOME
-sudo chown libvirt-qemu:libvirt-qemu $DISK $XML
+sudo chown qemu:qemu $DISK $XML
 
 # Start the VM
 sudo virsh net-start default || true
