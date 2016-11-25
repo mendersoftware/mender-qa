@@ -158,18 +158,18 @@ sudo iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 2222 -j DNAT --t
 sudo iptables -I FORWARD 1 -p tcp --dport 22 -j ACCEPT
 
 # Create jenkins user on slave VM and copy keys.
-attempts=30
-while ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP true
-do
-    attempts=$(($attempts - 1))
-    if [ $attempts -le 0 ]
-    then
-        echo "Could not connect to SSH of launched VM."
-        exit 1
-    fi
-
-    sleep 10
-done
+#attempts=30
+#while ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP true
+#do
+#    attempts=$(($attempts - 1))
+#    if [ $attempts -le 0 ]
+#    then
+#        echo "Could not connect to SSH of launched VM."
+#        exit 1
+#    fi
+#
+#    sleep 10
+#done
 #ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP useradd -m -d /home/jenkins jenkins || true
 #ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP mkdir -p /home/jenkins/.ssh
 #ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP cp .ssh/authorized_keys /home/jenkins/.ssh/authorized_keys
