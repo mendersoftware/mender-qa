@@ -132,7 +132,7 @@ fi
 #alias apt-get=apt_get
 
 address="$(cat $HOME/ip.txt)"
-until ssh $address "uname -a";
+until ssh jenkins@$address "uname -a";
 do
   echo "waiting for solaris to answer to ssh"
   sleep 10
