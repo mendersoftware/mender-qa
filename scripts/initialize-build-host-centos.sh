@@ -131,6 +131,13 @@ fi
 #alias apt=apt_get
 #alias apt-get=apt_get
 
+address="$(cat $HOME/ip.txt)"
+until nc -z -v $address 2222;
+do
+  echo "waiting for solaris to answer to ssh"
+  sleep 10
+done
+
 if [ -f $HOME/proxy-target.txt ]
 then
     ret=0
