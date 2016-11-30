@@ -61,7 +61,7 @@ set -x -e
 
 echo "Current user: $USER"
 
-uname=$("uname -s")
+uname=$("/usr/bin/uname -s")
 echo "IP information:"
 /sbin/ifconfig -a || true
 
