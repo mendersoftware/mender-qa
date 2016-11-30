@@ -67,6 +67,11 @@ echo "IP information:"
 
 if [ $flavour == "Linux" ]; then
   /sbin/ip addr || true
+  cpu_centos="$(cat /proc/cpuinfo | grep processor | wc -l)"
+  echo "Hypervisor has $cpu_centos cpus available"
+else
+  cpu="$(/usr/bin/kstat -m cpu_info | grep instance | wc -l)"
+  echo "Solaris has detected $cpu cpus"
 fi
 
 RSYNC="/usr/bin/rsync --delete -czrlpt"
