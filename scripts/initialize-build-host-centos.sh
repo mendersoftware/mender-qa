@@ -139,12 +139,14 @@ echo '========================================= CURRENT ENVIRONMENT END ========
 #alias apt=apt_get
 #alias apt-get=apt_get
 
-address="$(cat $HOME/ip.txt)"
-until ssh -o BatchMode=yes -o StrictHostKeyChecking=no jenkins@$address "uname -a";
-do
-  echo "waiting for solaris to answer to ssh"
-  sleep 10
-done
+if [ -f $HOME/ip.txt ]; then
+  address="$(cat $HOME/ip.txt)"
+  until ssh -o BatchMode=yes -o StrictHostKeyChecking=no jenkins@$address "uname -a";
+  do
+    echo "waiting for solaris to answer to ssh"
+    sleep 10
+  done
+fi
 
 if [ -f $HOME/proxy-target.txt ]
 then
