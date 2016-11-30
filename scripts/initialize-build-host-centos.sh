@@ -61,11 +61,11 @@ set -x -e
 
 echo "Current user: $USER"
 
-uname=$("/usr/bin/uname -s")
+flavour=$("/usr/bin/uname -s")
 echo "IP information:"
 /sbin/ifconfig -a || true
 
-if [ $uname == "Linux" ]; then
+if [ $flavour == "Linux" ]; then
   /sbin/ip addr || true
 fi
 
