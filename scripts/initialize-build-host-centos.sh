@@ -60,10 +60,14 @@ set -x -e
 
 
 echo "Current user: $USER"
+
+uname=$("uname -s")
 echo "IP information:"
 /sbin/ifconfig -a || true
-/sbin/ip addr || true
 
+if [ $uname == "Linux" ]; then
+  /sbin/ip addr || true
+fi
 
 RSYNC="/usr/bin/rsync --delete -czrlpt"
 RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
@@ -99,10 +103,11 @@ echo '========================================= CURRENT ENVIRONMENT END ========
 # new users without the user data section. We still need to disable the TTY
 # requirement, since even root will use sudo inside the scripts. If we are not
 # root, we cannot do anything.
-if [ "$(id -u)" = 0 ] && [ -f /etc/sudoers ]
-then
-    sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
-fi
+##if [ "$(id -u)" = 0 ] && [ -f /etc/sudoers ]
+##then
+##    sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
+##fi
+
 
 #apt_get() {
 #    # Work around apt-get not waiting for a lock if it's taken. We want to wait
