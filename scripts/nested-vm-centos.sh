@@ -49,6 +49,7 @@ egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 sudo yum -y update
 sudo yum -y install epel-release
 sudo yum -y install qemu-kvm.x86_64 qemu-system-x86 libvirt rsync
+sudo yum -y install qemu-common qemu-kvm-common
 
 
 
