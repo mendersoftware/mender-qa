@@ -74,7 +74,7 @@ else
   echo "Solaris has detected $cpu cpus"
 fi
 
-RSYNC="/usr/bin/rsync --delete -czrlpt"
+RSYNC="/usr/bin/rsync --delete -czrlpt -T /tmp"
 RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
 
 # Support launching scripts that were initially launched under bash.
@@ -295,12 +295,16 @@ then
     then
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
-            $RSYNC -e "$RSH"    $login:.cache/cfengine-buildscripts-distfiles/  $HOME/.cache/cfengine-buildscripts-distfiles/
+            $RSYNC -e "$RSH"                                       \
+                   $login:.cache/cfengine-buildscripts-distfiles/  \
+                    $HOME/.cache/cfengine-buildscripts-distfiles/
         fi
 
         if [ -d $HOME/.cache/cfengine-buildscripts-pkgs ]
         then
-            $RSYNC -e "$RSH"    $login:.cache/cfengine-buildscripts-pkgs/$label/  $HOME/.cache/cfengine-buildscripts-pkgs/$label/
+            $RSYNC -e "$RSH"                                         \
+                   $login:.cache/cfengine-buildscripts-pkgs/$label/  \
+                    $HOME/.cache/cfengine-buildscripts-pkgs/$label/
         fi
     fi
 
