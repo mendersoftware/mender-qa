@@ -62,7 +62,7 @@ echo "IP information:"
 /sbin/ip addr || true
 
 
-RSYNC="rsync --delete -czrlpt"
+RSYNC="rsync --delete -czrlpt -T /tmp"
 RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
 
 # Support launching scripts that were initially launched under bash.

@@ -74,7 +74,7 @@ else
   echo "Solaris has detected $cpu cpus"
 fi
 
-RSYNC="/usr/bin/rsync --delete -czrlpt"
+RSYNC="/usr/bin/rsync --delete -czrlpt -T /tmp"
 RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
 
 # Support launching scripts that were initially launched under bash.
