@@ -49,8 +49,7 @@ egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 sudo yum -y update
 sudo yum -y install epel-release
 sudo yum -y install qemu-kvm.x86_64 qemu-system-x86 libvirt rsync
-sudo yum -y install qemu-common qemu-kvm-common
-
+sudo yum -y install qemu-common qemu-kvm-common.x86_64
 
 
 # Enable nbd devices to have partitions.
@@ -128,6 +127,12 @@ sed -i -e "s,[^']*/$BASEDISK,$HOME/$BASEDISK," $XML
 
 chmod go+rx $HOME
 sudo chown qemu:qemu $DISK $XML
+
+## fixing issue with /dev/kvm
+
+chown root:kvm /dev/kvm
+chmod g+rw /dev/kvm
+chmod o+rw /dev/kvm
 
 # Start libvirt
 sudo systemctl start libvirtd
