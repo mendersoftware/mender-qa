@@ -130,9 +130,9 @@ sudo chown qemu:qemu $DISK $XML
 
 ## fixing issue with /dev/kvm
 
-chown root:kvm /dev/kvm
-chmod g+rw /dev/kvm
-chmod o+rw /dev/kvm
+sudo chown root:kvm /dev/kvm
+sudo chmod g+rw /dev/kvm
+sudo chmod o+rw /dev/kvm
 
 # Start libvirt
 sudo systemctl start libvirtd
