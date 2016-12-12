@@ -72,6 +72,8 @@ if [ $flavour == "Linux" ]; then
 else
   cpu="$(/usr/bin/kstat -m cpu_info | grep instance | wc -l)"
   echo "Solaris has detected $cpu cpus"
+  ## correcting the date on Solaris
+  /usr/sbin/ntpdate -s date.ien.it
 fi
 
 RSYNC="/usr/bin/rsync --delete -czrlpt -T /tmp"
