@@ -61,7 +61,9 @@ set -x -e
 
 echo "Current user: $USER"
 
-flavour="$(/usr/bin/uname -s)"
+# flavour="$(/usr/bin/uname -s)"
+flavour="$(/bin/uname -s)"
+
 echo "IP information:"
 /sbin/ifconfig -a || true
 
