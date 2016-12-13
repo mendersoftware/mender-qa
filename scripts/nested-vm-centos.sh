@@ -44,7 +44,7 @@ egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 
 # Install KVM and other tools.
 sudo apt -qy update
-sudo apt -qy install libvirt-bin rsync kvm qemu-kvm qemu-system-x86_64
+sudo apt -qy install libvirt-bin rsync kvm qemu-kvm qemu-system-x86
 
 #sudo yum -y update
 #sudo yum -y install epel-release
