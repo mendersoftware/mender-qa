@@ -28,8 +28,6 @@ then
       /bin/cp mender-qa/build-conf/*  $BUILDDIR/conf/
       # See comment in local.conf
       cat >> $BUILDDIR/conf/local.conf <<EOF
-MENDER_UPDATE_POLL_INTERVAL_SECONDS = "2"
-MENDER_INVENTORY_POLL_INTERVAL_SECONDS = "2"
 EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
 EXTERNALSRC_pn-artifacts = "$WORKSPACE/artifacts"
 EXTERNALSRC_pn-artifacts-native = "$WORKSPACE/artifacts"
