@@ -44,7 +44,7 @@ egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 
 # Install KVM and other tools.
 sudo apt -qy update
-sudo apt -qy install libvirt-bin rsync
+sudo apt -qy install libvirt-bin rsync kvm qemu-kvm
 
 #sudo yum -y update
 #sudo yum -y install epel-release
@@ -126,7 +126,7 @@ sudo apt -qy install libvirt-bin rsync
 sed -i -e "s,[^']*/$BASEDISK,$HOME/$BASEDISK," $XML
 
 chmod go+rx $HOME
-sudo chown qemu:qemu $DISK $XML
+sudo chown libvirt-qemu:kvm $DISK $XML
 
 ## fixing issue with /dev/kvm
 
