@@ -126,7 +126,7 @@ sudo yum -y install qemu-common qemu-kvm-common.x86_64
 sed -i -e "s,[^']*/$BASEDISK,$HOME/$BASEDISK," $XML
 
 chmod go+rx $HOME
-sudo chown libvirt-qemu:kvm $DISK $XML
+sudo chown qemu:kvm $DISK $XML
 
 ## fixing issue with /dev/kvm
 
