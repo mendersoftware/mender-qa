@@ -46,7 +46,7 @@ egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 # sudo apt -qy update
 # sudo apt -qy install libvirt-bin rsync kvm qemu-kvm qemu-system-x86
 
-sudo yum -y update
+# sudo yum -y update
 sudo yum -y install epel-release
 sudo yum -y install qemu-kvm.x86_64 qemu-system-x86 libvirt rsync
 sudo yum -y install qemu-common qemu-kvm-common.x86_64
@@ -138,7 +138,7 @@ sudo chmod o+rw /dev/kvm
 sudo systemctl start libvirtd
 
 # Start the VM
-sudo virsh net-start default || true
+# sudo virsh net-start default || true
 sudo virsh create $XML
 
 # Find IP of the newly launched host.
