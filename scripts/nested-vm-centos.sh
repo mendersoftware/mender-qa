@@ -43,13 +43,13 @@ test "`cat /sys/module/kvm_intel/parameters/nested`" = "Y"
 egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 
 # Install KVM and other tools.
-sudo apt -qy update
-sudo apt -qy install libvirt-bin rsync kvm qemu-kvm qemu-system-x86
+# sudo apt -qy update
+# sudo apt -qy install libvirt-bin rsync kvm qemu-kvm qemu-system-x86
 
-#sudo yum -y update
-#sudo yum -y install epel-release
-#sudo yum -y install qemu-kvm.x86_64 qemu-system-x86 libvirt rsync
-#sudo yum -y install qemu-common qemu-kvm-common.x86_64
+sudo yum -y update
+sudo yum -y install epel-release
+sudo yum -y install qemu-kvm.x86_64 qemu-system-x86 libvirt rsync
+sudo yum -y install qemu-common qemu-kvm-common.x86_64
 
 
 # Enable nbd devices to have partitions.
