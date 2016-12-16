@@ -29,8 +29,8 @@ then
       # See comment in local.conf
       cat >> $BUILDDIR/conf/local.conf <<EOF
 EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
-EXTERNALSRC_pn-artifacts = "$WORKSPACE/artifacts"
-EXTERNALSRC_pn-artifacts-native = "$WORKSPACE/artifacts"
+EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
+EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
 SSTATE_DIR = "/mnt/sstate-cache"
 EOF
     fi
@@ -51,7 +51,7 @@ EOF
     export QEMU_SYSTEM_ARM="qemu-system-arm"
     cp $WORKSPACE/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 image.dat
 
-    artifacts write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
+    mender-artifact write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
     # run tests on qemu
     if [ "$TEST_QEMU" = "true" ]
     then
@@ -80,8 +80,8 @@ then
 
     cat >> ./conf/local.conf <<EOF
 EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
-EXTERNALSRC_pn-artifacts = "$WORKSPACE/artifacts"
-EXTERNALSRC_pn-artifacts-native = "$WORKSPACE/artifacts"
+EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
+EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
 SSTATE_DIR = "/mnt/sstate-cache"
 EOF
 
@@ -102,7 +102,7 @@ EOF
     if [ "$TEST_BBB" = "true" ]
     then
     bash prepare_ext4_testing.sh
-    artifacts write rootfs-image -t beaglebone -n test-update -u core-image-base-beaglebone-modified-testing.ext4 -o successful_image_update.mender
+    mender-artifact write rootfs-image -t beaglebone -n test-update -u core-image-base-beaglebone-modified-testing.ext4 -o successful_image_update.mender
 
         bash prepare_bbb_testing.sh || {
             kill -s TERM $(ps aux | grep ssh| grep wmd | awk '{print $2}') || true
