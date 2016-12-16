@@ -81,7 +81,7 @@ then
     cat >> ./conf/local.conf <<EOF
 EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
-EXTERNALSRC_pn-mender-artifacts-native = "$WORKSPACE/mender-artifact"
+EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
 SSTATE_DIR = "/mnt/sstate-cache"
 EOF
 
