@@ -259,7 +259,7 @@ then
     then
 
         # Clean up spurious garbage
-        find $HOME/.cache -type f -size 0  |  xargs rm
+        find $HOME/.cache -type f -size 0  |  xargs rm -f
 
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
@@ -304,7 +304,7 @@ then
 
         # Clean up spurious garbage
         $RSH $login \
-             "find .cache -type f -size 0  |  xargs rm"
+             "find .cache -type f -size 0  |  xargs rm -f"
 
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
