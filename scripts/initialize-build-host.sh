@@ -28,6 +28,9 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC6D4Pz1bR67BzEiPkEO0bTQ6aQU+U3fxOc9BDGhLgC
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDtfMHZ+GXw/10nSCuCZAYvMS7LElvjMGUd0wjTzQ7m4XaVmDY6SMpeW2ZHk2YXHmQDw5oUTWZ+pBQVk9J/iXrQfghtGS+akvnqDKy/OrNb2pXWToxGu9vaBkIp9VHgXsZAzCMs7vOZyXJSQgiMrL0oj9smcNsVr1+9+yFzuRgRgRRQ67JZWhb7J2A2DL8SAFfJUXpAdx1Sdzhx3C0tZ8Ptgz0bd0CoWVXBDva4z6MJq3jD4zM6MTmWfm0HGz1IOtVeUlEt7T30j8yIcSzxIlKT3Bs7EavlK2JJbU/7rb7sG/O2ih/Ovr23pgPsq0D7CGaWe01+Z9ivk0Ycp+cFGDZV dimitrios.apostolou@cfengine.com
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDDmlwzo9m1ypsusAp9cVj+XgmDBsZMPdZzIt15pM7Ay2Ie4dl0TtVpj/H9S5O5NsHkQ/fPEaWCpZGgbRrOsrb3wgMg0qM6pA5fvbmCBKxvdvCwp03FyATY0yC+OnvmnWtLOshdZX1gZjzQwiEG/UFyl0N5p/wu8cJv+ODWJ+EOLWs0yTie8oCV2XXFiRsby9qCwDCQIvXrbp1amZJOYNW49GNPKEoJgq6D9fZ5mYE/ozoUdW2ecIOWRWDMI+4AKv48JYPN/wtYJnUs/JmRHUc4HTZ7P9wsXLSc8F+9eVEWzGIZL8WuCS3L8V1n3tPJIxZhQKe3R8DcjER07M+0J9HP a10040@cflu-10040
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAy6vrcU1d/80WMFqzumFHG/dllkhakswezvKfX7KupQwpc55JyyUNpnjxLy76leuJnlTTZTaxq1CcW3lIH9CjG/rJVQLN/PLjQPLZgfvzHqS8HuVCtKynwp0Sgw9tRmrN1KcXRiQMWs3plVDJwB4HFQpb7NsC0f5fskpgxr2KRNPn058oe6VYx183Err/0Uawy64aFSiowRgvHgXgelhSDWUVkOoviKR1zB11EZ8Xr5d4s/yXDE9ehlgv2EBFdhZrqsMmhs7KdPPNDD6/El2dID7V7LKHblbtVO009VS/dlq1XUGE0IUl153ZaVm/dt4+2+NriGpI7COAU4cLxhpj9w== cmdln@tp
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC/NLV9UQu5eXr/CE9NfnC6IsvLx+vvVDxpbIfOVNhBjpLHoXqLDVedAT4dn+82x+OulBXdYzZkEGoKlkBkbmxjsXBF6gX1oWFnSmdlZNEe+GqTcfRHL4+fF09oUh6tCdCBFaMLbkdA1M+UvYtJc8BZoNUXCVG/Sn0saVLDOFfmUG9ICfmVFzwcVW+X6+qfyauBC6lGtW/Bnqj6GY6VaSo94cYyLUFeUI1GbJ5sDmkFKBXn/p/1ks6eWlejcs2Q/mqqaH5sseek+0MP8qHss9HSZzbn9Iq4n1uUW43NBu242KISE/fDDqZtJs54zJmt97cDOgr+p0wglwFUT8x6Grl5 kristian@kristian-mender
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5MGowxEkIXVweJId1Fmxp+EL+0e19xH8OPdwfc9daepPaT8SmYqVNq+YA6/PJUUr39oGgTdX6iK2dk5JW4OqgtcwotECspW7mVfF7izLapw/bpFOWryhJmVlYXKnwg61tcmZHMtVf+cSPcljyjAH+gULA+mzivikfKl9YHoHZI1BbxcqNUz5uJxw/WiZr9BLd+ZRw7D53HpNPGlfyHZOi+DzjZmmfdk9MqA/fiEoxw2nSXBE10n9bC/dxplvOvKvNXjVPFs/UpUpanY4AGsFCWM1+7z2c8LxpWanBLHYSVLH0Ung+uJVu6gtnSK4jKwWfPuHGJ6Qi7ZQo4Uyw90rN buildmaster@buildmaster
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA3Jo+DWnGMqK2SoU9ZqBS/yFsrOy6GAKcMeKFV79Bp3nRCjSzgOhRI5lmTU9tSg5IHkBqiv0qjkEyaxjrV/rX5JGRrFfpJT0uuNcNvPTlhNuWnkdmv/Xy5zwU27AMdz2/kRsEPEdYWwch5wd7VV1xgxiJG0yGMCVeRpLYrUJpILt1LHMz+HYYjiz6dHxfCgcywCs7aaFS4Z//Idwm0XOnzpDpBb3tBCtQjiOY88N4xfGwUpx8A1+bq4Wg2pQ0RJxabvtLp9oJ1s5h9Be0ZUKwChAiqOlG6ATsYk/09Uwj3ypdPMjFYZ1HWuoKH1KkLmhwpw6K9Mg21loy0TEBGYIOSQ== root@buildmaster
 '
 
 #
@@ -231,6 +234,10 @@ then
     # label.
     if [ x"$label" != x ]
     then
+
+        # Clean up spurious garbage
+        find $HOME/.cache -type f -size 0  |  xargs rm
+
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
             $RSH  $login  mkdir -p .cache
@@ -271,6 +278,11 @@ then
     # Copy the build cache back in order to be preserved.
     if [ x"$label" != x ]
     then
+
+        # Clean up spurious garbage
+        $RSH $login \
+             "find .cache -type f -size 0  |  xargs rm"
+
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
             $RSYNC -e "$RSH"                                       \

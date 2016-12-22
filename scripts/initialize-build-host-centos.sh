@@ -78,7 +78,7 @@ else
   /usr/sbin/ntpdate -s date.ien.it
 fi
 
-RSYNC="/usr/bin/rsync --delete -czrlpt -T /tmp"
+RSYNC="rsync --delete -czrlpt -T /tmp"
 RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
 
 # Support launching scripts that were initially launched under bash.
@@ -118,35 +118,35 @@ echo '========================================= CURRENT ENVIRONMENT END ========
 ##fi
 
 
-#apt_get() {
-#    # Work around apt-get not waiting for a lock if it's taken. We want to wait
-#    # for it instead of bailing out. No good return code to check unfortunately,
-#    # so we just have to look inside the log.
-#
-#    pid=$$
-#    # Maximum five minute wait (30 * 10 seconds)
-#    attempts=30
-#
-#    while true
-#    do
-#        ( /usr/bin/apt-get "$@" 2>&1 ; echo $? > /tmp/apt-get-return-code.$pid.txt ) | tee /tmp/apt-get.$pid.log
-#        if [ $attempts -gt 0 ] && \
-#               [ "$(cat /tmp/apt-get-return-code.$pid.txt)" -ne 0 ] && \
-#               fgrep "Could not get lock" /tmp/apt-get.$pid.log > /dev/null
-#        then
-#            attempts=`expr $attempts - 1`
-#            sleep 10
-#        else
-#            break
-#        fi
-#    done
-#
-#    rm -f /tmp/apt-get-return-code.$pid.txt /tmp/apt-get.$pid.log
-#
-#    return "$(cat /tmp/apt-get-return-code.$pid.txt)"
-#}
-#alias apt=apt_get
-#alias apt-get=apt_get
+apt_get() {
+    # Work around apt-get not waiting for a lock if it's taken. We want to wait
+    # for it instead of bailing out. No good return code to check unfortunately,
+    # so we just have to look inside the log.
+
+    pid=$$
+    # Maximum five minute wait (30 * 10 seconds)
+    attempts=30
+
+    while true
+    do
+        ( /usr/bin/apt-get "$@" 2>&1 ; echo $? > /tmp/apt-get-return-code.$pid.txt ) | tee /tmp/apt-get.$pid.log
+        if [ $attempts -gt 0 ] && \
+               [ "$(cat /tmp/apt-get-return-code.$pid.txt)" -ne 0 ] && \
+               fgrep "Could not get lock" /tmp/apt-get.$pid.log > /dev/null
+        then
+            attempts=`expr $attempts - 1`
+            sleep 10
+        else
+            break
+        fi
+    done
+
+    rm -f /tmp/apt-get-return-code.$pid.txt /tmp/apt-get.$pid.log
+
+    return "$(cat /tmp/apt-get-return-code.$pid.txt)"
+}
+alias apt=apt_get
+alias apt-get=apt_get
 
 if [ -f $HOME/ip.txt ]; then
   address="$(cat $HOME/ip.txt)"
@@ -342,7 +342,7 @@ then
 
     # Reexecute script in order to be able to collect the return code, and
     # potentially stop the slave.
-    /usr/bin/rsync -czt "$0" $HOME/commands.sh
+    rsync -czt "$0" $HOME/commands.sh
     ret=0
     env INIT_BUILD_HOST_SUB_INVOKATION=1 $SUBSHELL $HOME/commands.sh || ret=$?
 
