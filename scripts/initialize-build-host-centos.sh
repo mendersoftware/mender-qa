@@ -257,6 +257,10 @@ then
     # label.
     if [ x"$label" != x ]
     then
+
+        # Clean up spurious garbage
+        find $HOME/.cache -type f -size 0  |  xargs rm
+
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
             $RSH  $login  mkdir -p .cache
@@ -297,6 +301,11 @@ then
     # Copy the build cache back in order to be preserved.
     if [ x"$label" != x ]
     then
+
+        # Clean up spurious garbage
+        $RSH $login \
+             "find .cache -type f -size 0  |  xargs rm"
+
         if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
         then
             $RSYNC -e "$RSH"                                       \
