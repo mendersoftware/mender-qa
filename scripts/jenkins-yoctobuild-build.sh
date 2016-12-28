@@ -8,6 +8,15 @@ echo "Debug Jenkins setup"
 ls /home/jenkins/.ssh
 #----
 
+disable_mender_service() {
+    if [ "$DISABLE_MENDER_SERVICE" = "true" ]
+    then
+        cat >> "$BUILDDIR"/conf/local.conf <<EOF
+SYSTEMD_AUTO_ENABLE_pn-mender = "disable"
+EOF
+    fi
+}
+
 export PATH=$WORKSPACE/scripts:$WORKSPACE/bitbake/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
 if [ "$CLEAN_BUILD_CACHE" = "true" ]
 then
@@ -36,7 +45,7 @@ EXTERNALSRC_pn-artifacts-native = "$WORKSPACE/artifacts"
 SSTATE_DIR = "/mnt/sstate-cache"
 EOF
     fi
-
+    disable_mender_service
     source oe-init-build-env
     bitbake core-image-full-cmdline
 
@@ -86,7 +95,7 @@ EXTERNALSRC_pn-artifacts = "$WORKSPACE/artifacts"
 EXTERNALSRC_pn-artifacts-native = "$WORKSPACE/artifacts"
 SSTATE_DIR = "/mnt/sstate-cache"
 EOF
-
+    disable_mender_service
     export MACHINE="beaglebone"
     bitbake core-image-base
 
