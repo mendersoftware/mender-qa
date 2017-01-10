@@ -24,9 +24,17 @@ then
     exit 1
 fi
 
-cp "$1"* $HOME
+# Avoid nfs copy if argument contains '@'
+if echo "$1" | grep -q '@'
+then
+    # '*' must be interpreted by the remote ssh host
+    scp -o Ciphers=aes128-gcm@openssh.com -o Compression=yes  \
+        "$1*" $HOME/
+else
+    cp "$1"* $HOME/
+fi
 
-BASEDISK="$(basename "$1")"
+BASEDISK=`echo $1 | sed 's/.*\///'`
 DISK="$HOME/$BASEDISK"
 XML="$DISK.xml"
 
