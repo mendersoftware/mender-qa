@@ -64,7 +64,7 @@ EOF
     # run tests on qemu
     if [ "$TEST_QEMU" = "true" ]
     then
-        py.test
+        py.test --junit-xml=results.xml
     fi
 
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf . )
