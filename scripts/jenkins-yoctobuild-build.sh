@@ -25,7 +25,7 @@ fi
 
 if [ "$BUILD_QEMU" = "true" ]
 then
-    source oe-init-build-env
+    source oe-init-build-env build-qemu
     cd ../
 
     if [ ! -d mender-qa ]
@@ -44,7 +44,7 @@ SSTATE_DIR = "/mnt/sstate-cache"
 EOF
     fi
     disable_mender_service
-    source oe-init-build-env
+    cd $BUILDDIR
     bitbake core-image-full-cmdline
 
     mkdir -p $WORKSPACE/vexpress-qemu
@@ -67,6 +67,7 @@ EOF
         py.test --junit-xml=results.xml
     fi
 
+    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 . )
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf . )
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg . )
     cd $WORKSPACE/
@@ -84,7 +85,7 @@ fi
 
 if [ "$BUILD_BBB" = "true" ]
 then
-    source oe-init-build-env
+    source oe-init-build-env build-bbb
     cp ../mender-qa/build-conf/*  ./conf/
 
     cat >> ./conf/local.conf <<EOF
