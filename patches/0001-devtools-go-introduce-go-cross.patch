@@ -1,0 +1,250 @@
+From 56c0f7ecb04ec9147e8407adc8f7ba27d4fe9652 Mon Sep 17 00:00:00 2001
+From: Maciej Borzecki <maciej.borzecki@rndity.com>
+Date: Wed, 25 Jan 2017 07:35:18 +0100
+Subject: [PATCH] devtools: go: introduce go-cross
+
+Poky change 9107d6ca144ac1f6169830dee25dae2dad775333 introduced support for
+recipe specific sysroots.
+
+The change follows some prior assumptions about the naming of cross compilation
+toolchains. The naming is expected to match *-cross-* pattern. By convention,
+`*-cross-` prefix is followed by ${TARGET_ARCH} (examples. binutils-cross-arm,
+gcc-cross-arm). Since Go cross toolchain is named go-cross, when recipe specific
+sysroot is built, the mechanism present in OE-core would not make the toochain
+available to the recipe, hence any attempt to build Go code will fail.
+
+On top of this BBCLASSEXTEND = "..cross.." is not a recommended solution for
+toolchain like recipes. Upstream suggests sticking to convention of having a
+`foo-cross` recipe and `inherit cross` inside.
+
+The change introduces a recipe for go-cross that inherits `cross` class inside.
+The recipe produces `go-cross-${TARGET_ARCH}` package. Recipes that `inherit go`
+will automatically depend on `go-cross-${TARGET_ARCH}`
+
+The fix should also be compatible with non-rss setups.
+
+Signed-off-by: Maciej Borzecki <maciej.borzecki@rndity.com>
+---
+ classes/go.bbclass                        |  2 +-
+ recipes-devtools/examples/go-examples.inc |  2 +-
+ recipes-devtools/go/go-cross              |  1 +
+ recipes-devtools/go/go-cross.inc          |  8 +++++
+ recipes-devtools/go/go-cross_1.6.3.bb     |  1 +
+ recipes-devtools/go/go-cross_1.7.4.bb     | 15 +++++++++
+ recipes-devtools/go/go.inc                | 41 ++++++++++++++++++++++++
+ recipes-devtools/go/go_1.6.3.bb           | 52 +++----------------------------
+ 8 files changed, 73 insertions(+), 49 deletions(-)
+ create mode 120000 recipes-devtools/go/go-cross
+ create mode 100644 recipes-devtools/go/go-cross.inc
+ create mode 120000 recipes-devtools/go/go-cross_1.6.3.bb
+ create mode 100644 recipes-devtools/go/go-cross_1.7.4.bb
+
+diff --git a/classes/go.bbclass b/classes/go.bbclass
+index a71fdf0..bbd8e8f 100644
+--- a/classes/go.bbclass
++++ b/classes/go.bbclass
+@@ -27,7 +27,7 @@ export CGO_CPPFLAGS = "${TARGET_CPPFLAGS}"
+ export CGO_CXXFLAGS = "${TARGET_CC_ARCH}${TOOLCHAIN_OPTIONS} ${TARGET_CXXFLAGS}"
+ export CGO_LDFLAGS = "${TARGET_CC_ARCH}${TOOLCHAIN_OPTIONS} ${TARGET_LDFLAGS}"
+ 
+-DEPENDS += "go-cross"
++DEPENDS += "go-cross-${TARGET_ARCH}"
+ DEPENDS_class-native += "go-native"
+ 
+ INHIBIT_PACKAGE_STRIP = "1"
+diff --git a/recipes-devtools/examples/go-examples.inc b/recipes-devtools/examples/go-examples.inc
+index cfdc201..d8e2328 100644
+--- a/recipes-devtools/examples/go-examples.inc
++++ b/recipes-devtools/examples/go-examples.inc
+@@ -2,7 +2,7 @@ DESCRIPTION = "This is a simple example recipe that cross-compiles a Go program.
+ SECTION = "examples"
+ HOMEPAGE = "https://golang.org/"
+ 
+-DEPENDS = "go-cross"
++DEPENDS = "go-cross-${TARGET_ARCH}"
+ 
+ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+ 
+diff --git a/recipes-devtools/go/go-cross b/recipes-devtools/go/go-cross
+new file mode 120000
+index 0000000..c08e80d
+--- /dev/null
++++ b/recipes-devtools/go/go-cross
+@@ -0,0 +1 @@
++go
+\ No newline at end of file
+diff --git a/recipes-devtools/go/go-cross.inc b/recipes-devtools/go/go-cross.inc
+new file mode 100644
+index 0000000..7ea8abe
+--- /dev/null
++++ b/recipes-devtools/go/go-cross.inc
+@@ -0,0 +1,8 @@
++inherit cross
++
++PN = "go-cross-${TARGET_ARCH}"
++
++FILESEXTRAPATHS =. "${FILE_DIRNAME}/go-cross:"
++
++GOROOT_FINAL ="${libdir}/go"
++export GOROOT_FINAL
+diff --git a/recipes-devtools/go/go-cross_1.6.3.bb b/recipes-devtools/go/go-cross_1.6.3.bb
+new file mode 120000
+index 0000000..5e2a2e6
+--- /dev/null
++++ b/recipes-devtools/go/go-cross_1.6.3.bb
+@@ -0,0 +1 @@
++go-cross_1.7.4.bb
+\ No newline at end of file
+diff --git a/recipes-devtools/go/go-cross_1.7.4.bb b/recipes-devtools/go/go-cross_1.7.4.bb
+new file mode 100644
+index 0000000..4eae3f4
+--- /dev/null
++++ b/recipes-devtools/go/go-cross_1.7.4.bb
+@@ -0,0 +1,15 @@
++require go-cross.inc
++require go_${PV}.inc
++
++# Go binaries are not understood by the strip tool.
++INHIBIT_SYSROOT_STRIP = "1"
++
++do_compile() {
++  go_compile
++}
++
++do_install() {
++  go_install
++}
++
++## TODO: implement do_clean() and ensure we actually do rebuild super cleanly
+diff --git a/recipes-devtools/go/go.inc b/recipes-devtools/go/go.inc
+index 8dae6ab..4f4c743 100644
+--- a/recipes-devtools/go/go.inc
++++ b/recipes-devtools/go/go.inc
+@@ -62,3 +62,44 @@ EOT
+     chmod +x ${WORKDIR}/${TARGET_PREFIX}${t}
+   done
+ }
++
++go_compile() {
++    export GOROOT_BOOTSTRAP="${GOROOT_BOOTSTRAP}"
++
++    setup_go_arch
++
++    setup_cgo_gcc_wrapper
++
++    ## TODO: consider setting GO_EXTLINK_ENABLED
++    export CGO_ENABLED="${GO_CROSS_CGO_ENABLED}"
++    export CC=${BUILD_CC}
++    export CC_FOR_TARGET="${WORKDIR}/${TARGET_PREFIX}gcc"
++    export CXX_FOR_TARGET="${WORKDIR}/${TARGET_PREFIX}g++"
++    export GO_GCFLAGS="${HOST_CFLAGS}"
++    export GO_LDFLAGS="${HOST_LDFLAGS}"
++
++    set > ${WORKDIR}/go-${PV}.env
++    cd ${WORKDIR}/go-${PV}/go/src && bash -x ./make.bash
++
++    # log the resulting environment
++    env "GOROOT=${WORKDIR}/go-${PV}/go" "${WORKDIR}/go-${PV}/go/bin/go" env
++}
++
++go_install() {
++    install -d "${D}${bindir}" "${D}${GOROOT_FINAL}"
++    tar -C "${WORKDIR}/go-${PV}/go" -cf - bin lib src pkg test |
++        tar -C "${D}${GOROOT_FINAL}" -xf -
++    rm -rf "${D}${GOROOT_FINAL}/pkg/bootstrap"
++
++    mv "${D}${GOROOT_FINAL}/bin/"* "${D}${bindir}/"
++
++    rm -f "${D}${GOROOT_FINAL}/src/"*.rc
++
++    for t in gcc g++ ; do
++        cat > ${D}${GOROOT_FINAL}/bin/${TARGET_PREFIX}${t} <<EOT
++#!/bin/sh
++exec ${TARGET_PREFIX}${t} ${TARGET_CC_ARCH} --sysroot=${STAGING_DIR_TARGET} "\$@"
++EOT
++        chmod +x ${D}${GOROOT_FINAL}/bin/${TARGET_PREFIX}${t}
++    done
++}
+diff --git a/recipes-devtools/go/go_1.6.3.bb b/recipes-devtools/go/go_1.6.3.bb
+index b53ae58..79c56a8 100644
+--- a/recipes-devtools/go/go_1.6.3.bb
++++ b/recipes-devtools/go/go_1.6.3.bb
+@@ -1,65 +1,23 @@
+ require go_${PV}.inc
+ 
+-PN_class-native = "go-native"
+-PN_class-cross = "go-cross"
++#PN_class-native = "go-native"
++#PN_class-cross = "go-cross-${TARGET_ARCH}"
+ 
+-GOROOT_FINAL_class-target="${libdir}/go"
++GOROOT_FINAL="${libdir}/go"
+ GOROOT_FINAL_class-native="${STAGING_LIBDIR_NATIVE}/go"
+-GOROOT_FINAL_class-cross="${libdir}/go"
+ export GOROOT_FINAL
+ 
+ # Go binaries are not understood by the strip tool.
+ INHIBIT_SYSROOT_STRIP = "1"
+ 
+ do_compile() {
+-  export GOROOT_BOOTSTRAP="${GOROOT_BOOTSTRAP}"
+-
+-  setup_go_arch
+-
+-  setup_cgo_gcc_wrapper
+-
+-  ## TODO: consider setting GO_EXTLINK_ENABLED
+-  export CGO_ENABLED="${GO_CROSS_CGO_ENABLED}"
+-  export CC=${BUILD_CC}
+-  export CC_FOR_TARGET="${WORKDIR}/${TARGET_PREFIX}gcc"
+-  export CXX_FOR_TARGET="${WORKDIR}/${TARGET_PREFIX}g++"
+-  export GO_GCFLAGS="${HOST_CFLAGS}"
+-  export GO_LDFLAGS="${HOST_LDFLAGS}"
+-
+-  set > ${WORKDIR}/go-${PV}.env
+-  cd ${WORKDIR}/go-${PV}/go/src && bash -x ./make.bash
+-
+-  # log the resulting environment
+-  env "GOROOT=${WORKDIR}/go-${PV}/go" "${WORKDIR}/go-${PV}/go/bin/go" env
+-}
+-
+-go_install() {
+-  install -d "${D}${bindir}" "${D}${GOROOT_FINAL}"
+-  tar -C "${WORKDIR}/go-${PV}/go" -cf - bin lib src pkg test |
+-  tar -C "${D}${GOROOT_FINAL}" -xf -
+-  rm -rf "${D}${GOROOT_FINAL}/pkg/bootstrap"
+-
+-  mv "${D}${GOROOT_FINAL}/bin/"* "${D}${bindir}/"
+-
+-  rm -f "${D}${GOROOT_FINAL}/src/"*.rc
+-
+-  for t in gcc g++ ; do
+-    cat > ${D}${GOROOT_FINAL}/bin/${TARGET_PREFIX}${t} <<EOT
+-#!/bin/sh
+-exec ${TARGET_PREFIX}${t} ${TARGET_CC_ARCH} --sysroot=${STAGING_DIR_TARGET} "\$@"
+-EOT
+-    chmod +x ${D}${GOROOT_FINAL}/bin/${TARGET_PREFIX}${t}
+-  done
++  go_compile
+ }
+ 
+ do_install() {
+   go_install
+ }
+ 
+-do_install_class-cross() {
+-  go_install
+-}
+-
+ do_install_class-target() {
+   setup_go_arch
+ 
+@@ -83,4 +41,4 @@ do_install_class-target() {
+ 
+ INSANE_SKIP_go = "staticdev"
+ 
+-BBCLASSEXTEND = "cross native"
++BBCLASSEXTEND = "native"
+-- 
+2.7.4
+

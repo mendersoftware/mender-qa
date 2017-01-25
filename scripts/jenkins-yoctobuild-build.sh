@@ -23,6 +23,13 @@ then
     sudo rm -rf /mnt/sstate-cache/*
 fi
 
+# Temporary fixes.
+patch -p1 < mender-qa/patches/0001-Make-SSTATE_SCAN_CMD-vars-configurable-using-weak-de.patch
+cd oe-meta-go
+patch -p1 < ../mender-qa/patches/0001-Make-sure-the-sstate-mechanism-doesn-t-try-to-mangle.patch
+patch -p1 < ../mender-qa/patches/0001-devtools-go-introduce-go-cross.patch
+cd ..
+
 if [ "$BUILD_QEMU" = "true" ]
 then
     source oe-init-build-env build-qemu
