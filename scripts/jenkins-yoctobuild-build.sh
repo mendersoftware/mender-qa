@@ -23,9 +23,16 @@ then
     sudo rm -rf /mnt/sstate-cache/*
 fi
 
+# Temporary fixes.
+patch -p1 < mender-qa/patches/0001-Make-SSTATE_SCAN_CMD-vars-configurable-using-weak-de.patch
+cd oe-meta-go
+patch -p1 < ../mender-qa/patches/0001-Make-sure-the-sstate-mechanism-doesn-t-try-to-mangle.patch
+patch -p1 < ../mender-qa/patches/0001-devtools-go-introduce-go-cross.patch
+cd ..
+
 if [ "$BUILD_QEMU" = "true" ]
 then
-    source oe-init-build-env
+    source oe-init-build-env build-qemu
     cd ../
 
     if [ ! -d mender-qa ]
@@ -44,7 +51,7 @@ SSTATE_DIR = "/mnt/sstate-cache"
 EOF
     fi
     disable_mender_service
-    source oe-init-build-env
+    cd $BUILDDIR
     bitbake core-image-full-cmdline
 
     mkdir -p $WORKSPACE/vexpress-qemu
@@ -67,6 +74,7 @@ EOF
         py.test --junit-xml=results.xml
     fi
 
+    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 . )
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf . )
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg . )
     cd $WORKSPACE/
@@ -84,7 +92,7 @@ fi
 
 if [ "$BUILD_BBB" = "true" ]
 then
-    source oe-init-build-env
+    source oe-init-build-env build-bbb
     cp ../mender-qa/build-conf/*  ./conf/
 
     cat >> ./conf/local.conf <<EOF
@@ -140,4 +148,16 @@ then
     s3cmd put output.tar.xz s3://mender/temp/yoctobuilds/$BUILD_TAG/
     s3cmd setacl s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz --acl-public
     echo "Download build output from: https://s3.amazonaws.com/mender/temp/yoctobuilds/${BUILD_TAG}/output.tar.xz"
+fi
+
+
+if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
+    cd /home/jenkins/workspace/yoctobuild/meta-mender/meta-mender-qemu
+    cp ../core-image-full-cmdline-vexpress-qemu.ext4 ../core-image-full-cmdline-vexpress-qemu.sdimg ../u-boot.elf .
+
+    s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4
+    s3cmd setacl s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
+
+    sudo docker build -t mendersoftware/mender-client-qemu:latest --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
+    cd $WORKSPACE/integration/tests && sudo ./run.sh
 fi

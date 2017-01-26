@@ -1,0 +1,55 @@
+From 2f84aa3a1ef5306b7c14f9349a98c8e53bd248c6 Mon Sep 17 00:00:00 2001
+From: Kristian Amlie <kristian.amlie@mender.io>
+Date: Wed, 25 Jan 2017 14:56:47 +0100
+Subject: [PATCH] Make sure the sstate mechanism doesn't try to mangle Go
+ files.
+
+Signed-off-by: Kristian Amlie <kristian.amlie@mender.io>
+---
+ recipes-devtools/go/go_1.4.3.inc | 2 ++
+ recipes-devtools/go/go_1.6.3.inc | 2 ++
+ recipes-devtools/go/go_1.7.4.inc | 2 ++
+ 3 files changed, 6 insertions(+)
+
+diff --git a/recipes-devtools/go/go_1.4.3.inc b/recipes-devtools/go/go_1.4.3.inc
+index 561d45e..5e4ea19 100644
+--- a/recipes-devtools/go/go_1.4.3.inc
++++ b/recipes-devtools/go/go_1.4.3.inc
+@@ -16,6 +16,8 @@ SRC_URI += "\
+ 
+ LIC_FILES_CHKSUM = "file://${WORKDIR}/go-${PV}/go/LICENSE;md5=591778525c869cdde0ab5a1bf283cd81"
+ 
++SSTATE_SCAN_CMD = "true"
++
+ do_install() {
+   install -d "${D}${libdir}/${PN}-${PV}"
+   tar -C "${WORKDIR}/go-${PV}/go/" -cf - bin include lib pkg src test |
+diff --git a/recipes-devtools/go/go_1.6.3.inc b/recipes-devtools/go/go_1.6.3.inc
+index d13408c..7ffde00 100644
+--- a/recipes-devtools/go/go_1.6.3.inc
++++ b/recipes-devtools/go/go_1.6.3.inc
+@@ -2,6 +2,8 @@ require go.inc
+ 
+ DEPENDS = "go-bootstrap-native"
+ 
++SSTATE_SCAN_CMD = "true"
++
+ SRC_URI = "${SRC_URI_PREFIX}/go${PV}.src.tar.gz;subdir=go-${PV}"
+ SRC_URI[md5sum] = "bf3fce6ccaadd310159c9e874220e2a2"
+ SRC_URI[sha256sum] = "6326aeed5f86cf18f16d6dc831405614f855e2d416a91fd3fdc334f772345b00"
+diff --git a/recipes-devtools/go/go_1.7.4.inc b/recipes-devtools/go/go_1.7.4.inc
+index 3a8764f..5269997 100644
+--- a/recipes-devtools/go/go_1.7.4.inc
++++ b/recipes-devtools/go/go_1.7.4.inc
+@@ -2,6 +2,8 @@ require go.inc
+ 
+ DEPENDS = "go-bootstrap-native"
+ 
++SSTATE_SCAN_CMD = "true"
++
+ SRC_URI = "${SRC_URI_PREFIX}/go${PV}.src.tar.gz;subdir=go-${PV}"
+ SRC_URI[md5sum] = "49c1076428a5d3b5ad7ac65233fcca2f"
+ SRC_URI[sha256sum] = "4c189111e9ba651a2bb3ee868aa881fab36b2f2da3409e80885ca758a6b614cc"
+-- 
+2.7.4
+
