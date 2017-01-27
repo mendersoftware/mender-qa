@@ -25,6 +25,7 @@ fi
 
 # Temporary fixes.
 patch -p1 < mender-qa/patches/0001-Make-SSTATE_SCAN_CMD-vars-configurable-using-weak-de.patch
+patch -p1 < mender-qa/patches/0001-wic-partionedfs-Avoid-reserving-space-for-non-existi.patch
 cd oe-meta-go
 patch -p1 < ../mender-qa/patches/0001-Make-sure-the-sstate-mechanism-doesn-t-try-to-mangle.patch
 patch -p1 < ../mender-qa/patches/0001-devtools-go-introduce-go-cross.patch
