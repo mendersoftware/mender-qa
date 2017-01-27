@@ -17,7 +17,11 @@ EOF
     fi
 }
 
-export PATH=$WORKSPACE/scripts:$WORKSPACE/bitbake/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+prepare_and_set_PATH() {
+    bitbake -c prepare_recipe_sysroot mender-test-dependencies
+    eval `bitbake -e mender-test-dependencies | grep '^export PATH='`
+}
+
 if [ "$CLEAN_BUILD_CACHE" = "true" ]
 then
     sudo rm -rf /mnt/sstate-cache/*
@@ -55,11 +59,13 @@ EOF
     cd $BUILDDIR
     bitbake core-image-full-cmdline
 
+    OLD_PATH="$PATH"
+    prepare_and_set_PATH
+
     mkdir -p $WORKSPACE/vexpress-qemu
     cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf $WORKSPACE/vexpress-qemu/u-boot.elf
     cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 $WORKSPACE/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4
     cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg $WORKSPACE/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg
-    export PATH=$PATH:$BUILDDIR/tmp/sysroots/x86_64-linux/usr/bin
 
     cd $WORKSPACE/meta-mender/tests/acceptance/
 
@@ -88,6 +94,8 @@ EOF
         mv $BUILDDIR/tmp/deploy/* "vexpress-qemu-deploy"
     fi
 
+    PATH="$OLD_PATH"
+
     rm -rf build
 fi
 
@@ -106,6 +114,9 @@ EOF
     export MACHINE="beaglebone"
     bitbake core-image-base
 
+    OLD_PATH="$PATH"
+    prepare_and_set_PATH
+
     mkdir -p $WORKSPACE/beaglebone
 
     cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4
@@ -114,7 +125,6 @@ EOF
     cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg.clean
 
     cd $WORKSPACE/meta-mender/tests/acceptance/
-    export PATH=$PATH:$BUILDDIR/tmp/sysroots/x86_64-linux/usr/bin
     export BBB_IMAGE_DIR=$WORKSPACE/beaglebone
 
     if [ "$TEST_BBB" = "true" ]
@@ -140,6 +150,8 @@ EOF
         mkdir -p "beaglebone-deploy"
         mv $BUILDDIR/tmp/deploy/* "beaglebone-deploy"
     fi
+
+    PATH="$OLD_PATH"
 fi
 
 if [ "$UPLOAD_OUTPUT" = "true" ]
