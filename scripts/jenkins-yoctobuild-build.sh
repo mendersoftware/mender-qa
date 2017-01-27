@@ -137,7 +137,7 @@ EOF
     if [ "$UPLOAD_OUTPUT" = "true" ]
     then
         cd $WORKSPACE/
-    mkdir -p "beaglebone-deploy"
+        mkdir -p "beaglebone-deploy"
         mv $BUILDDIR/tmp/deploy/* "beaglebone-deploy"
     fi
 fi
