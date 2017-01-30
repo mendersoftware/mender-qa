@@ -28,8 +28,14 @@ then
 fi
 
 # Temporary fixes.
-patch -p1 < mender-qa/patches/0001-Make-SSTATE_SCAN_CMD-vars-configurable-using-weak-de.patch
-patch -p1 < mender-qa/patches/0001-wic-partionedfs-Avoid-reserving-space-for-non-existi.patch
+if git describe --all HEAD | grep -q master; then
+    # master
+    patch -p1 < mender-qa/patches/0001-Make-SSTATE_SCAN_CMD-vars-configurable-using-weak-de.patch
+    patch -p1 < mender-qa/patches/0001-wic-partionedfs-Avoid-reserving-space-for-non-existi.patch
+else
+    # morty
+    patch -p1 < mender-qa/patches/0001-sstate-Make-SSTATE_SCAN_CMD-vars-configurable-using-_morty.patch
+fi
 cd oe-meta-go
 patch -p1 < ../mender-qa/patches/0001-Make-sure-the-sstate-mechanism-doesn-t-try-to-mangle.patch
 patch -p1 < ../mender-qa/patches/0001-devtools-go-introduce-go-cross.patch
