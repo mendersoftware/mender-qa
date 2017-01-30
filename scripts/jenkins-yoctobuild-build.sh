@@ -18,8 +18,14 @@ EOF
 }
 
 prepare_and_set_PATH() {
-    bitbake -c prepare_recipe_sysroot mender-test-dependencies
-    eval `bitbake -e mender-test-dependencies | grep '^export PATH='`
+    # On branches without recipe specific sysroots, the next step will fail
+    # because the prepare_recipe_sysroot task doesn't exist. Use that failure
+    # to fall back to the old generic sysroot path.
+    if bitbake -c prepare_recipe_sysroot mender-test-dependencies; then
+        eval `bitbake -e mender-test-dependencies | grep '^export PATH='`
+    else
+        eval `bitbake -e core-image-minimal | grep '^export PATH='`
+    fi
 }
 
 if [ "$CLEAN_BUILD_CACHE" = "true" ]
@@ -28,8 +34,14 @@ then
 fi
 
 # Temporary fixes.
-patch -p1 < mender-qa/patches/0001-Make-SSTATE_SCAN_CMD-vars-configurable-using-weak-de.patch
-patch -p1 < mender-qa/patches/0001-wic-partionedfs-Avoid-reserving-space-for-non-existi.patch
+if git describe --all HEAD | grep -q master; then
+    # master
+    patch -p1 < mender-qa/patches/0001-Make-SSTATE_SCAN_CMD-vars-configurable-using-weak-de.patch
+    patch -p1 < mender-qa/patches/0001-wic-partionedfs-Avoid-reserving-space-for-non-existi.patch
+else
+    # morty
+    patch -p1 < mender-qa/patches/0001-sstate-Make-SSTATE_SCAN_CMD-vars-configurable-using-_morty.patch
+fi
 cd oe-meta-go
 patch -p1 < ../mender-qa/patches/0001-Make-sure-the-sstate-mechanism-doesn-t-try-to-mangle.patch
 patch -p1 < ../mender-qa/patches/0001-devtools-go-introduce-go-cross.patch
