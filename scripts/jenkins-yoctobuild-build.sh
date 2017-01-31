@@ -44,7 +44,6 @@ else
 fi
 cd oe-meta-go
 patch -p1 < ../mender-qa/patches/0001-Make-sure-the-sstate-mechanism-doesn-t-try-to-mangle.patch
-patch -p1 < ../mender-qa/patches/0001-devtools-go-introduce-go-cross.patch
 cd ..
 
 if [ "$BUILD_QEMU" = "true" ]
