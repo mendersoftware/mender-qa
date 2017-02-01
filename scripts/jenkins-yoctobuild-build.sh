@@ -74,16 +74,10 @@ EOF
     prepare_and_set_PATH
 
     mkdir -p $WORKSPACE/vexpress-qemu
-    cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf $WORKSPACE/vexpress-qemu/u-boot.elf
-    cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 $WORKSPACE/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4
-    cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg $WORKSPACE/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg
 
     cd $WORKSPACE/meta-mender/tests/acceptance/
 
-    export UBOOT_ELF=$WORKSPACE/vexpress-qemu/u-boot.elf
-    export VEXPRESS_SDIMG=$WORKSPACE/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg
     export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
-    cp $WORKSPACE/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 image.dat
 
     mender-artifact write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
     # run tests on qemu
