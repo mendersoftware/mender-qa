@@ -36,7 +36,6 @@ fi
 # Temporary fixes.
 if git describe --all HEAD | grep -q master; then
     # master
-    patch -p1 < mender-qa/patches/0001-Make-SSTATE_SCAN_CMD-vars-configurable-using-weak-de.patch
     patch -p1 < mender-qa/patches/0001-wic-partionedfs-Avoid-reserving-space-for-non-existi.patch
 else
     # morty
