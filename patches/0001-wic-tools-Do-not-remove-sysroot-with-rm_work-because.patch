@@ -1,0 +1,32 @@
+From e6623ce639cfd950d0247e298f00ff72c61cbdb3 Mon Sep 17 00:00:00 2001
+From: Kristian Amlie <kristian.amlie@mender.io>
+Date: Mon, 30 Jan 2017 10:35:47 +0100
+Subject: [PATCH] wic-tools: Do not remove sysroot with rm_work, because wic
+ needs it.
+
+The sysroot of wic-tools is needed for wic, but if rm_work is enabled,
+it will be removed before wic has a chance to use it, hence this fix.
+
+Signed-off-by: Kristian Amlie <kristian.amlie@mender.io>
+---
+ meta/recipes-core/meta/wic-tools.bb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/meta/recipes-core/meta/wic-tools.bb b/meta/recipes-core/meta/wic-tools.bb
+index 1d9ea9c..bd4319a 100644
+--- a/meta/recipes-core/meta/wic-tools.bb
++++ b/meta/recipes-core/meta/wic-tools.bb
+@@ -9,6 +9,10 @@ DEPENDS_append_x86-64 = " syslinux grub-efi systemd-boot"
+ INHIBIT_DEFAULT_DEPS = "1"
+ inherit nopackages
+ 
++# The sysroot of wic-tools is needed for wic, but if rm_work is enabled, it will
++# be removed before wic has a chance to use it, hence the exclusion below.
++RM_WORK_EXCLUDE += "${PN}"
++
+ python do_build_sysroot () {
+     bb.build.exec_func("extend_recipe_sysroot", d)
+ 
+-- 
+2.7.4
+

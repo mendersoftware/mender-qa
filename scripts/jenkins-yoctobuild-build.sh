@@ -37,6 +37,7 @@ fi
 if git describe --all HEAD | grep -q master; then
     # master
     patch -p1 < mender-qa/patches/0001-wic-partionedfs-Avoid-reserving-space-for-non-existi.patch
+    patch -p1 < mender-qa/patches/0001-wic-tools-Do-not-remove-sysroot-with-rm_work-because.patch
 else
     # morty
     patch -p1 < mender-qa/patches/0001-sstate-Make-SSTATE_SCAN_CMD-vars-configurable-using-_morty.patch
