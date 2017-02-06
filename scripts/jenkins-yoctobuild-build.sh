@@ -88,7 +88,7 @@ EOF
     then
     # store useful output to directory
     mkdir -p "vexpress-qemu-deploy"
-        mv $BUILDDIR/tmp/deploy/* "vexpress-qemu-deploy"
+        cp -r $BUILDDIR/tmp/deploy/* "vexpress-qemu-deploy"
     fi
 
     PATH="$OLD_PATH"
@@ -145,7 +145,7 @@ EOF
     then
         cd $WORKSPACE/
         mkdir -p "beaglebone-deploy"
-        mv $BUILDDIR/tmp/deploy/* "beaglebone-deploy"
+        cp -r $BUILDDIR/tmp/deploy/* "beaglebone-deploy"
     fi
 
     PATH="$OLD_PATH"
