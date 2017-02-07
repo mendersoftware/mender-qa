@@ -171,8 +171,8 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
     cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
 
-    sudo docker build -t mendersoftware/mender-client-qemu:latest --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
-    cd $WORKSPACE/integration/tests && sudo ./run.sh
+    docker build -t mendersoftware/mender-client-qemu:latest --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
+    cd $WORKSPACE/integration/tests && ./run.sh
 
     if [ $PUBLISH_ARTIFACTS = "true" ]; then
         s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4
