@@ -88,7 +88,7 @@ EOF
     then
     # store useful output to directory
     mkdir -p "vexpress-qemu-deploy"
-        mv $BUILDDIR/tmp/deploy/* "vexpress-qemu-deploy"
+        cp -r $BUILDDIR/tmp/deploy/* "vexpress-qemu-deploy"
     fi
 
     PATH="$OLD_PATH"
@@ -145,7 +145,7 @@ EOF
     then
         cd $WORKSPACE/
         mkdir -p "beaglebone-deploy"
-        mv $BUILDDIR/tmp/deploy/* "beaglebone-deploy"
+        cp -r $BUILDDIR/tmp/deploy/* "beaglebone-deploy"
     fi
 
     PATH="$OLD_PATH"
@@ -162,12 +162,20 @@ fi
 
 
 if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
-    cd /home/jenkins/workspace/yoctobuild/meta-mender/meta-mender-qemu
-    cp ../core-image-full-cmdline-vexpress-qemu.ext4 ../core-image-full-cmdline-vexpress-qemu.sdimg ../u-boot.elf .
+    cd $WORKSPACE
+    # Set build dir for qemu again, BBB build might possibly have overridden
+    # this.
+    source oe-init-build-env build-qemu
 
-    s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4
-    s3cmd setacl s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
+    cd $WORKSPACE/meta-mender/meta-mender-qemu
+    cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
+    cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
 
     sudo docker build -t mendersoftware/mender-client-qemu:latest --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
     cd $WORKSPACE/integration/tests && sudo ./run.sh
+
+    if [ $PUBLISH_ARTIFACTS = "true" ]; then
+        s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4
+        s3cmd setacl s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
+    fi
 fi
