@@ -33,6 +33,35 @@ prepare_and_set_PATH() {
     fi
 }
 
+prepare_build_config() {
+    /bin/cp $WORKSPACE/mender-qa/build-conf/*  $BUILDDIR/conf/
+
+    # See comment in local.conf
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
+EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
+EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
+SSTATE_DIR = "/mnt/sstate-cache"
+EOF
+
+    # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
+    # since we are building the one that Jenkins has cloned, but it does
+    # influence which version Yocto and the binaries will show.
+    if [ -n "$RELEASE_VERSION" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION_mender = "${RELEASE_VERSION}%"
+PREFERRED_VERSION_mender-artifact = "${RELEASE_VERSION}%"
+PREFERRED_VERSION_mender-artifact-native = "${RELEASE_VERSION}%"
+EOF
+    else
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION_mender = "master-git%"
+PREFERRED_VERSION_mender-artifact = "master-git%"
+PREFERRED_VERSION_mender-artifact-native = "master-git%"
+EOF
+    fi
+}
+
 if [ "$CLEAN_BUILD_CACHE" = "true" ]
 then
     sudo rm -rf /mnt/sstate-cache/*
@@ -50,19 +79,11 @@ then
 
     if [ ! -d mender-qa ]
     then
-      echo "JENKINS SCRIPT: mender-qa directory is not present"
-      exit 1
-    else
-      /bin/rm -f $BUILDDIR/conf/*
-      /bin/cp mender-qa/build-conf/*  $BUILDDIR/conf/
-      # See comment in local.conf
-      cat >> $BUILDDIR/conf/local.conf <<EOF
-EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
-EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
-EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
-SSTATE_DIR = "/mnt/sstate-cache"
-EOF
+        echo "JENKINS SCRIPT: mender-qa directory is not present"
+        exit 1
     fi
+
+    prepare_build_config
     disable_mender_service
     cd $BUILDDIR
     bitbake core-image-full-cmdline
@@ -105,14 +126,7 @@ fi
 if [ "$BUILD_BBB" = "true" ]
 then
     source oe-init-build-env build-bbb
-    cp ../mender-qa/build-conf/*  ./conf/
-
-    cat >> ./conf/local.conf <<EOF
-EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
-EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
-EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
-SSTATE_DIR = "/mnt/sstate-cache"
-EOF
+    prepare_build_config
     disable_mender_service
     export MACHINE="beaglebone"
     bitbake core-image-base
