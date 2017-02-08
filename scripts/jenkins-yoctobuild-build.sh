@@ -17,6 +17,11 @@ EOF
     fi
 }
 
+modify_ext4() {
+    echo -n "artifact_name=$2" > /tmp/artifactfile
+    e2cp  /tmp/artifactfile $1:/etc/mender/artifact_info
+}
+
 prepare_and_set_PATH() {
     # On branches without recipe specific sysroots, the next step will fail
     # because the prepare_recipe_sysroot task doesn't exist. Use that failure
@@ -81,6 +86,7 @@ EOF
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 . )
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf . )
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg . )
+    (cd $WORKSPACE/meta-mender && cp {core-image-full-cmdline-vexpress-qemu.ext4,core-image-full-cmdline-vexpress-qemu.sdimg,u-boot.elf} $WORKSPACE/vexpress-qemu )
     cd $WORKSPACE/
 
 
@@ -166,6 +172,8 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     # Set build dir for qemu again, BBB build might possibly have overridden
     # this.
     source oe-init-build-env build-qemu
+    prepare_and_set_PATH
+
 
     cd $WORKSPACE/meta-mender/meta-mender-qemu
     cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
@@ -177,5 +185,32 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     if [ $PUBLISH_ARTIFACTS = "true" ]; then
         s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4
         s3cmd setacl s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
+
+        if [ ! -z "${RELEASE_VERSION}" ]; then
+
+            cd $WORKSPACE/vexpress-qemu/
+            modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-1
+            mender-artifact write rootfs-image -t vexpress-qemu -n release-1 -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_1.mender
+            modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-2
+            mender-artifact write rootfs-image -t vexpress-qemu -n release-2 -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_2.mender
+            s3cmd --cf-invalidate -F put vexpress_release_1.mender s3://mender/${RELEASE_VERSION}/vexpress-qemu/
+            s3cmd --cf-invalidate -F put vexpress_release_2.mender s3://mender/${RELEASE_VERSION}/vexpress-qemu/
+            s3cmd setacl s3://mender/${RELEASE_VERSION}/vexpress-qemu/vexpress_release_1.mender --acl-public
+            s3cmd setacl s3://mender/${RELEASE_VERSION}/vexpress-qemu/vexpress_release_2.mender --acl-public
+
+            cd $WORKSPACE/beaglebone/
+            modify_ext4 core-image-base-beaglebone.ext4 release-1
+            mender-artifact write rootfs-image -t beaglebone -n release-1 -u core-image-base-beaglebone.ext4 -o beaglebone_release_1.mender
+            modify_ext4 core-image-base-beaglebone.ext4 release-2
+            mender-artifact write rootfs-image -t beaglebone -n release-2 -u core-image-base-beaglebone.ext4 -o beaglebone_release_2.mender
+            s3cmd --cf-invalidate -F put beaglebone_release_1.mender s3://mender/${RELEASE_VERSION}/beaglebone/
+            s3cmd --cf-invalidate -F put beaglebone_release_2.mender s3://mender/${RELEASE_VERSION}/beaglebone/
+            s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_1.mender --acl-public
+            s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_2.mender --acl-public
+
+            sudo docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+            sudo docker tag mendersoftware/mender-client-qemu:latest mendersoftware/mender-client-qemu:${RELEASE_VERSION}
+            sudo docker push mendersoftware/mender-client-qemu:${RELEASE_VERSION}
+        fi
     fi
 fi
