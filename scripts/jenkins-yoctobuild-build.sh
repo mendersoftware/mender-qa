@@ -182,12 +182,11 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     docker build -t mendersoftware/mender-client-qemu:latest --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
     cd $WORKSPACE/integration/tests && ./run.sh
 
-    if [ $PUBLISH_ARTIFACTS = "true" ]; then
-        s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4
+    if [ $PUBLISH_ARTIFACTS = "true" ] && [ -n "$RELEASE_VERSION" ]; then
+        s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${RELEASE_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
         s3cmd setacl s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
 
-        if [ ! -z "${RELEASE_VERSION}" ]; then
-
+        if [ $PERFORM_RELEASE = "true" ]; then
             cd $WORKSPACE/vexpress-qemu/
             modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-1
             mender-artifact write rootfs-image -t vexpress-qemu -n release-1 -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_1.mender
