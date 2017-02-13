@@ -184,7 +184,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
 
     if [ $PUBLISH_ARTIFACTS = "true" ] && [ -n "$RELEASE_VERSION" ]; then
         s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${RELEASE_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
-        s3cmd setacl s3://mender/temp/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
+        s3cmd setacl s3://mender/temp_${RELEASE_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
 
         if [ $PERFORM_RELEASE = "true" ]; then
             cd $WORKSPACE/vexpress-qemu/
