@@ -226,8 +226,8 @@ EOF
         s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_1.mender --acl-public
         s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_2.mender --acl-public
 
-        sudo docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
-        sudo docker tag mendersoftware/mender-client-qemu:pr mendersoftware/mender-client-qemu:${RELEASE_VERSION}
-        sudo docker push mendersoftware/mender-client-qemu:${RELEASE_VERSION}
+        docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+        docker tag mendersoftware/mender-client-qemu:pr mendersoftware/mender-client-qemu:${RELEASE_VERSION}
+        docker push mendersoftware/mender-client-qemu:${RELEASE_VERSION}
     fi
 fi
