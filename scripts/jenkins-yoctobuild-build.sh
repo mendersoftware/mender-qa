@@ -221,6 +221,9 @@ EOF
         mender-artifact write rootfs-image -t beaglebone -n release-1 -u core-image-base-beaglebone.ext4 -o beaglebone_release_1.mender
         modify_ext4 core-image-base-beaglebone.ext4 release-2
         mender-artifact write rootfs-image -t beaglebone -n release-2 -u core-image-base-beaglebone.ext4 -o beaglebone_release_2.mender
+        gzip -c core-image-base-beaglebone.sdimg > mender-beaglebone.sdimg.gz
+        s3cmd --cf-invalidate -F put mender-beaglebone.sdimg.gz s3://mender/${RELEASE_VERSION}/beaglebone/
+        s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/mender-beaglebone.sdimg.gz --acl-public
         s3cmd --cf-invalidate -F put beaglebone_release_1.mender s3://mender/${RELEASE_VERSION}/beaglebone/
         s3cmd --cf-invalidate -F put beaglebone_release_2.mender s3://mender/${RELEASE_VERSION}/beaglebone/
         s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_1.mender --acl-public
