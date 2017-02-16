@@ -193,8 +193,14 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
     cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
 
-    docker build -t mendersoftware/mender-client-qemu:latest --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
-    cd $WORKSPACE/integration/tests && ./run.sh
+    docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
+    cat > $WORKSPACE/integration/docker-compose-pr-client.yml <<EOF
+version: '2'
+services:
+    mender-client:
+        image: mendersoftware/mender-client-qemu:pr
+EOF
+    cd $WORKSPACE/integration/tests && ./run.sh --docker-compose-file=../docker-compose-pr-client.yml
 
     if [ -n "$RELEASE_VERSION" ]; then
         s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${RELEASE_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
@@ -220,8 +226,8 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_1.mender --acl-public
         s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_2.mender --acl-public
 
-        sudo docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
-        sudo docker tag mendersoftware/mender-client-qemu:latest mendersoftware/mender-client-qemu:${RELEASE_VERSION}
-        sudo docker push mendersoftware/mender-client-qemu:${RELEASE_VERSION}
+        docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+        docker tag mendersoftware/mender-client-qemu:pr mendersoftware/mender-client-qemu:${RELEASE_VERSION}
+        docker push mendersoftware/mender-client-qemu:${RELEASE_VERSION}
     fi
 fi
