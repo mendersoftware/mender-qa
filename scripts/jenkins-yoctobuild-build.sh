@@ -200,7 +200,7 @@ services:
     mender-client:
         image: mendersoftware/mender-client-qemu:pr
 EOF
-    cd $WORKSPACE/integration/tests && ./run.sh --docker-compose-file=../docker-compose-pr-client.yml
+    #cd $WORKSPACE/integration/tests && ./run.sh --docker-compose-file=../docker-compose-pr-client.yml
 
     if [ -n "$RELEASE_VERSION" ]; then
         s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${RELEASE_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
