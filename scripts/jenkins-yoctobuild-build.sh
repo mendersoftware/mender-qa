@@ -19,7 +19,8 @@ EOF
 
 modify_ext4() {
     echo -n "artifact_name=$2" > /tmp/artifactfile
-    e2cp  /tmp/artifactfile $1:/etc/mender/artifact_info
+    debugfs -w -R "rm /etc/mender/artifact_info" $1
+    printf "cd %s\nwrite %s %s\n" /etc/mender /tmp/artifactfile artifact_info | debugfs -w $1
 }
 
 prepare_and_set_PATH() {
