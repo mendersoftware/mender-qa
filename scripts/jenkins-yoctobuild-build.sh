@@ -68,11 +68,6 @@ then
     sudo rm -rf /mnt/sstate-cache/*
 fi
 
-# Temporary fixes.
-cd oe-meta-go
-patch -p1 < ../mender-qa/patches/0001-Make-sure-the-sstate-mechanism-doesn-t-try-to-mangle.patch
-cd ..
-
 if [ "$BUILD_QEMU" = "true" ]
 then
     source oe-init-build-env build-qemu
