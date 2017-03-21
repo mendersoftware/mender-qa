@@ -61,6 +61,14 @@ PREFERRED_VERSION_mender-artifact = "master-git%"
 PREFERRED_VERSION_mender-artifact-native = "master-git%"
 EOF
     fi
+
+    # Figure out which branch of poky we're building.
+    if egrep -q '^ *DISTRO_CODENAME *= *"morty" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf; then
+        # Morty needs oe-meta-go
+        cat >> $BUILDDIR/conf/bblayers.conf <<EOF
+BBLAYERS_append = " /home/jenkins/workspace/yoctobuild/oe-meta-go"
+EOF
+    fi
 }
 
 if [ "$CLEAN_BUILD_CACHE" = "true" ]
