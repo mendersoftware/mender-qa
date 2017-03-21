@@ -28,9 +28,9 @@ prepare_and_set_PATH() {
     # because the prepare_recipe_sysroot task doesn't exist. Use that failure
     # to fall back to the old generic sysroot path.
     if bitbake -c prepare_recipe_sysroot mender-test-dependencies; then
-        eval `bitbake -e mender-test-dependencies | grep '^export PATH='`
+        eval `bitbake -e mender-test-dependencies | grep '^export PATH='`:$PATH
     else
-        eval `bitbake -e core-image-minimal | grep '^export PATH='`
+        eval `bitbake -e core-image-minimal | grep '^export PATH='`:$PATH
     fi
 }
 
