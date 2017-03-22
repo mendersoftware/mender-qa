@@ -28,9 +28,9 @@ prepare_and_set_PATH() {
     # because the prepare_recipe_sysroot task doesn't exist. Use that failure
     # to fall back to the old generic sysroot path.
     if bitbake -c prepare_recipe_sysroot mender-test-dependencies; then
-        eval `bitbake -e mender-test-dependencies | grep '^export PATH='`
+        eval `bitbake -e mender-test-dependencies | grep '^export PATH='`:$PATH
     else
-        eval `bitbake -e core-image-minimal | grep '^export PATH='`
+        eval `bitbake -e core-image-minimal | grep '^export PATH='`:$PATH
     fi
 }
 
@@ -59,6 +59,14 @@ EOF
 PREFERRED_VERSION_mender = "master-git%"
 PREFERRED_VERSION_mender-artifact = "master-git%"
 PREFERRED_VERSION_mender-artifact-native = "master-git%"
+EOF
+    fi
+
+    # Figure out which branch of poky we're building.
+    if egrep -q '^ *DISTRO_CODENAME *= *"morty" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf; then
+        # Morty needs oe-meta-go
+        cat >> $BUILDDIR/conf/bblayers.conf <<EOF
+BBLAYERS_append = " /home/jenkins/workspace/yoctobuild/oe-meta-go"
 EOF
     fi
 }
