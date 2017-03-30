@@ -71,6 +71,36 @@ EOF
     fi
 }
 
+# ---------------------------------------------------
+# Build server repositories.
+# ---------------------------------------------------
+
+# Build Go repositories.
+export GOPATH="$WORKSPACE/go"
+for build in deployments deviceadm deviceauth inventory useradm; do (
+    $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
+    cd go/src/github.com/mendersoftware/$build
+    CGO_ENABLED=0 go build
+    docker build -t mendersoftware/$build:pr .
+); done
+# Build GUI
+(
+    $WORKSPACE/integration/extra/release_tool.py --set-version-of gui --version pr
+    cd gui
+    gulp build
+    docker build -t mendersoftware/gui:pr .
+)
+# Build other repositories
+(
+    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-api-gateway-docker --version pr
+    cd mender-api-gateway-docker
+    docker build -t mendersoftware/api-gateway:pr .
+)
+
+# -----------------------
+# Done with server build.
+# -----------------------
+
 if [ "$CLEAN_BUILD_CACHE" = "true" ]
 then
     sudo rm -rf /mnt/sstate-cache/*
@@ -198,13 +228,8 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
 
     docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
-    cat > $WORKSPACE/integration/docker-compose-pr-client.yml <<EOF
-version: '2'
-services:
-    mender-client:
-        image: mendersoftware/mender-client-qemu:pr
-EOF
-    cd $WORKSPACE/integration/tests && ./run.sh --docker-compose-file=../docker-compose-pr-client.yml
+    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
+    cd $WORKSPACE/integration/tests && ./run.sh
 
     if [ -n "$RELEASE_VERSION" ]; then
         s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${RELEASE_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
@@ -234,7 +259,10 @@ EOF
         s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_2.mender --acl-public
 
         docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
-        docker tag mendersoftware/mender-client-qemu:pr mendersoftware/mender-client-qemu:${RELEASE_VERSION}
-        docker push mendersoftware/mender-client-qemu:${RELEASE_VERSION}
+
+        for container in mender-client-qemu api-gateway deployments deviceadm deviceauth gui inventory useradm; do
+            docker tag mendersoftware/$container:pr mendersoftware/$container:${RELEASE_VERSION}
+            docker push mendersoftware/$container:${RELEASE_VERSION}
+        done
     fi
 fi
