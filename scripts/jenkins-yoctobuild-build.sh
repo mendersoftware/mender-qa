@@ -48,11 +48,12 @@ EOF
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
     # influence which version Yocto and the binaries will show.
-    if [ -n "$RELEASE_VERSION" ]; then
+    if [ "$PUSH_CONTAINERS" = true ]; then
+        CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_mender = "${RELEASE_VERSION}%"
-PREFERRED_VERSION_mender-artifact = "${RELEASE_VERSION}%"
-PREFERRED_VERSION_mender-artifact-native = "${RELEASE_VERSION}%"
+PREFERRED_VERSION_mender = "${CLIENT_VERSION}%"
+PREFERRED_VERSION_mender-artifact = "${CLIENT_VERSION}%"
+PREFERRED_VERSION_mender-artifact-native = "${CLIENT_VERSION}%"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -231,19 +232,26 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
     cd $WORKSPACE/integration/tests && ./run.sh
 
-    if [ -n "$RELEASE_VERSION" ]; then
-        s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${RELEASE_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
-        s3cmd setacl s3://mender/temp_${RELEASE_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
+    # Reset docker tag names to their cloned values after tests are done.
+    cd $WORKSPACE/integration
+    git checkout -- docker-compose*.yml
+
+    if [ "$PUSH_CONTAINERS" = true ]; then
+        cd $WORKSPACE/integration/tests
+        CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
+
+        s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${CLIENT_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
+        s3cmd setacl s3://mender/temp_${CLIENT_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
 
         cd $WORKSPACE/vexpress-qemu/
         modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-1
         mender-artifact write rootfs-image -t vexpress-qemu -n release-1 -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_1.mender
         modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-2
         mender-artifact write rootfs-image -t vexpress-qemu -n release-2 -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_2.mender
-        s3cmd --cf-invalidate -F put vexpress_release_1.mender s3://mender/${RELEASE_VERSION}/vexpress-qemu/
-        s3cmd --cf-invalidate -F put vexpress_release_2.mender s3://mender/${RELEASE_VERSION}/vexpress-qemu/
-        s3cmd setacl s3://mender/${RELEASE_VERSION}/vexpress-qemu/vexpress_release_1.mender --acl-public
-        s3cmd setacl s3://mender/${RELEASE_VERSION}/vexpress-qemu/vexpress_release_2.mender --acl-public
+        s3cmd --cf-invalidate -F put vexpress_release_1.mender s3://mender/${CLIENT_VERSION}/vexpress-qemu/
+        s3cmd --cf-invalidate -F put vexpress_release_2.mender s3://mender/${CLIENT_VERSION}/vexpress-qemu/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/vexpress-qemu/vexpress_release_1.mender --acl-public
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/vexpress-qemu/vexpress_release_2.mender --acl-public
 
         cd $WORKSPACE/beaglebone/
         modify_ext4 core-image-base-beaglebone.ext4 release-1
@@ -251,18 +259,19 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         modify_ext4 core-image-base-beaglebone.ext4 release-2
         mender-artifact write rootfs-image -t beaglebone -n release-2 -u core-image-base-beaglebone.ext4 -o beaglebone_release_2.mender
         gzip -c core-image-base-beaglebone.sdimg > mender-beaglebone.sdimg.gz
-        s3cmd --cf-invalidate -F put mender-beaglebone.sdimg.gz s3://mender/${RELEASE_VERSION}/beaglebone/
-        s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/mender-beaglebone.sdimg.gz --acl-public
-        s3cmd --cf-invalidate -F put beaglebone_release_1.mender s3://mender/${RELEASE_VERSION}/beaglebone/
-        s3cmd --cf-invalidate -F put beaglebone_release_2.mender s3://mender/${RELEASE_VERSION}/beaglebone/
-        s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_1.mender --acl-public
-        s3cmd setacl s3://mender/${RELEASE_VERSION}/beaglebone/beaglebone_release_2.mender --acl-public
+        s3cmd --cf-invalidate -F put mender-beaglebone.sdimg.gz s3://mender/${CLIENT_VERSION}/beaglebone/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/mender-beaglebone.sdimg.gz --acl-public
+        s3cmd --cf-invalidate -F put beaglebone_release_1.mender s3://mender/${CLIENT_VERSION}/beaglebone/
+        s3cmd --cf-invalidate -F put beaglebone_release_2.mender s3://mender/${CLIENT_VERSION}/beaglebone/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_1.mender --acl-public
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_2.mender --acl-public
 
         docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 
         for container in mender-client-qemu api-gateway deployments deviceadm deviceauth gui inventory useradm; do
-            docker tag mendersoftware/$container:pr mendersoftware/$container:${RELEASE_VERSION}
-            docker push mendersoftware/$container:${RELEASE_VERSION}
+            VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
+            docker tag mendersoftware/$container:pr mendersoftware/$container:${VERSION}
+            docker push mendersoftware/$container:${VERSION}
         done
     fi
 fi
