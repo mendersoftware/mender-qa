@@ -240,13 +240,12 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     git checkout -- docker-compose*.yml
 
     if [ "$PUSH_CONTAINERS" = true ]; then
-        cd $WORKSPACE/integration/tests
         CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
 
+        cd $WORKSPACE/vexpress-qemu/
         s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${CLIENT_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
         s3cmd setacl s3://mender/temp_${CLIENT_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
 
-        cd $WORKSPACE/vexpress-qemu/
         modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-1_${CLIENT_VERSION}
         mender-artifact write rootfs-image -t vexpress-qemu -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_1_${CLIENT_VERSION}.mender
         modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-2_${CLIENT_VERSION}
