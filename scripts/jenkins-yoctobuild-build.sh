@@ -37,19 +37,22 @@ prepare_and_set_PATH() {
 prepare_build_config() {
     /bin/cp $WORKSPACE/mender-qa/build-conf/*  $BUILDDIR/conf/
 
+    CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
+
     # See comment in local.conf
     cat >> $BUILDDIR/conf/local.conf <<EOF
 EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
 SSTATE_DIR = "/mnt/sstate-cache"
+
+MENDER_ARTIFACT_NAME = "mender-image-${CLIENT_VERSION}"
 EOF
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
     # influence which version Yocto and the binaries will show.
     if [ "$PUSH_CONTAINERS" = true ]; then
-        CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
         cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION_mender = "${CLIENT_VERSION}%"
 PREFERRED_VERSION_mender-artifact = "${CLIENT_VERSION}%"
@@ -244,27 +247,27 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         s3cmd setacl s3://mender/temp_${CLIENT_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
 
         cd $WORKSPACE/vexpress-qemu/
-        modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-1
-        mender-artifact write rootfs-image -t vexpress-qemu -n release-1 -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_1.mender
-        modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-2
-        mender-artifact write rootfs-image -t vexpress-qemu -n release-2 -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_2.mender
-        s3cmd --cf-invalidate -F put vexpress_release_1.mender s3://mender/${CLIENT_VERSION}/vexpress-qemu/
-        s3cmd --cf-invalidate -F put vexpress_release_2.mender s3://mender/${CLIENT_VERSION}/vexpress-qemu/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/vexpress-qemu/vexpress_release_1.mender --acl-public
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/vexpress-qemu/vexpress_release_2.mender --acl-public
+        modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-1_${CLIENT_VERSION}
+        mender-artifact write rootfs-image -t vexpress-qemu -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_1_${CLIENT_VERSION}.mender
+        modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-2_${CLIENT_VERSION}
+        mender-artifact write rootfs-image -t vexpress-qemu -n release-2_${CLIENT_VERSION} -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_2_${CLIENT_VERSION}.mender
+        s3cmd --cf-invalidate -F put vexpress_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/vexpress-qemu/
+        s3cmd --cf-invalidate -F put vexpress_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/vexpress-qemu/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/vexpress-qemu/vexpress_release_1_${CLIENT_VERSION}.mender --acl-public
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/vexpress-qemu/vexpress_release_2_${CLIENT_VERSION}.mender --acl-public
 
         cd $WORKSPACE/beaglebone/
-        modify_ext4 core-image-base-beaglebone.ext4 release-1
-        mender-artifact write rootfs-image -t beaglebone -n release-1 -u core-image-base-beaglebone.ext4 -o beaglebone_release_1.mender
-        modify_ext4 core-image-base-beaglebone.ext4 release-2
-        mender-artifact write rootfs-image -t beaglebone -n release-2 -u core-image-base-beaglebone.ext4 -o beaglebone_release_2.mender
-        gzip -c core-image-base-beaglebone.sdimg > mender-beaglebone.sdimg.gz
-        s3cmd --cf-invalidate -F put mender-beaglebone.sdimg.gz s3://mender/${CLIENT_VERSION}/beaglebone/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/mender-beaglebone.sdimg.gz --acl-public
-        s3cmd --cf-invalidate -F put beaglebone_release_1.mender s3://mender/${CLIENT_VERSION}/beaglebone/
-        s3cmd --cf-invalidate -F put beaglebone_release_2.mender s3://mender/${CLIENT_VERSION}/beaglebone/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_1.mender --acl-public
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_2.mender --acl-public
+        modify_ext4 core-image-base-beaglebone.ext4 release-1_${CLIENT_VERSION}
+        mender-artifact write rootfs-image -t beaglebone -n release-1_${CLIENT_VERSION} -u core-image-base-beaglebone.ext4 -o beaglebone_release_1_${CLIENT_VERSION}.mender
+        modify_ext4 core-image-base-beaglebone.ext4 release-2_${CLIENT_VERSION}
+        mender-artifact write rootfs-image -t beaglebone -n release-2_${CLIENT_VERSION} -u core-image-base-beaglebone.ext4 -o beaglebone_release_2_${CLIENT_VERSION}.mender
+        gzip -c core-image-base-beaglebone.sdimg > mender-beaglebone_${CLIENT_VERSION}.sdimg.gz
+        s3cmd --cf-invalidate -F put mender-beaglebone_${CLIENT_VERSION}.sdimg.gz s3://mender/${CLIENT_VERSION}/beaglebone/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/mender-beaglebone_${CLIENT_VERSION}.sdimg.gz --acl-public
+        s3cmd --cf-invalidate -F put beaglebone_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/beaglebone/
+        s3cmd --cf-invalidate -F put beaglebone_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/beaglebone/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_1_${CLIENT_VERSION}.mender --acl-public
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_2_${CLIENT_VERSION}.mender --acl-public
 
         docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 
