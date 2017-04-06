@@ -237,7 +237,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
 
     # Reset docker tag names to their cloned values after tests are done.
     cd $WORKSPACE/integration
-    git checkout -- docker-compose*.yml
+    git checkout -f -- .
 
     if [ "$PUSH_CONTAINERS" = true ]; then
         CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
