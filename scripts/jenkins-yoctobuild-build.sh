@@ -82,6 +82,12 @@ EOF
 # Build Go repositories.
 export GOPATH="$WORKSPACE/go"
 for build in deployments deviceadm deviceauth inventory useradm; do (
+
+    # If we are testing a specific microservice, only build that one.
+    if [[ ! -z $REPO_TO_TEST && $build != $REPO_TO_TEST ]]; then
+        continue
+    fi
+
     $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
     cd go/src/github.com/mendersoftware/$build
     CGO_ENABLED=0 go build
@@ -104,6 +110,19 @@ for build in deployments deviceadm deviceauth inventory useradm; do (
 # -----------------------
 # Done with server build.
 # -----------------------
+
+if [ ! -z $PR_TO_TEST ]; then
+    START_COMMENT="##### Integration tests [job]($BUILD_URL) starting for:\nHEAD commit: $GIT_COMMIT"
+
+    curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+         --data @<(cat <<EOF
+        {
+            "body": "$START_COMMENT"
+        }
+EOF
+        ) \
+        $API_ENDPOINT
+fi
 
 if [ "$CLEAN_BUILD_CACHE" = "true" ]
 then
@@ -220,24 +239,50 @@ fi
 
 
 if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
-    cd $WORKSPACE
-    # Set build dir for qemu again, BBB build might possibly have overridden
-    # this.
-    source oe-init-build-env build-qemu
-    prepare_and_set_PATH
+    if [ "$BUILD_QEMU" = "true" ]; then
+        cd $WORKSPACE
+        # Set build dir for qemu again, BBB build might possibly have overridden
+        # this.
+        source oe-init-build-env build-qemu
+        prepare_and_set_PATH
 
+        cd $WORKSPACE/meta-mender/meta-mender-qemu
+        cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
+        cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
 
-    cd $WORKSPACE/meta-mender/meta-mender-qemu
-    cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
-    cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
+        docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
+        $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
+    fi
 
-    docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
-    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
-    cd $WORKSPACE/integration/tests && ./run.sh
+    cd $WORKSPACE/integration/tests && ./run.sh || FAILED=1
+
+    # if it is a PR, make and publish the report
+    if [ ! -z $PR_TO_TEST ]; then
+        HTML_REPORT=$(find . -iname report.html  | head -n 1)
+        REPORT_DIR=$BUILD_NUMBER
+
+        s3cmd put $HTML_REPORT s3://mender-integration-reports/$REPORT_DIR/
+        REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$REPORT_DIR/report.html
+        TEST_RESULTS=$([ "$FAILED" == 1 ] && echo "FAILED" || echo "PASSED")
+        FINISH_COMMENT="#### Integration tests\n#### $TEST_RESULTS\nHEAD commit: $GIT_COMMIT\nhtml report: $REPORT_URL\n"
+
+        curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+            --data @<(cat <<EOF
+            {
+                "body": "$FINISH_COMMENT"
+            }
+EOF
+            ) \
+            $API_ENDPOINT
+    fi
 
     # Reset docker tag names to their cloned values after tests are done.
     cd $WORKSPACE/integration
     git checkout -f -- .
+
+    if [ ! -z $FAILED ]; then
+        exit $FAILED
+    fi
 
     if [ "$PUSH_CONTAINERS" = true ]; then
         CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
