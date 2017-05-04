@@ -23,6 +23,18 @@ modify_ext4() {
     printf "cd %s\nwrite %s %s\n" /etc/mender /tmp/artifactfile artifact_info | debugfs -w $1
 }
 
+github_pull_request_comment() {
+    local request_body=$(cat <<EOF
+    {
+      "body": "$1"
+    }
+EOF
+)
+    curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+         -d "$request_body" \
+         "$API_ENDPOINT"
+}
+
 prepare_and_set_PATH() {
     # On branches without recipe specific sysroots, the next step will fail
     # because the prepare_recipe_sysroot task doesn't exist. Use that failure
@@ -82,6 +94,12 @@ EOF
 # Build Go repositories.
 export GOPATH="$WORKSPACE/go"
 for build in deployments deviceadm deviceauth inventory useradm; do (
+
+    # If we are testing a specific microservice, only build that one.
+    if [[ ! -z $REPO_TO_TEST && $build != $REPO_TO_TEST ]]; then
+        continue
+    fi
+
     $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
     cd go/src/github.com/mendersoftware/$build
     CGO_ENABLED=0 go build
@@ -137,9 +155,33 @@ then
 
     mender-artifact write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
     # run tests on qemu
-    if [ "$TEST_QEMU" = "true" ]
-    then
-        py.test --junit-xml=results.xml
+    if [ "$TEST_QEMU" = "true" ]; then
+        if [ ! -z "$PR_TO_TEST" ]; then
+            START_COMMENT="##### QEMU acceptance tests [job]($BUILD_URL) starting for:\nHEAD commit: $GIT_COMMIT"
+            github_pull_request_comment "$START_COMMENT"
+        fi
+
+        HTML_REPORT="--html=report.html --self-contained-html"
+        if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
+            HTML_REPORT=""
+            echo "WARNING: install pytest-html for html results report"
+        fi
+
+        py.test --junit-xml=results.xml $HTML_REPORT || FAILED=1
+
+        if [ ! -z "$PR_TO_TEST" ]; then
+            HTML_REPORT=$(find . -iname report.html  | head -n 1)
+            REPORT_DIR=$BUILD_NUMBER
+            s3cmd put $HTML_REPORT s3://mender-acceptance-reports/$REPORT_DIR/
+            REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-reports/$REPORT_DIR/report.html
+            TEST_RESULTS=$([ "$FAILED" == 1 ] && echo "FAILED" || echo "PASSED")
+            FINISH_COMMENT="#### QEMU acceptance tests\n#### $TEST_RESULTS\nHEAD commit: $GIT_COMMIT\nhtml report: $REPORT_URL\n"
+            github_pull_request_comment "$FINISH_COMMENT"
+        fi
+
+        if [ ! -z $FAILED ]; then
+            exit $FAILED
+        fi
     fi
 
     (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 . )
@@ -220,24 +262,48 @@ fi
 
 
 if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
-    cd $WORKSPACE
-    # Set build dir for qemu again, BBB build might possibly have overridden
-    # this.
-    source oe-init-build-env build-qemu
-    prepare_and_set_PATH
 
+    if [ ! -z $PR_TO_TEST ]; then
+        START_COMMENT="##### Integration tests [job]($BUILD_URL) starting for:\nHEAD commit: $GIT_COMMIT"
+        github_pull_request_comment "$START_COMMENT"
+    fi
 
-    cd $WORKSPACE/meta-mender/meta-mender-qemu
-    cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
-    cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
+    if [ "$BUILD_QEMU" = "true" ]; then
+        cd $WORKSPACE
+        # Set build dir for qemu again, BBB build might possibly have overridden
+        # this.
+        source oe-init-build-env build-qemu
+        prepare_and_set_PATH
 
-    docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
-    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
-    cd $WORKSPACE/integration/tests && ./run.sh
+        cd $WORKSPACE/meta-mender/meta-mender-qemu
+        cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
+        cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
+
+        docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
+        $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
+    fi
+
+    cd $WORKSPACE/integration/tests && ./run.sh || FAILED=1
+
+    # if it is a PR, make and publish the report
+    if [ ! -z $PR_TO_TEST ]; then
+        HTML_REPORT=$(find . -iname report.html  | head -n 1)
+        REPORT_DIR=$BUILD_NUMBER
+
+        s3cmd put $HTML_REPORT s3://mender-integration-reports/$REPORT_DIR/
+        REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$REPORT_DIR/report.html
+        TEST_RESULTS=$([ "$FAILED" == 1 ] && echo "FAILED" || echo "PASSED")
+        FINISH_COMMENT="#### Integration tests\n#### $TEST_RESULTS\nHEAD commit: $GIT_COMMIT\nhtml report: $REPORT_URL\n"
+        github_pull_request_comment "$FINISH_COMMENT"
+    fi
 
     # Reset docker tag names to their cloned values after tests are done.
     cd $WORKSPACE/integration
     git checkout -f -- .
+
+    if [ ! -z $FAILED ]; then
+        exit $FAILED
+    fi
 
     if [ "$PUSH_CONTAINERS" = true ]; then
         CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
