@@ -8,6 +8,29 @@ echo "Debug Jenkins setup"
 ls /home/jenkins/.ssh
 #----
 
+PR_COMMENT_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/issues/$PR_TO_TEST/comments
+PR_STATUS_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/statuses/$GIT_COMMIT
+
+declare -A TEST_TRACKER
+
+function testFinished {
+    for i in "${!TEST_TRACKER[@]}"
+    do
+        if [[ "${TEST_TRACKER[$i]}" == "pending" ]]; then
+            github_pull_request_status "failure" "tests errored." $BUILD_URL $i
+            return
+        fi
+    done
+
+    if [[ ${#TEST_TRACKER[@]} -eq 0 ]]; then
+        github_pull_request_comment "Jenkins build [job]($BUILD_URL) failed."
+    fi
+}
+
+if [ -n "$PR_TO_TEST" ]; then
+    trap testFinished SIGHUP SIGINT SIGTERM SIGKILL EXIT
+fi
+
 disable_mender_service() {
     if [ "$DISABLE_MENDER_SERVICE" = "true" ]
     then
@@ -32,7 +55,27 @@ EOF
 )
     curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
          -d "$request_body" \
-         "$API_ENDPOINT"
+         "$PR_COMMENT_ENDPOINT"
+}
+
+github_pull_request_status() {
+    if [[ -z $PR_TO_TEST ]]; then
+        return
+    fi
+
+    TEST_TRACKER[$4]=$1
+    local request_body=$(cat <<EOF
+    {
+      "state": "$1",
+      "description": "$2",
+      "target_url": "$3",
+      "context": "$4"
+    }
+EOF
+)
+    curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+         -d "$request_body" \
+         "$PR_STATUS_ENDPOINT"
 }
 
 prepare_and_set_PATH() {
@@ -96,7 +139,7 @@ export GOPATH="$WORKSPACE/go"
 for build in deployments deviceadm deviceauth inventory useradm; do (
 
     # If we are testing a specific microservice, only build that one.
-    if [[ ! -z $REPO_TO_TEST && $build != $REPO_TO_TEST ]]; then
+    if [[ -n $REPO_TO_TEST && $build != $REPO_TO_TEST ]]; then
         continue
     fi
 
@@ -130,6 +173,7 @@ fi
 
 if [ "$BUILD_QEMU" = "true" ]
 then
+    github_pull_request_status "pending" "qemu build started" "" "qemu_build"
     source oe-init-build-env build-qemu
     cd ../
 
@@ -144,6 +188,9 @@ then
     cd $BUILDDIR
     bitbake core-image-full-cmdline
 
+    $? && github_pull_request_status "success" "qemu build complete" "" "qemu_build" \
+       || github_pull_request_status "failure" "qemu build failed" "" "qemu_build"
+
     OLD_PATH="$PATH"
     prepare_and_set_PATH
 
@@ -156,10 +203,6 @@ then
     mender-artifact write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
     # run tests on qemu
     if [ "$TEST_QEMU" = "true" ]; then
-        if [ ! -z "$PR_TO_TEST" ]; then
-            START_COMMENT="##### QEMU acceptance tests [job]($BUILD_URL) starting for:\nHEAD commit: $GIT_COMMIT"
-            github_pull_request_comment "$START_COMMENT"
-        fi
 
         HTML_REPORT="--html=report.html --self-contained-html"
         if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
@@ -167,20 +210,25 @@ then
             echo "WARNING: install pytest-html for html results report"
         fi
 
-        py.test --verbose --junit-xml=results.xml $HTML_REPORT || FAILED=1
+        github_pull_request_status "pending" "qemu acceptance tests started" "" "qemu_acceptance_tests"
+        py.test --verbose --junit-xml=results.xml $HTML_REPORT
+        QEMU_TESTING_STATUS=$?
 
-        if [ ! -z "$PR_TO_TEST" ]; then
+        if [ -n "$PR_TO_TEST" ]; then
             HTML_REPORT=$(find . -iname report.html  | head -n 1)
             REPORT_DIR=$BUILD_NUMBER
             s3cmd put $HTML_REPORT s3://mender-acceptance-reports/$REPORT_DIR/
             REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-reports/$REPORT_DIR/report.html
-            TEST_RESULTS=$([ "$FAILED" == 1 ] && echo "FAILED" || echo "PASSED")
-            FINISH_COMMENT="#### QEMU acceptance tests\n#### $TEST_RESULTS\nHEAD commit: $GIT_COMMIT\nhtml report: $REPORT_URL\n"
-            github_pull_request_comment "$FINISH_COMMENT"
+
+            if [ $QEMU_TESTING_STATUS -ne 0 ]; then
+                github_pull_request_status "failure" "qemu acceptance tests failed" $REPORT_URL "qemu_acceptance_tests"
+            else
+                github_pull_request_status "success" "qemu acceptance tests passed!" $REPORT_URL "qemu_acceptance_tests"
+            fi
         fi
 
-        if [ ! -z $FAILED ]; then
-            exit $FAILED
+        if [ $QEMU_TESTING_STATUS -ne 0 ]; then
+            exit $QEMU_TESTING_STATUS
         fi
     fi
 
@@ -262,12 +310,6 @@ fi
 
 
 if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
-
-    if [ ! -z $PR_TO_TEST ]; then
-        START_COMMENT="##### Integration tests [job]($BUILD_URL) starting for:\nHEAD commit: $GIT_COMMIT"
-        github_pull_request_comment "$START_COMMENT"
-    fi
-
     if [ "$BUILD_QEMU" = "true" ]; then
         cd $WORKSPACE
         # Set build dir for qemu again, BBB build might possibly have overridden
@@ -283,26 +325,32 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
     fi
 
-    cd $WORKSPACE/integration/tests && ./run.sh || FAILED=1
+    github_pull_request_status "pending" "integration tests have started.." "" "integration"
+
+    cd $WORKSPACE/integration/tests && ./run.sh
+    INTEGRATION_TESTING_STATUS=$?
 
     # if it is a PR, make and publish the report
-    if [ ! -z $PR_TO_TEST ]; then
+    if [ -n "$PR_TO_TEST" ]; then
         HTML_REPORT=$(find . -iname report.html  | head -n 1)
         REPORT_DIR=$BUILD_NUMBER
 
         s3cmd put $HTML_REPORT s3://mender-integration-reports/$REPORT_DIR/
         REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$REPORT_DIR/report.html
-        TEST_RESULTS=$([ "$FAILED" == 1 ] && echo "FAILED" || echo "PASSED")
-        FINISH_COMMENT="#### Integration tests\n#### $TEST_RESULTS\nHEAD commit: $GIT_COMMIT\nhtml report: $REPORT_URL\n"
-        github_pull_request_comment "$FINISH_COMMENT"
+
+        if [ $INTEGRATION_TESTING_STATUS -ne 0 ]; then
+            github_pull_request_status "failure" "integration tests failed" $REPORT_URL "integration"
+        else
+            github_pull_request_status "success" "integration tests passed!" $REPORT_URL "integration"
+        fi
     fi
 
     # Reset docker tag names to their cloned values after tests are done.
     cd $WORKSPACE/integration
     git checkout -f -- .
 
-    if [ ! -z $FAILED ]; then
-        exit $FAILED
+    if [ $INTEGRATION_TESTING_STATUS -ne 0 ]; then
+        exit $INTEGRATION_TESTING_STATUS
     fi
 
     if [ "$PUSH_CONTAINERS" = true ]; then
