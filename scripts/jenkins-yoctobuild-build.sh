@@ -167,7 +167,7 @@ then
             echo "WARNING: install pytest-html for html results report"
         fi
 
-        py.test --junit-xml=results.xml $HTML_REPORT || FAILED=1
+        py.test --verbose --junit-xml=results.xml $HTML_REPORT || FAILED=1
 
         if [ ! -z "$PR_TO_TEST" ]; then
             HTML_REPORT=$(find . -iname report.html  | head -n 1)
