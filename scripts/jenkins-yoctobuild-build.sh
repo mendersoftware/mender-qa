@@ -173,7 +173,7 @@ fi
 
 if [ "$BUILD_QEMU" = "true" ]
 then
-    github_pull_request_status "pending" "qemu build started" "" "qemu_build"
+    github_pull_request_status "pending" "qemu build started" "$BUILD_URL" "qemu_build"
     source oe-init-build-env build-qemu
     cd ../
 
@@ -186,10 +186,13 @@ then
     prepare_build_config
     disable_mender_service
     cd $BUILDDIR
-    bitbake core-image-full-cmdline
+    bitbake core-image-full-cmdline || QEMU_BITBAKE_RESULT=$?
 
-    $? && github_pull_request_status "success" "qemu build complete" "" "qemu_build" \
-       || github_pull_request_status "failure" "qemu build failed" "" "qemu_build"
+    if [[ $QEMU_BITBAKE_RESULT -eq 0 ]]; then
+        github_pull_request_status "success" "qemu build completed" "$BUILD_URL" "qemu_build"
+    else
+        github_pull_request_status "failure" "qemu build failed" "$BUILD_URL" "qemu_build"
+    fi
 
     OLD_PATH="$PATH"
     prepare_and_set_PATH
@@ -211,8 +214,7 @@ then
         fi
 
         github_pull_request_status "pending" "qemu acceptance tests started" "" "qemu_acceptance_tests"
-        py.test --verbose --junit-xml=results.xml $HTML_REPORT
-        QEMU_TESTING_STATUS=$?
+        py.test --verbose --junit-xml=results.xml $HTML_REPORT || QEMU_TESTING_STATUS=$?
 
         if [ -n "$PR_TO_TEST" ]; then
             HTML_REPORT=$(find . -iname report.html  | head -n 1)
@@ -327,8 +329,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
 
     github_pull_request_status "pending" "integration tests have started.." "" "integration"
 
-    cd $WORKSPACE/integration/tests && ./run.sh
-    INTEGRATION_TESTING_STATUS=$?
+    cd $WORKSPACE/integration/tests && ./run.sh || INTEGRATION_TESTING_STATUS=$?
 
     # if it is a PR, make and publish the report
     if [ -n "$PR_TO_TEST" ]; then
