@@ -131,6 +131,14 @@ EOF
 }
 
 # ---------------------------------------------------
+# Preliminary checks.
+# ---------------------------------------------------
+
+# Verify that version references are up to date.
+$WORKSPACE/integration/extra/release_tool.py --verify-integration-references
+
+
+# ---------------------------------------------------
 # Build server repositories.
 # ---------------------------------------------------
 
