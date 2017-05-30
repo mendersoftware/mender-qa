@@ -221,7 +221,7 @@ then
             echo "WARNING: install pytest-html for html results report"
         fi
 
-        github_pull_request_status "pending" "qemu acceptance tests started" "" "qemu_acceptance_tests"
+        github_pull_request_status "pending" "qemu acceptance tests started in Jenkins" "$BUILD_URL" "qemu_acceptance_tests"
         py.test --verbose --junit-xml=results.xml $HTML_REPORT || QEMU_TESTING_STATUS=$?
 
         if [ -n "$PR_TO_TEST" ]; then
@@ -335,7 +335,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
     fi
 
-    github_pull_request_status "pending" "integration tests have started.." "" "integration"
+    github_pull_request_status "pending" "integration tests have started in Jenkins" "$BUILD_URL" "integration"
 
     cd $WORKSPACE/integration/tests && ./run.sh || INTEGRATION_TESTING_STATUS=$?
 
