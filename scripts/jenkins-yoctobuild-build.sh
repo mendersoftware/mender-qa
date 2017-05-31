@@ -380,6 +380,11 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
 
     if [ "$PUSH_CONTAINERS" = true ]; then
         CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
+        MENDER_ARTIFACT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
+
+        # $(which mender-artifact) will grab it from the Yocto build.
+        s3cmd --cf-invalidate -F put "$(which mender-artifact)" s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/
+        s3cmd setacl s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/mender-artifact --acl-public
 
         cd $WORKSPACE/vexpress-qemu/
         s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${CLIENT_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
