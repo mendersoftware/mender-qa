@@ -93,6 +93,7 @@ prepare_build_config() {
     /bin/cp $WORKSPACE/mender-qa/build-conf/*  $BUILDDIR/conf/
 
     CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
+    MENDER_ARTIFACT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
 
     # See comment in local.conf
     cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -101,23 +102,38 @@ EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
 SSTATE_DIR = "/mnt/sstate-cache"
 
-MENDER_ARTIFACT_NAME = "mender-image-${CLIENT_VERSION}"
+MENDER_ARTIFACT_NAME = "mender-image-$CLIENT_VERSION"
+# This is only used in the mender_git.bb recipe.
+MENDER_BRANCH = "$CLIENT_VERSION"
+# This is only used in the mender_artifact_git.bb recipe.
+MENDER_ARTIFACT_BRANCH = "$MENDER_ARTIFACT_VERSION"
 EOF
+
+    mender_on_exact_tag=$(cd $WORKSPACE/mender && git describe --tags --exact-match HEAD) || mender_on_exact_tag=
+    mender_artifact_on_exact_tag=$(cd $WORKSPACE/mender && git describe --tags --exact-match HEAD) || mender_artifact_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
     # influence which version Yocto and the binaries will show.
-    if [ "$PUSH_CONTAINERS" = true ]; then
+    if [ -n "$mender_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_mender = "${CLIENT_VERSION}%"
-PREFERRED_VERSION_mender-artifact = "${CLIENT_VERSION}%"
-PREFERRED_VERSION_mender-artifact-native = "${CLIENT_VERSION}%"
+PREFERRED_VERSION_mender = "$CLIENT_VERSION%"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_mender = "master-git%"
-PREFERRED_VERSION_mender-artifact = "master-git%"
-PREFERRED_VERSION_mender-artifact-native = "master-git%"
+PREFERRED_VERSION_mender = "$CLIENT_VERSION-git%"
+EOF
+    fi
+
+    if [ -n "$mender_artifact_on_exact_tag" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION_mender-artifact = "$MENDER_ARTIFACT_VERSION%"
+PREFERRED_VERSION_mender-artifact-native = "$MENDER_ARTIFACT_VERSION%"
+EOF
+    else
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION_mender-artifact = "$MENDER_ARTIFACT_VERSION-git%"
+PREFERRED_VERSION_mender-artifact-native = "$MENDER_ARTIFACT_VERSION-git%"
 EOF
     fi
 
