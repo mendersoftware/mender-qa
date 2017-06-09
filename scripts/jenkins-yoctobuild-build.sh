@@ -103,10 +103,6 @@ EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
 SSTATE_DIR = "/mnt/sstate-cache"
 
 MENDER_ARTIFACT_NAME = "mender-image-$CLIENT_VERSION"
-# This is only used in the mender_git.bb recipe.
-MENDER_BRANCH = "$CLIENT_VERSION"
-# This is only used in the mender_artifact_git.bb recipe.
-MENDER_ARTIFACT_BRANCH = "$MENDER_ARTIFACT_VERSION"
 EOF
 
     mender_on_exact_tag=$(cd $WORKSPACE/mender && git describe --tags --exact-match HEAD) || mender_on_exact_tag=
