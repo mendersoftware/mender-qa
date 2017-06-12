@@ -347,7 +347,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
     fi
 
-    github_pull_request_status "pending" "integration tests have started in Jenkins" "$BUILD_URL" "integration"
+    github_pull_request_status "pending" "integration tests have started in Jenkins" "$BUILD_URL" "integration_$INTEGRATION_REV"
 
     cd $WORKSPACE/integration/tests && ./run.sh || INTEGRATION_TESTING_STATUS=$?
 
@@ -360,9 +360,9 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$REPORT_DIR/report.html
 
         if [ $INTEGRATION_TESTING_STATUS -ne 0 ]; then
-            github_pull_request_status "failure" "integration tests failed" $REPORT_URL "integration"
+            github_pull_request_status "failure" "integration tests failed" $REPORT_URL "integration_$INTEGRATION_REV"
         else
-            github_pull_request_status "success" "integration tests passed!" $REPORT_URL "integration"
+            github_pull_request_status "success" "integration tests passed!" $REPORT_URL "integration_$INTEGRATION_REV"
         fi
     fi
 
