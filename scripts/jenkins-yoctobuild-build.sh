@@ -181,6 +181,13 @@ for build in deployments deviceadm deviceauth inventory useradm; do (
     cd mender-api-gateway-docker
     docker build -t mendersoftware/api-gateway:pr .
 )
+# Build fake client
+(
+    cd go/src/github.com/mendersoftware/mender-stress-test-client
+    go get ./...
+    go build
+    go install
+)
 
 # -----------------------
 # Done with server build.
