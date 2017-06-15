@@ -219,6 +219,7 @@ then
         github_pull_request_status "success" "qemu build completed" "$BUILD_URL" "qemu_build"
     else
         github_pull_request_status "failure" "qemu build failed" "$BUILD_URL" "qemu_build"
+        exit $QEMU_BITBAKE_RESULT
     fi
 
     OLD_PATH="$PATH"
@@ -251,6 +252,7 @@ then
 
             if [ $QEMU_TESTING_STATUS -ne 0 ]; then
                 github_pull_request_status "failure" "qemu acceptance tests failed" $REPORT_URL "qemu_acceptance_tests"
+                exit $QEMU_TESTING_STATUS
             else
                 github_pull_request_status "success" "qemu acceptance tests passed!" $REPORT_URL "qemu_acceptance_tests"
             fi
