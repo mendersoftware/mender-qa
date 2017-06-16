@@ -169,13 +169,19 @@ do
 
     sleep 10
 done
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP useradd -m -d /home/jenkins jenkins || true
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP mkdir -p /home/jenkins/.ssh
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP cp .ssh/authorized_keys /home/jenkins/.ssh/authorized_keys
-scp -o BatchMode=yes -o StrictHostKeyChecking=no /home/jenkins/.ssh/id_rsa* root@$IP:/home/jenkins/.ssh/
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP chown -R jenkins:jenkins /home/jenkins/.ssh
+
+RSH="ssh -o BatchMode=yes"
+
+# Populate known_hosts file
+ssh-keyscan -t rsa  $IP  > ~/.ssh/known_hosts
+
+$RSH root@$IP  "useradd -m -d /home/jenkins jenkins"  ||  true
+$RSH root@$IP  "mkdir -p /home/jenkins/.ssh"
+$RSH root@$IP  "cp .ssh/authorized_keys /home/jenkins/.ssh/authorized_keys"
+scp -o BatchMode=yes  /home/jenkins/.ssh/id_rsa* root@$IP:/home/jenkins/.ssh/
+$RSH root@$IP  "chown -R jenkins:jenkins /home/jenkins/.ssh"
 PKG_MANAGER="apt-get -q"
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "test -x /usr/bin/yum" && PKG_MANAGER=yum
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP "$PKG_MANAGER -y update && $PKG_MANAGER -y install rsync"
+$RSH root@$IP  "test -x /usr/bin/yum"  &&  PKG_MANAGER=yum
+$RSH root@$IP  "$PKG_MANAGER -y update && $PKG_MANAGER -y install rsync"
 
 exit 0

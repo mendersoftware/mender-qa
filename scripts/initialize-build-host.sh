@@ -66,7 +66,7 @@ echo "IP information:"
 
 
 RSYNC="rsync --delete -czrlpt -T /tmp"
-RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
+RSH="ssh -o BatchMode=yes"
 
 # Support launching scripts that were initially launched under bash.
 if [ -n "$BASH_VERSION" ]
