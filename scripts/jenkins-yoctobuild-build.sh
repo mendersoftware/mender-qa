@@ -10,6 +10,7 @@ ls /home/jenkins/.ssh
 
 PR_COMMENT_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/issues/$PR_TO_TEST/comments
 PR_STATUS_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/statuses/$GIT_COMMIT
+export PATH=$PATH:~/workspace/yoctobuild/go/bin
 
 declare -A TEST_TRACKER
 
