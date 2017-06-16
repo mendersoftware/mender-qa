@@ -319,7 +319,7 @@ then
     )
 
     # Add build-artifacts-cache to known hosts
-    KNOWN_HOSTS_FILE=/home/jenkins/.ssh/known_hosts
+    KNOWN_HOSTS_FILE=~/.ssh/known_hosts
     # if fgrep build-artifacts-cache.cloud.cfengine.com $KNOWN_HOSTS_FILE  2>/dev/null
     # then
     #     :
