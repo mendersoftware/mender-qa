@@ -65,8 +65,9 @@ echo "IP information:"
 /sbin/ip addr || true
 
 
+CACHE_HOST="jenkins@build-artifacts-cache.cloud.cfengine.com"
 RSYNC="rsync --delete -czrlpt -T /tmp"
-RSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no"
+RSH="ssh -o BatchMode=yes"
 
 # Support launching scripts that were initially launched under bash.
 if [ -n "$BASH_VERSION" ]
@@ -316,6 +317,15 @@ then
             fi
         done
     )
+
+    # Add build-artifacts-cache to known hosts
+    KNOWN_HOSTS_FILE=/home/jenkins/.ssh/known_hosts
+    # if fgrep build-artifacts-cache.cloud.cfengine.com $KNOWN_HOSTS_FILE  2>/dev/null
+    # then
+    #     :
+    # else
+        echo "build-artifacts-cache.cloud.cfengine.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6qcxCQgtubv9WEhrAyMEFFMLLEjirk0p0Ru+vATioEIyw7gBFfOWOp/dBfsF6fuiY1vt3IsBx4u1DkS4j8x7DjB8X2dIcBia2jt2D3sBdDFb/nc7ZnWfFf/E7dWoiF0WKvxZ62RwjyZuyz9TmL1d3jlIyuRimkhgwnuRAMyymJ5YbxvvfTH01OuGS/0pkqkLAxomRyJTv6qcGr1rOPd5FuySwOO5M/tGkajJppKC+8u/RCyWfgu1khrBmi6PevXTaoJ/lQyexexZK0HVsA5G1U/+ipO18DqaCCAnHvZ/AKt+yYmoe9RtLfx0T7DHinEV1yj4ynUj7EqudCrLOorg5 root@yoctobuild-sstate-cache"  > $KNOWN_HOSTS_FILE
+    # fi
 
     # Reexecute script in order to be able to collect the return code, and
     # potentially stop the slave.
