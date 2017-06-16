@@ -97,16 +97,16 @@ prepare_build_config() {
 
     # See comment in local.conf
     cat >> $BUILDDIR/conf/local.conf <<EOF
-EXTERNALSRC_pn-mender = "$WORKSPACE/mender"
-EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/mender-artifact"
-EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/mender-artifact"
+EXTERNALSRC_pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
+EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
+EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
 SSTATE_DIR = "/mnt/sstate-cache"
 
 MENDER_ARTIFACT_NAME = "mender-image-$CLIENT_VERSION"
 EOF
 
-    mender_on_exact_tag=$(cd $WORKSPACE/mender && git describe --tags --exact-match HEAD) || mender_on_exact_tag=
-    mender_artifact_on_exact_tag=$(cd $WORKSPACE/mender && git describe --tags --exact-match HEAD) || mender_artifact_on_exact_tag=
+    mender_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD) || mender_on_exact_tag=
+    mender_artifact_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD) || mender_artifact_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
@@ -156,6 +156,10 @@ $WORKSPACE/integration/extra/release_tool.py --verify-integration-references
 
 # Build Go repositories.
 export GOPATH="$WORKSPACE/go"
+(
+    cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact
+    CGO_ENABLED=0 go build
+)
 for build in deployments deviceadm deviceauth inventory useradm; do (
 
     # If we are testing a specific microservice, only build that one.
@@ -387,8 +391,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
         MENDER_ARTIFACT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
 
-        # $(which mender-artifact) will grab it from the Yocto build.
-        s3cmd --cf-invalidate -F put "$(which mender-artifact)" s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/
+        s3cmd --cf-invalidate -F put $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/mender-artifact s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/
         s3cmd setacl s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/mender-artifact --acl-public
 
         cd $WORKSPACE/vexpress-qemu/
