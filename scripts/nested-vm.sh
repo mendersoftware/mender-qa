@@ -134,7 +134,7 @@ sudo chown libvirt-qemu:libvirt-qemu $DISK $XML
 sudo virsh net-start default || true
 sudo virsh create $XML
 
-# Find IP of the newly launched host.
+# WAIT for host and find its IP
 IP=
 attempts=20
 while [ -z "$IP" ]
@@ -156,7 +156,7 @@ sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 2222 -j DNAT --to-dest $IP:2
 sudo iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 2222 -j DNAT --to-dest $IP:22
 sudo iptables -I FORWARD 1 -p tcp --dport 22 -j ACCEPT
 
-# Create jenkins user on slave VM and copy keys.
+# WAIT for ssh
 attempts=10
 while ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@$IP true
 do
@@ -175,6 +175,7 @@ RSH="ssh -o BatchMode=yes"
 # Populate known_hosts file
 ssh-keyscan -t rsa  $IP  > ~/.ssh/known_hosts
 
+# Create jenkins user on slave VM and copy keys.
 $RSH root@$IP  "useradd -m -d /home/jenkins jenkins"  ||  true
 $RSH root@$IP  "mkdir -p /home/jenkins/.ssh"
 $RSH root@$IP  "cp .ssh/authorized_keys /home/jenkins/.ssh/authorized_keys"
