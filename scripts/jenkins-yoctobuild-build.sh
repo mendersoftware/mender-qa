@@ -150,6 +150,7 @@ build_custom_qemu() {
 
     if [ -f /var/tmp/qemu-built ]; then
         echo "qmeu already built"
+        return
     fi
 
     git clone git://git.qemu.org/qemu.git
@@ -172,7 +173,7 @@ build_custom_qemu() {
                 --disable-gtk \
 
     sudo make install -j$(grep -c ^processor /proc/cpuinfo) V=1
-
+    cd -
     touch /var/tmp/qemu-built
 }
 
@@ -276,7 +277,7 @@ then
         # use original path when building qemu
         export PATH=$OLD_PATH
         build_custom_qemu
-        prepare_and_set_PATH
+        ( cd $BUILDDIR && prepare_and_set_PATH )
 
         HTML_REPORT="--html=report.html --self-contained-html"
         if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
