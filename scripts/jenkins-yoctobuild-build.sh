@@ -143,6 +143,39 @@ EOF
     fi
 }
 
+build_custom_qemu() {
+    # using released versions of qemu, we end up with this error:
+    #   https://bugs.launchpad.net/qemu/+bug/1481272
+    # installing from source doesn't exhibit this behaviour
+
+    if [ -f /var/tmp/qemu-built ]; then
+        echo "qmeu already built"
+    fi
+
+    git clone git://git.qemu.org/qemu.git
+    cd qemu && git checkout b187e2b53055007fa08ccb9fb120578bae0d02f3
+    git submodule update --init dtc
+
+    ./configure --target-list=arm-softmmu \
+                --disable-werror \
+                --prefix=/usr \
+                --localstatedir=/var \
+                    --sysconfdir=/etc \
+                        --libexecdir=/usr/lib/qemu \
+                    --disable-glusterfs \
+                    --disable-debug-info \
+                    --disable-bsd-user \
+                    --disable-werror \
+                    --disable-sdl \
+                    --disable-xen \
+                --disable-attr \
+                --disable-gtk \
+
+    sudo make install -j$(grep -c ^processor /proc/cpuinfo) V=1
+
+    touch /var/tmp/qemu-built
+}
+
 # ---------------------------------------------------
 # Preliminary checks.
 # ---------------------------------------------------
@@ -239,6 +272,11 @@ then
     mender-artifact write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
     # run tests on qemu
     if [ "$TEST_QEMU" = "true" ]; then
+
+        # use original path when building qemu
+        export PATH=$OLD_PATH
+        build_custom_qemu
+        prepare_and_set_PATH
 
         HTML_REPORT="--html=report.html --self-contained-html"
         if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
