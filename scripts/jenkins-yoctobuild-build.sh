@@ -270,7 +270,9 @@ then
 
     export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
 
+    cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg /var/tmp/clean_sdimg
     mender-artifact write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
+
     # run tests on qemu
     if [ "$TEST_QEMU" = "true" ]; then
 
@@ -284,6 +286,8 @@ then
             HTML_REPORT=""
             echo "WARNING: install pytest-html for html results report"
         fi
+
+
 
         github_pull_request_status "pending" "qemu acceptance tests started in Jenkins" "$BUILD_URL" "qemu_acceptance_tests"
         py.test --verbose --junit-xml=results.xml $HTML_REPORT || QEMU_TESTING_STATUS=$?
