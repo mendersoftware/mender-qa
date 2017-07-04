@@ -45,11 +45,14 @@ touch $HOME/proxy-target.txt
 # Enabled nested VMs.
 sudo modprobe -r kvm_intel
 sudo modprobe -r kvm
-sudo modprobe kvm_intel nested=1 || sudo modprobe kvm nested=1
 
-# Verify that nested VMs are supported.
-test "`cat /sys/module/kvm_intel/parameters/nested`" = "Y"
-egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
+if sudo modprobe kvm_intel nested=1; then
+    # Verify that nested VMs are supported.
+    test "`cat /sys/module/kvm_intel/parameters/nested`" = "Y"
+    egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
+else
+    sudo modprobe kvm
+fi
 
 # Install KVM and other tools.
 sudo apt -qy update
