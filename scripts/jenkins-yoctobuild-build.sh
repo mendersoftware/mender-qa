@@ -153,7 +153,7 @@ build_custom_qemu() {
     #    return
     #fi
 
-    git clone https://github.com/mendersoftware/qemu.git
+    git clone -b bboozzoo/qemu-reset-race-fix https://github.com/bboozzoo/qemu.git
     cd qemu
     git submodule update --init dtc
 
