@@ -153,8 +153,8 @@ build_custom_qemu() {
     #    return
     #fi
 
-    git clone git://git.qemu.org/qemu.git
-    cd qemu && git checkout 359c41abe32638adad503e386969fa428cecff52
+    git clone git@github.com:mendersoftware/qemu.git
+    cd qemu
     git submodule update --init dtc
 
     ./configure --target-list=arm-softmmu \
