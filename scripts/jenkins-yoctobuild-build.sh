@@ -153,7 +153,7 @@ build_custom_qemu() {
     #    return
     #fi
 
-    git clone git@github.com:mendersoftware/qemu.git
+    git clone https://github.com/mendersoftware/qemu.git
     cd qemu
     git submodule update --init dtc
 
