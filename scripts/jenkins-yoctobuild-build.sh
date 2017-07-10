@@ -148,13 +148,9 @@ build_custom_qemu() {
     #   https://bugs.launchpad.net/qemu/+bug/1481272
     # installing from source doesn't exhibit this behaviour
 
-    if [ -f /var/tmp/qemu-built ]; then
-        echo "qmeu already built"
-        return
-    fi
-
-    git clone git://git.qemu.org/qemu.git
-    cd qemu && git checkout b187e2b53055007fa08ccb9fb120578bae0d02f3
+    git clone -b qemu-system-reset-race-fix --depth 1 \
+        https://github.com/mendersoftware/qemu.git
+    cd qemu
     git submodule update --init dtc
 
     ./configure --target-list=arm-softmmu \
