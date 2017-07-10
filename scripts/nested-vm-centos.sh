@@ -24,6 +24,18 @@ then
     exit 1
 fi
 
+# Create an empty file early in case there is an error in this script. At least
+# then we will still detect correctly whether we are on a slave or a proxy.
+touch $HOME/proxy-target.txt
+
+# Enabled nested VMs.
+sudo modprobe -r kvm_intel
+sudo modprobe kvm_intel nested=1
+
+# Verify that nested VMs are supported.
+test "`cat /sys/module/kvm_intel/parameters/nested`" = "Y"
+egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
+
 # Avoid nfs copy if argument contains '@'
 if echo "$1" | grep -q '@'
 then
@@ -37,19 +49,6 @@ fi
 BASEDISK=`echo $1 | sed 's/.*\///'`
 DISK="$HOME/$BASEDISK"
 XML="$DISK.xml"
-
-# Create an empty file early in case there is an error in this script. At least
-# then we will still detect correctly whether we are on a slave or a proxy.
-touch $HOME/proxy-target.txt
-
-# Enabled nested VMs.
-sudo modprobe -r kvm_intel
-sudo modprobe -r kvm
-sudo modprobe kvm_intel nested=1 || sudo modprobe kvm nested=1
-
-# Verify that nested VMs are supported.
-test "`cat /sys/module/kvm_intel/parameters/nested`" = "Y"
-egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 
 # Install KVM and other tools.
 sudo yum -y install epel-release
