@@ -148,7 +148,7 @@ build_custom_qemu() {
     #   https://bugs.launchpad.net/qemu/+bug/1481272
     # installing from source doesn't exhibit this behaviour
 
-    git clone -b qemu-system-reset-race-fix --depth 1 \
+    git clone -b qemu-system-reset-race-fix \
         https://github.com/mendersoftware/qemu.git
     cd qemu
     git submodule update --init dtc
