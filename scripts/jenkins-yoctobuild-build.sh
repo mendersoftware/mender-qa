@@ -148,7 +148,7 @@ build_custom_qemu() {
     #   https://bugs.launchpad.net/qemu/+bug/1481272
     # installing from source doesn't exhibit this behaviour
 
-    git clone -b qemu-system-reset-race-fix --depth 1 \
+    git clone -b qemu-system-reset-race-fix \
         https://github.com/mendersoftware/qemu.git
     cd qemu
     git submodule update --init dtc
@@ -282,7 +282,8 @@ then
         fi
 
         github_pull_request_status "pending" "qemu acceptance tests started in Jenkins" "$BUILD_URL" "qemu_acceptance_tests"
-        py.test --verbose --junit-xml=results.xml $HTML_REPORT || QEMU_TESTING_STATUS=$?
+        # run tests with xdist explicitly disabled
+        py.test -p no:xdist --verbose --junit-xml=results.xml $HTML_REPORT || QEMU_TESTING_STATUS=$?
 
         if [ -n "$PR_TO_TEST" ]; then
             HTML_REPORT=$(find . -iname report.html  | head -n 1)
