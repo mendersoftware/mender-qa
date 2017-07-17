@@ -217,46 +217,6 @@ then
         $RSYNC -e "$RSH"    "$WORKSPACE"/  $login:"$WORKSPACE_REMOTE"/
     fi
 
-    # * In multi-matrix jobs, "label" is the label of the node because we
-    #   selected to set that variable in the configuration matrix.
-    #
-    # * In other jobs, label is unset so we set it to the first label
-    #   that the node provides in NODE_LABELS, which might not be the
-    #   one that we build now (!)
-
-    if [ x"$label" = x ]  &&  [ x"$NODE_LABELS" != x ]
-    then
-        # There can be multiple labels in NODE_LABELS, pick the first one.
-        # The last one is usually the node name.
-        label=${NODE_LABELS%% *}
-    fi
-
-    # Copy the build cache, if there is one, and only if the node has a known
-    # label.
-    if [ x"$label" != x ]
-    then
-
-        # Clean up spurious garbage
-        find $HOME/.cache/*/ -type f -size 0  |  xargs rm -f
-
-        if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
-        then
-            $RSH  $login  mkdir -p .cache
-            $RSYNC -e "$RSH"                                        \
-                   $HOME/.cache/cfengine-buildscripts-distfiles/    \
-                  $login:.cache/cfengine-buildscripts-distfiles/
-        fi
-
-        if [ -d $HOME/.cache/cfengine-buildscripts-pkgs ]
-        then
-            mkdir -p $HOME/.cache/cfengine-buildscripts-pkgs/$label
-            $RSH  $login  mkdir -p .cache/cfengine-buildscripts-pkgs/$label
-            $RSYNC -e "$RSH"                                          \
-                   $HOME/.cache/cfengine-buildscripts-pkgs/$label/    \
-                  $login:.cache/cfengine-buildscripts-pkgs/$label/
-        fi
-    fi
-
     # --------------------------------------------------------------------------
     # Run the actual job.
     # --------------------------------------------------------------------------
@@ -274,29 +234,6 @@ then
     if [ -n "$WORKSPACE" ]
     then
         $RSYNC -e "$RSH"    $login:"$WORKSPACE_REMOTE"/  "$WORKSPACE"/
-    fi
-
-    # Copy the build cache back in order to be preserved.
-    if [ x"$label" != x ]
-    then
-
-        # Clean up spurious garbage
-        $RSH $login \
-             "find .cache/*/ -type f -size 0  |  xargs rm -f"
-
-        if [ -d $HOME/.cache/cfengine-buildscripts-distfiles ]
-        then
-            $RSYNC -e "$RSH"                                       \
-                   $login:.cache/cfengine-buildscripts-distfiles/  \
-                    $HOME/.cache/cfengine-buildscripts-distfiles/
-        fi
-
-        if [ -d $HOME/.cache/cfengine-buildscripts-pkgs ]
-        then
-            $RSYNC -e "$RSH"                                         \
-                   $login:.cache/cfengine-buildscripts-pkgs/$label/  \
-                    $HOME/.cache/cfengine-buildscripts-pkgs/$label/
-        fi
     fi
 
     # Return the error code from the job.
