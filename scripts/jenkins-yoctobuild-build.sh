@@ -400,7 +400,7 @@ then
                                    "$BUILD_URL" "qemu_flash_acceptance_tests"
 
         # install test dependencies
-        pip2 install --user -r requirements.txt
+        sudo pip2 install -r requirements.txt
 
         py.test --verbose --junit-xml=results.xml \
                 --bitbake-image core-image-minimal \
