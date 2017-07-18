@@ -362,7 +362,7 @@ then
     disable_mender_service
 
     cd $BUILDDIR
-    bitbake core-image-full-cmdline || QEMU_BITBAKE_RESULT=$?
+    bitbake core-image-minimal || QEMU_BITBAKE_RESULT=$?
 
     if [[ $QEMU_BITBAKE_RESULT -eq 0 ]]; then
         github_pull_request_status "success" "qemu-raw-flash build completed" \
@@ -385,7 +385,7 @@ then
     mender-artifact write rootfs-image \
                     -t vexpress-qemu-flash \
                     -n test-update \
-                    -u $BUILDDIR/tmp/deploy/images/vexpress-qemu-flash/core-image-full-cmdline-vexpress-qemu-flash.ubifs \
+                    -u $BUILDDIR/tmp/deploy/images/vexpress-qemu-flash/core-image-minimal-vexpress-qemu-flash.ubifs \
                     -o successful_image_update.mender
 
     # run tests on qemu
@@ -405,7 +405,9 @@ then
         github_pull_request_status "pending" "qemu-raw-flash acceptance tests started in Jenkins" \
                                    "$BUILD_URL" "qemu_flash_acceptance_tests"
 
-        py.test --verbose --junit-xml=results.xml $HTML_REPORT || QEMU_TESTING_STATUS=$?
+        py.test --verbose --junit-xml=results.xml \
+                --bitbake-image core-image-minimal \
+                $HTML_REPORT || QEMU_TESTING_STATUS=$?
 
         if [ -n "$PR_TO_TEST" ]; then
             HTML_REPORT=$(find . -iname report.html  | head -n 1)
