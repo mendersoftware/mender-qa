@@ -385,7 +385,7 @@ then
     mender-artifact write rootfs-image \
                     -t vexpress-qemu-flash \
                     -n test-update \
-                    -u $BUILDDIR/tmp/deploy/images/vexpress-qemu-flash/core-image-full-cmdline-vexpress-qemu-flash.ext4 \
+                    -u $BUILDDIR/tmp/deploy/images/vexpress-qemu-flash/core-image-full-cmdline-vexpress-qemu-flash.ubifs \
                     -o successful_image_update.mender
 
     # run tests on qemu
