@@ -399,6 +399,9 @@ then
         github_pull_request_status "pending" "qemu-raw-flash acceptance tests started in Jenkins" \
                                    "$BUILD_URL" "qemu_flash_acceptance_tests"
 
+        # install test dependencies
+        pip2 install --user -r requirements.txt
+
         py.test --verbose --junit-xml=results.xml \
                 --bitbake-image core-image-minimal \
                 $HTML_REPORT || QEMU_TESTING_STATUS=$?
