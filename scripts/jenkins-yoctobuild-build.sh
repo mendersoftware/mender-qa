@@ -277,7 +277,6 @@ then
 
     export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
 
-    mender-artifact write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
     # run tests on qemu
     if [ "$TEST_QEMU" = "true" ]; then
 
