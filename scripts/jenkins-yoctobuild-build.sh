@@ -148,29 +148,31 @@ build_custom_qemu() {
     #   https://bugs.launchpad.net/qemu/+bug/1481272
     # installing from source doesn't exhibit this behaviour
 
-    git clone -b qemu-system-reset-race-fix \
-        https://github.com/mendersoftware/qemu.git
-    cd qemu
-    git submodule update --init dtc
+    if [ ! -f /var/tmp/qemu-built ]; then
+        git clone -b qemu-system-reset-race-fix \
+            https://github.com/mendersoftware/qemu.git
+        cd qemu
+        git submodule update --init dtc
 
-    ./configure --target-list=arm-softmmu \
-                --disable-werror \
-                --prefix=/usr \
-                --localstatedir=/var \
-                    --sysconfdir=/etc \
-                        --libexecdir=/usr/lib/qemu \
-                    --disable-glusterfs \
-                    --disable-debug-info \
-                    --disable-bsd-user \
+        ./configure --target-list=arm-softmmu \
                     --disable-werror \
-                    --disable-sdl \
-                    --disable-xen \
-                --disable-attr \
-                --disable-gtk \
+                    --prefix=/usr \
+                    --localstatedir=/var \
+                        --sysconfdir=/etc \
+                            --libexecdir=/usr/lib/qemu \
+                        --disable-glusterfs \
+                        --disable-debug-info \
+                        --disable-bsd-user \
+                        --disable-werror \
+                        --disable-sdl \
+                        --disable-xen \
+                    --disable-attr \
+                    --disable-gtk \
 
-    sudo make install -j$(grep -c ^processor /proc/cpuinfo) V=1
-    cd -
-    touch /var/tmp/qemu-built
+        sudo make install -j$(grep -c ^processor /proc/cpuinfo) V=1
+        cd -
+        touch /var/tmp/qemu-built
+    fi
 }
 
 # ---------------------------------------------------
