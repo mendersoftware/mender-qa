@@ -93,6 +93,15 @@ prepare_and_set_PATH() {
 prepare_build_config() {
     /bin/cp $WORKSPACE/mender-qa/build-conf/*  $BUILDDIR/conf/
 
+    local machine
+    machine=$1
+
+    if [ -n "$machine" ]; then
+        if [ -d $WORKSPACE/mender-qa/build-conf-${machine} ]; then
+            /bin/cp $WORKSPACE/mender-qa/build-conf-${machine}/*  $BUILDDIR/conf/
+        fi
+    fi
+
     CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
     MENDER_ARTIFACT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
 
@@ -268,7 +277,6 @@ then
 
     export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
 
-    mender-artifact write rootfs-image -t vexpress-qemu -n test-update -u $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 -o successful_image_update.mender
     # run tests on qemu
     if [ "$TEST_QEMU" = "true" ]; then
 
@@ -294,7 +302,9 @@ then
         fi
 
         # run tests with xdist explicitly disabled
-        py.test -p no:xdist --verbose --junit-xml=results.xml $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN || QEMU_TESTING_STATUS=$?
+        py.test -p no:xdist --verbose --junit-xml=results.xml \
+                $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN
+        QEMU_TESTING_STATUS=$?
 
         if [ -n "$PR_TO_TEST" ]; then
             HTML_REPORT=$(find . -iname report.html  | head -n 1)
@@ -332,6 +342,100 @@ then
     PATH="$OLD_PATH"
 
     rm -rf build
+fi
+
+if [ "$BUILD_QEMU_RAW_FLASH" = "true" ]
+then
+    github_pull_request_status "pending" "qemu-raw-flash build started" \
+                               "$BUILD_URL" "qemu_flash_build"
+
+    source oe-init-build-env build-qemu-flash
+    cd ../
+
+    if [ ! -d mender-qa ]
+    then
+        echo "JENKINS SCRIPT: mender-qa directory is not present"
+        exit 1
+    fi
+
+    # use config for vexpress-qemu-flash
+    prepare_build_config vexpress-qemu-flash
+    disable_mender_service
+
+    cd $BUILDDIR
+    bitbake core-image-minimal || QEMU_BITBAKE_RESULT=$?
+
+    if [[ $QEMU_BITBAKE_RESULT -eq 0 ]]; then
+        github_pull_request_status "success" "qemu-raw-flash build completed" \
+                                   "$BUILD_URL" "qemu_flash_build"
+    else
+        github_pull_request_status "failure" "qemu-raw-flash build failed" \
+                                   "$BUILD_URL" "qemu_flash_build"
+        exit $QEMU_BITBAKE_RESULT
+    fi
+
+    OLD_PATH="$PATH"
+    prepare_and_set_PATH
+
+    mkdir -p $WORKSPACE/vexpress-qemu-flash
+
+    cd $WORKSPACE/meta-mender/tests/acceptance/
+
+    export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
+
+    # run tests on qemu
+    if [ "$TEST_QEMU" = "true" ]; then
+
+        # use original path when building qemu
+        export PATH=$OLD_PATH
+        build_custom_qemu
+        ( cd $BUILDDIR && prepare_and_set_PATH )
+
+        HTML_REPORT="--html=report.html --self-contained-html"
+        if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
+            HTML_REPORT=""
+            echo "WARNING: install pytest-html for html results report"
+        fi
+
+        github_pull_request_status "pending" "qemu-raw-flash acceptance tests started in Jenkins" \
+                                   "$BUILD_URL" "qemu_flash_acceptance_tests"
+
+        # install test dependencies
+        sudo pip2 install -r requirements.txt
+
+        ACCEPTANCE_TEST_TO_RUN=""
+
+        # make it possible to run specific test
+        if [ -n "$ACCEPTANCE_TEST" ]; then
+            ACCEPTANCE_TEST_TO_RUN=" -k $ACCEPTANCE_TEST"
+        fi
+
+        # run tests with xdist explicitly disabled
+        py.test -p no:xdist --verbose --junit-xml=results.xml \
+                --bitbake-image core-image-minimal \
+                $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN
+        QEMU_TESTING_STATUS=$?
+
+        if [ -n "$PR_TO_TEST" ]; then
+            HTML_REPORT=$(find . -iname report.html  | head -n 1)
+            REPORT_DIR=$BUILD_NUMBER
+            s3cmd put $HTML_REPORT s3://mender-acceptance-reports/$REPORT_DIR/
+            REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-reports/$REPORT_DIR/report.html
+
+            if [ $QEMU_TESTING_STATUS -ne 0 ]; then
+                github_pull_request_status "failure" "qemu-raw-flash acceptance tests failed" \
+                                           $REPORT_URL "qemu_flash_acceptance_tests"
+                exit $QEMU_TESTING_STATUS
+            else
+                github_pull_request_status "success" "qemu-raw-flash acceptance tests passed!" \
+                                           $REPORT_URL "qemu_flash_acceptance_tests"
+            fi
+        fi
+
+        if [ $QEMU_TESTING_STATUS -ne 0 ]; then
+            exit $QEMU_TESTING_STATUS
+        fi
+    fi
 fi
 
 if [ "$BUILD_BBB" = "true" ]
