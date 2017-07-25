@@ -36,7 +36,7 @@ cp -r /root/mender-qa /home/jenkins
 privkeyfile=/root/*id_rsa
 [ -f $privkeyfile ] \
     && cp $privkeyfile       /home/jenkins/.ssh/id_rsa \
-    && chmod 600             /home/jenkins/.ssh/id_rsa
+    && chmod 600             /home/jenkins/.ssh/id_rsa \
     && cp ${privkeyfile}.pub /home/jenkins/.ssh/id_rsa.pub
 cp /root/mender-qa/data/known_hosts                    /home/jenkins/.ssh/known_hosts
 
