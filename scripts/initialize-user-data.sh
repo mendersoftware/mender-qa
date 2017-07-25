@@ -34,10 +34,11 @@ cp -r /root/mender-qa /home/jenkins
 # via SFTP and getting the build artifacts (for normal build hosts) or
 # getting the nested VM image (for hosts that run nested-vm.sh).
 privkeyfile=/root/*id_rsa
+privkeybase=`basename $privkeyfile`  ||  true
 [ -f $privkeyfile ] \
     && cp $privkeyfile       /home/jenkins/.ssh/id_rsa \
     && chmod 600             /home/jenkins/.ssh/id_rsa \
-    && cp ${privkeyfile}.pub /home/jenkins/.ssh/id_rsa.pub
+    && cp /root/mender-qa/data/$privkeybase.pub /home/jenkins/.ssh/id_rsa.pub
 cp /root/mender-qa/data/known_hosts                    /home/jenkins/.ssh/known_hosts
 
 
