@@ -16,5 +16,7 @@ SIZE="$1"
 
 time dd if=/dev/zero of=/swapfile bs=1M count=$SIZE
 chmod 0600 /swapfile
+
+PATH=$PATH:/sbin:/usr/sbin
 mkswap /swapfile
 swapon /swapfile
