@@ -65,7 +65,6 @@ echo "IP information:"
 /sbin/ip addr || true
 
 
-CACHE_HOST="jenkins@build-artifacts-cache.cloud.cfengine.com"
 RSYNC="rsync --delete -czrlpt -T /tmp"
 RSH="ssh -o BatchMode=yes"
 
