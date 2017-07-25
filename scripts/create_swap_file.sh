@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# bash is needed in order to use the "time" built-in and avoid needing
+# an external utility.
 
 set -e                                                   # exit on error
 
