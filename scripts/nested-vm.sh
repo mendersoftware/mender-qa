@@ -36,15 +36,15 @@ sudo modprobe kvm_intel nested=1
 test "`cat /sys/module/kvm_intel/parameters/nested`" = "Y"
 egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 
-# Avoid nfs copy if argument contains '@'
-if echo "$1" | grep -q '@'
-then
-    # '*' must be interpreted by the remote ssh host
-    scp -o Ciphers=aes128-gcm@openssh.com -o Compression=yes  \
-        "$1*" $HOME/
-else
-    cp "$1"* $HOME/
-fi
+# Path where images are stored on build-artifacts-cache
+DISKIMAGE="/export/images/$1"
+
+# We append '*', which will be expanded on the SFTP server
+echo "
+lcd $HOME
+get $DISKIMAGE*
+"  | sftp -o Ciphers=aes128-gcm@openssh.com -o Compression=yes -o PreferredAuthentications=publickey -b -  \
+         jenkins_sftp_cache@build-artifacts-cache.cloud.cfengine.com
 
 BASEDISK=`echo $1 | sed 's/.*\///'`
 DISK="$HOME/$BASEDISK"
@@ -125,7 +125,7 @@ then
 fi
 
 # Replace the disk with our copy.
-sed -i -e "s,[^']*/$BASEDISK,$HOME/$BASEDISK," $XML
+sed -i -e "s,[^']*/$BASEDISK,$DISK," $XML
 
 chmod go+rx $HOME
 sudo chown libvirt-qemu:libvirt-qemu $DISK $XML
