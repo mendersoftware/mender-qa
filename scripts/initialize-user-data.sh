@@ -30,6 +30,14 @@ sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
 # Copy the mender-qa repository to jenkins user.
 cp -r /root/mender-qa /home/jenkins
 
+# Key generated for the purpose of connecting to build-artifacts-cache
+# via SFTP and getting the build artifacts (for normal build hosts) or
+# getting the nested VM image (for hosts that run nested-vm.sh).
+cp /root/mender-qa/data/jenkins_sftp_cache.id_rsa     /home/jenkins/.ssh/id_rsa
+cp /root/mender-qa/data/jenkins_sftp_cache.id_rsa.pub /home/jenkins/.ssh/id_rsa.pub
+cp /root/mender-qa/data/known_hosts                   /home/jenkins/.ssh/known_hosts
+chmod 600 /home/jenkins/.ssh/id_rsa
+
 # Make sure everything in jenkins' folder has right owner.
 chown -R jenkins:jenkins /home/jenkins
 
