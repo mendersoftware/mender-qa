@@ -3,7 +3,7 @@
 set -e                                                   # exit on error
 
 # Argument $1 is the size in megabytes
-if [ x"$1" = x ]  ||  echo "$1" | grep -q '^[0-9]'
+if [ x"$1" = x ]  ||  echo "$1" | grep -q '[^0-9]'
 then
     exit 2
 fi
