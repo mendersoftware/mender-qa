@@ -230,7 +230,6 @@ for build in deployments deviceadm deviceauth inventory useradm; do (
 # Build fake client
 (
     cd go/src/github.com/mendersoftware/mender-stress-test-client
-    go get ./...
     go build
     go install
 )
