@@ -123,7 +123,7 @@ EOF
     # influence which version Yocto and the binaries will show.
     if [ -n "$mender_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender = "$CLIENT_VERSION%"
+PREFERRED_VERSION_pn-mender = "$CLIENT_VERSION"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -133,8 +133,8 @@ EOF
 
     if [ -n "$mender_artifact_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-artifact = "$MENDER_ARTIFACT_VERSION%"
-PREFERRED_VERSION_pn-mender-artifact-native = "$MENDER_ARTIFACT_VERSION%"
+PREFERRED_VERSION_pn-mender-artifact = "$MENDER_ARTIFACT_VERSION"
+PREFERRED_VERSION_pn-mender-artifact-native = "$MENDER_ARTIFACT_VERSION"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
