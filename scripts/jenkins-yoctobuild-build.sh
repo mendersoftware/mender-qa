@@ -116,7 +116,7 @@ MENDER_ARTIFACT_NAME = "mender-image-$CLIENT_VERSION"
 EOF
 
     mender_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD) || mender_on_exact_tag=
-    mender_artifact_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD) || mender_artifact_on_exact_tag=
+    mender_artifact_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && git describe --tags --exact-match HEAD) || mender_artifact_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
