@@ -116,14 +116,14 @@ MENDER_ARTIFACT_NAME = "mender-image-$CLIENT_VERSION"
 EOF
 
     mender_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD) || mender_on_exact_tag=
-    mender_artifact_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD) || mender_artifact_on_exact_tag=
+    mender_artifact_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && git describe --tags --exact-match HEAD) || mender_artifact_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
     # influence which version Yocto and the binaries will show.
     if [ -n "$mender_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender = "$CLIENT_VERSION"
+PREFERRED_VERSION_pn-mender = "$mender_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -133,8 +133,8 @@ EOF
 
     if [ -n "$mender_artifact_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-artifact = "$MENDER_ARTIFACT_VERSION"
-PREFERRED_VERSION_pn-mender-artifact-native = "$MENDER_ARTIFACT_VERSION"
+PREFERRED_VERSION_pn-mender-artifact = "$mender_artifact_on_exact_tag"
+PREFERRED_VERSION_pn-mender-artifact-native = "$mender_artifact_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
