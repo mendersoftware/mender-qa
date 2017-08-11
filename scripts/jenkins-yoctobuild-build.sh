@@ -203,12 +203,6 @@ export GOPATH="$WORKSPACE/go"
     CGO_ENABLED=0 go build
 )
 for build in deployments deviceadm deviceauth inventory useradm; do (
-
-    # If we are testing a specific microservice, only build that one.
-    if [[ -n $REPO_TO_TEST && $build != $REPO_TO_TEST ]]; then
-        continue
-    fi
-
     $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
     cd go/src/github.com/mendersoftware/$build
     CGO_ENABLED=0 go build
