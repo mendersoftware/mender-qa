@@ -513,6 +513,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
 
     github_pull_request_status "pending" "integration tests have started in Jenkins" "$BUILD_URL" "integration_$INTEGRATION_REV"
 
+    INTEGRATION_TESTING_STATUS=0
     cd $WORKSPACE/integration/tests && ./run.sh || INTEGRATION_TESTING_STATUS=$?
 
     # if it is a PR, make and publish the report
@@ -534,7 +535,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     cd $WORKSPACE/integration
     git checkout -f -- .
 
-    if [ $INTEGRATION_TESTING_STATUS -ne 0 ]; then
+    if [ "$INTEGRATION_TESTING_STATUS" -ne 0 ]; then
         exit $INTEGRATION_TESTING_STATUS
     fi
 
