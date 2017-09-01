@@ -301,15 +301,15 @@ then
         fi
 
         # run tests with xdist explicitly disabled
+        QEMU_TESTING_STATUS=0
         py.test -p no:xdist --verbose --junit-xml=results.xml \
-                $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN
-        QEMU_TESTING_STATUS=$?
+                $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN || QEMU_TESTING_STATUS=$?
 
         if [ -n "$PR_TO_TEST" ]; then
             HTML_REPORT=$(find . -iname report.html  | head -n 1)
             REPORT_DIR=$BUILD_NUMBER
-            s3cmd put $HTML_REPORT s3://mender-acceptance-reports/$REPORT_DIR/
-            REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-reports/$REPORT_DIR/report.html
+            s3cmd put $HTML_REPORT s3://mender-acceptance-mmc-reports/$REPORT_DIR/
+            REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-mmc-reports/$REPORT_DIR/report.html
 
             if [ $QEMU_TESTING_STATUS -ne 0 ]; then
                 github_pull_request_status "failure" "qemu acceptance tests failed" $REPORT_URL "qemu_acceptance_tests"
@@ -410,16 +410,16 @@ then
         fi
 
         # run tests with xdist explicitly disabled
+        QEMU_TESTING_STATUS=0
         py.test -p no:xdist --verbose --junit-xml=results.xml \
                 --bitbake-image core-image-minimal \
-                $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN
-        QEMU_TESTING_STATUS=$?
+                $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN || QEMU_TESTING_STATUS=$?
 
         if [ -n "$PR_TO_TEST" ]; then
             HTML_REPORT=$(find . -iname report.html  | head -n 1)
             REPORT_DIR=$BUILD_NUMBER
-            s3cmd put $HTML_REPORT s3://mender-acceptance-reports/$REPORT_DIR/
-            REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-reports/$REPORT_DIR/report.html
+            s3cmd put $HTML_REPORT s3://mender-acceptance-raw-flash-reports/$REPORT_DIR/
+            REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-raw-flash-reports/$REPORT_DIR/report.html
 
             if [ $QEMU_TESTING_STATUS -ne 0 ]; then
                 github_pull_request_status "failure" "qemu-raw-flash acceptance tests failed" \
