@@ -439,6 +439,7 @@ fi
 
 if [ "$BUILD_BBB" = "true" ]
 then
+    cd "$WORKSPACE"
     source oe-init-build-env build-bbb
     prepare_build_config
     disable_mender_service
