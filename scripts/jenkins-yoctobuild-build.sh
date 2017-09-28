@@ -106,10 +106,23 @@ prepare_build_config() {
     MENDER_ARTIFACT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
 
     # See comment in local.conf
-    cat >> $BUILDDIR/conf/local.conf <<EOF
+    if egrep -q '^ *DISTRO_CODENAME *= *"morty" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf || \
+            egrep -q '^ *DISTRO_CODENAME *= *"pyro" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf; then
+        # Pyro and morty need old style full Go paths.
+        cat >> $BUILDDIR/conf/local.conf <<EOF
 EXTERNALSRC_pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
+EOF
+    else
+        # Newer branches need new style single Go path
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+EXTERNALSRC_pn-mender = "$WORKSPACE/go"
+EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go"
+EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go"
+EOF
+    fi
+    cat >> $BUILDDIR/conf/local.conf <<EOF
 SSTATE_DIR = "/mnt/sstate-cache"
 
 MENDER_ARTIFACT_NAME = "mender-image-$CLIENT_VERSION"
