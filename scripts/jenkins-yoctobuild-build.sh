@@ -120,6 +120,7 @@ EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go"
 EOF
     fi
+
     cat >> $BUILDDIR/conf/local.conf <<EOF
 SSTATE_DIR = "/mnt/sstate-cache"
 
@@ -161,6 +162,7 @@ EOF
 BBLAYERS_append = " /home/jenkins/workspace/yoctobuild/oe-meta-go"
 EOF
     fi
+
 }
 
 build_custom_qemu() {
@@ -496,6 +498,38 @@ then
     PATH="$OLD_PATH"
 fi
 
+if [ "$BUILD_RPI3" = "true" ]
+then
+    cd "$WORKSPACE"
+    source oe-init-build-env build-rpi3
+
+    prepare_build_config rpi3
+    disable_mender_service
+
+    bitbake core-image-full-cmdline || RPI3_BITBAKE_RESULT=$?
+
+    if [[ $RPI3_BITBAKE_RESULT -eq 0 ]]; then
+        github_pull_request_status "success" "raspberrypi 3 build completed" \
+                                   "$BUILD_URL" "rpi3_build"
+    else
+        github_pull_request_status "failure" "raspberrypi 3 build failed" \
+                                   "$BUILD_URL" "rpi3_build"
+        exit $RPI3_BITBAKE_RESULT
+    fi
+
+
+    OLD_PATH="$PATH"
+    prepare_and_set_PATH
+
+    mkdir -p "$WORKSPACE"/rpi3
+
+    cp -L "$BUILDDIR"/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 "$WORKSPACE"/rpi3/core-image-full-cmdline-raspberrypi3.ext4
+    cp -L "$BUILDDIR"/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.sdimg "$WORKSPACE"/rpi3/core-image-full-cmdline-raspberrypi3.sdimg
+
+    PATH="$OLD_PATH"
+fi
+
+
 if [ "$UPLOAD_OUTPUT" = "true" ]
 then
     cd $WORKSPACE
@@ -582,6 +616,21 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         s3cmd --cf-invalidate -F put beaglebone_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/beaglebone/
         s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_1_${CLIENT_VERSION}.mender --acl-public
         s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_2_${CLIENT_VERSION}.mender --acl-public
+
+
+        cd $WORKSPACE/rpi3/
+        modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-1_${CLIENT_VERSION}
+        mender-artifact write rootfs-image -t raspberrypi3 -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_1_${CLIENT_VERSION}.mender
+        modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-2_${CLIENT_VERSION}
+        mender-artifact write rootfs-image -t raspberrypi3 -n release-2_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_2_${CLIENT_VERSION}.mender
+        gzip -c core-image-full-cmdline-raspberrypi3.sdimg > mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz
+        s3cmd --cf-invalidate -F put mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz --acl-public
+        s3cmd --cf-invalidate -F put raspberrypi3_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        s3cmd --cf-invalidate -F put raspberrypi3_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_1_${CLIENT_VERSION}.mender --acl-public
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_2_${CLIENT_VERSION}.mender --acl-public
+
 
         docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 
