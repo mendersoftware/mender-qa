@@ -91,8 +91,6 @@ prepare_and_set_PATH() {
 }
 
 prepare_build_config() {
-    /bin/cp $WORKSPACE/mender-qa/build-conf/*  $BUILDDIR/conf/
-
     local machine
     machine=$1
 
@@ -268,7 +266,7 @@ then
         exit 1
     fi
 
-    prepare_build_config
+    prepare_build_config qemu
     disable_mender_service
     cd $BUILDDIR
     bitbake core-image-full-cmdline || QEMU_BITBAKE_RESULT=$?
@@ -454,9 +452,8 @@ if [ "$BUILD_BBB" = "true" ]
 then
     cd "$WORKSPACE"
     source oe-init-build-env build-bbb
-    prepare_build_config
+    prepare_build_config bbb
     disable_mender_service
-    export MACHINE="beaglebone"
     bitbake core-image-base
 
     OLD_PATH="$PATH"
