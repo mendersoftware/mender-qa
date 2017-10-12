@@ -618,18 +618,18 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_2_${CLIENT_VERSION}.mender --acl-public
 
 
-        cd $WORKSPACE/rpi3/
-        modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-1_${CLIENT_VERSION}
-        mender-artifact write rootfs-image -t raspberrypi3 -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_1_${CLIENT_VERSION}.mender
-        modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-2_${CLIENT_VERSION}
-        mender-artifact write rootfs-image -t raspberrypi3 -n release-2_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_2_${CLIENT_VERSION}.mender
-        gzip -c core-image-full-cmdline-raspberrypi3.sdimg > mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz
-        s3cmd --cf-invalidate -F put mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz --acl-public
-        s3cmd --cf-invalidate -F put raspberrypi3_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        s3cmd --cf-invalidate -F put raspberrypi3_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_1_${CLIENT_VERSION}.mender --acl-public
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_2_${CLIENT_VERSION}.mender --acl-public
+        #cd $WORKSPACE/rpi3/
+        #modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-1_${CLIENT_VERSION}
+        #mender-artifact write rootfs-image -t raspberrypi3 -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_1_${CLIENT_VERSION}.mender
+        #modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-2_${CLIENT_VERSION}
+        #mender-artifact write rootfs-image -t raspberrypi3 -n release-2_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_2_${CLIENT_VERSION}.mender
+        #gzip -c core-image-full-cmdline-raspberrypi3.sdimg > mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz
+        #s3cmd --cf-invalidate -F put mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        #s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz --acl-public
+        #s3cmd --cf-invalidate -F put raspberrypi3_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        #s3cmd --cf-invalidate -F put raspberrypi3_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        #s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_1_${CLIENT_VERSION}.mender --acl-public
+        #s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_2_${CLIENT_VERSION}.mender --acl-public
 
 
         docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
