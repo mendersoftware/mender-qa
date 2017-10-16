@@ -561,19 +561,17 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     INTEGRATION_TESTING_STATUS=0
     cd $WORKSPACE/integration/tests && ./run.sh || INTEGRATION_TESTING_STATUS=$?
 
-    # if it is a PR, make and publish the report
-    if [ -n "$PR_TO_TEST" ]; then
-        HTML_REPORT=$(find . -iname report.html  | head -n 1)
-        REPORT_DIR=$BUILD_NUMBER
 
-        s3cmd put $HTML_REPORT s3://mender-integration-reports/$REPORT_DIR/
-        REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$REPORT_DIR/report.html
+    HTML_REPORT=$(find . -iname report.html  | head -n 1)
+    REPORT_DIR=$BUILD_NUMBER
 
-        if [ $INTEGRATION_TESTING_STATUS -ne 0 ]; then
-            github_pull_request_status "failure" "integration tests failed" $REPORT_URL "integration_$INTEGRATION_REV"
-        else
-            github_pull_request_status "success" "integration tests passed!" $REPORT_URL "integration_$INTEGRATION_REV"
-        fi
+    s3cmd put $HTML_REPORT s3://mender-integration-reports/$REPORT_DIR/
+    REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$REPORT_DIR/report.html
+
+    if [ $INTEGRATION_TESTING_STATUS -ne 0 ]; then
+        github_pull_request_status "failure" "integration tests failed" $REPORT_URL "integration_$INTEGRATION_REV"
+    else
+        github_pull_request_status "success" "integration tests passed!" $REPORT_URL "integration_$INTEGRATION_REV"
     fi
 
     # Reset docker tag names to their cloned values after tests are done.
