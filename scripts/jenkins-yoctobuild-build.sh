@@ -12,6 +12,7 @@ PR_COMMENT_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/is
 PR_STATUS_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/statuses/$GIT_COMMIT
 SSH_TUNNEL_IP=188.166.29.46
 RPI3_PORT=2210
+BBB_PORT=2211
 
 export PATH=$PATH:~/workspace/yoctobuild/go/bin
 
@@ -471,20 +472,35 @@ then
     cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4.clean
     cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg.clean
 
-    cd $WORKSPACE/meta-mender/tests/acceptance/
-    export BBB_IMAGE_DIR=$WORKSPACE/beaglebone
+    if [ "$TEST_BBB" = "true" ]; then
+      rm -rf "$BUILDDIR"/tmp/
 
-    if [ "$TEST_BBB" = "true" ]
-    then
-    bash prepare_ext4_testing.sh
-    mender-artifact write rootfs-image -t beaglebone -n test-update -u core-image-base-beaglebone-modified-testing.ext4 -o successful_image_update.mender
+      /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci/recipes-mender/mender-qa/files/beaglebone/
+      bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
+      bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci
+      prepare_and_set_PATH
 
-        bash prepare_bbb_testing.sh || {
-            kill -s TERM $(ps aux | grep ssh| grep wmd | awk '{print $2}') || true
-            exit 1;
-    }
+      bitbake core-image-base
+      ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa activate-test-image off" || true
+
+      COUNTER=0
+      while [  $COUNTER -lt 5 ]; do
+        SCP_EXIT_CODE=0
+        scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${BBB_PORT} "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
+         if [ "$SCP_EXIT_CODE" -ne 0 ]; then
+            let COUNTER=COUNTER+1
+            sleep 30
+         else
+            ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa deploy-test-image" || true
+            break
+         fi
+        done
+
+      prepare_and_set_PATH
+      cd $WORKSPACE/meta-mender/tests/acceptance/
+      mender-artifact write rootfs-image -t beaglebone -n test-update -u "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 -o successful_image_update.mender
+      pytest --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb
     fi
-
 
     cp -L $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4.clean $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4
     cp -L $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg.clean  $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg
@@ -541,14 +557,14 @@ then
         ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${RPI3_PORT} "/usr/share/mender-qa/activate-test-image off" || true
 
         COUNTER=0
-        SCP_EXIT_CODE=0
-
         while [  $COUNTER -lt 5 ]; do
+            SCP_EXIT_CODE=0
            scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${RPI3_PORT} "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
            if [ "$SCP_EXIT_CODE" -ne 0 ]; then
               let COUNTER=COUNTER+1
               sleep 30
            else
+              ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${RPI3_PORT} "/usr/share/mender-qa/deploy-test-image" || true
               break
            fi
         done
@@ -557,7 +573,6 @@ then
         cd "$WORKSPACE"/meta-mender/tests/acceptance/
         mender-artifact write rootfs-image -t raspberrypi3 -n test-update -u "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 -o successful_image_update.mender
         pytest --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3
-
     fi
 
     PATH="$OLD_PATH"
