@@ -553,12 +553,13 @@ then
            fi
         done
 
+        prepare_and_set_PATH
+        cd "$WORKSPACE"/meta-mender/tests/acceptance/
+        mender-artifact write rootfs-image -t raspberrypi3 -n test-update -u "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 -o successful_image_update.mender
+        pytest --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3
+
     fi
 
-    prepare_and_set_PATH
-    cd $WORKSPACE/meta-mender/tests/acceptance/
-    mender-artifact write rootfs-image -t raspberrypi3 -n test-update -u "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 -o successful_image_update.mender
-    pytest --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3
     PATH="$OLD_PATH"
 fi
 
