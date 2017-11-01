@@ -10,6 +10,9 @@ ls /home/jenkins/.ssh
 
 PR_COMMENT_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/issues/$PR_TO_TEST/comments
 PR_STATUS_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/statuses/$GIT_COMMIT
+SSH_TUNNEL_IP=188.166.29.46
+RPI3_PORT=2210
+
 export PATH=$PATH:~/workspace/yoctobuild/go/bin
 
 declare -A TEST_TRACKER
@@ -526,6 +529,36 @@ then
     cp -L "$BUILDDIR"/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 "$WORKSPACE"/rpi3/core-image-full-cmdline-raspberrypi3.ext4
     cp -L "$BUILDDIR"/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.sdimg "$WORKSPACE"/rpi3/core-image-full-cmdline-raspberrypi3.sdimg
 
+
+    if [ "$TEST_RPI3" = "true" ]; then
+        rm -rf "$BUILDDIR"/tmp/
+
+        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
+        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-raspberrypi3-ci
+
+        cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-raspberrypi3-ci/recipes-mender/mender-qa/files/rpi/
+        bitbake core-image-full-cmdline
+        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${RPI3_PORT} "/usr/share/mender-qa/activate-test-image off" || true
+
+        COUNTER=0
+        SCP_EXIT_CODE=0
+
+        while [  $COUNTER -lt 5 ]; do
+           scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${RPI3_PORT} "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
+           if [ "$SCP_EXIT_CODE" -ne 0 ]; then
+              let COUNTER=COUNTER+1
+              sleep 30
+           else
+              break
+           fi
+        done
+
+    fi
+
+    prepare_and_set_PATH
+    cd $WORKSPACE/meta-mender/tests/acceptance/
+    mender-artifact write rootfs-image -t raspberrypi3 -n test-update -u "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 -o successful_image_update.mender
+    pytest --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3
     PATH="$OLD_PATH"
 fi
 
@@ -616,19 +649,18 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_2_${CLIENT_VERSION}.mender --acl-public
 
 
-        #cd $WORKSPACE/rpi3/
-        #modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-1_${CLIENT_VERSION}
-        #mender-artifact write rootfs-image -t raspberrypi3 -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_1_${CLIENT_VERSION}.mender
-        #modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-2_${CLIENT_VERSION}
-        #mender-artifact write rootfs-image -t raspberrypi3 -n release-2_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_2_${CLIENT_VERSION}.mender
-        #gzip -c core-image-full-cmdline-raspberrypi3.sdimg > mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz
-        #s3cmd --cf-invalidate -F put mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        #s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz --acl-public
-        #s3cmd --cf-invalidate -F put raspberrypi3_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        #s3cmd --cf-invalidate -F put raspberrypi3_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        #s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_1_${CLIENT_VERSION}.mender --acl-public
-        #s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_2_${CLIENT_VERSION}.mender --acl-public
-
+        cd $WORKSPACE/rpi3/
+        modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-1_${CLIENT_VERSION}
+        mender-artifact write rootfs-image -t raspberrypi3 -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_1_${CLIENT_VERSION}.mender
+        modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-2_${CLIENT_VERSION}
+        mender-artifact write rootfs-image -t raspberrypi3 -n release-2_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_2_${CLIENT_VERSION}.mender
+        gzip -c core-image-full-cmdline-raspberrypi3.sdimg > mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz
+        s3cmd --cf-invalidate -F put mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz --acl-public
+        s3cmd --cf-invalidate -F put raspberrypi3_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        s3cmd --cf-invalidate -F put raspberrypi3_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_1_${CLIENT_VERSION}.mender --acl-public
+        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_2_${CLIENT_VERSION}.mender --acl-public
 
         docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 
