@@ -102,11 +102,10 @@ echo '========================================= CURRENT ENVIRONMENT END ========
 if [ "$(id -u)" = 0 ] && [ -f /etc/sudoers ]
 then
     sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
+    # Fix `hostname -f`, if it's broken - working `hostname -f` is needed for CFEngine
+    # and some CFEngine acceptance tests
+    hostname -f || hostname localhost
 fi
-
-# Fix `hostname -f`, if it's broken - working `hostname -f` is needed for CFEngine
-# and some CFEngine acceptance tests
-hostname -f || hostname localhost
 
 apt_get() {
     # Work around apt-get not waiting for a lock if it's taken. We want to wait
