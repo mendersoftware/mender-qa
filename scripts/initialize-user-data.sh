@@ -49,6 +49,10 @@ chown -R jenkins:jenkins /home/jenkins
 # it will fix sudo complaining "unable to resolve host digitalocean",
 # and some tests
 hostname localhost
+# Ensure reverse hostname resolution is correct and 127.0.0.1 is always 'localhost'.
+# There's no nice shell command to test it but this one:
+# python -c 'import socket;print socket.gethostbyaddr("127.0.0.1")'
+sed -i -e '1s/^/127.0.0.1 localhost localhost.localdomian\n/' /etc/hosts
 
 # Open SSH port on 222.
 iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
