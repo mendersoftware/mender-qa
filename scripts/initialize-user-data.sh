@@ -17,7 +17,7 @@
 set -x -e
 
 # Add jenkins user and copy credentials.
-useradd -m jenkins
+useradd -m -u 1010 jenkins
 mkdir -p /home/jenkins/.ssh
 cp /root/.ssh/authorized_keys /home/jenkins/.ssh
 
