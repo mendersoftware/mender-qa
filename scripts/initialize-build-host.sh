@@ -105,6 +105,10 @@ then
     # Fix `hostname -f`, if it's broken - working `hostname -f` is needed for CFEngine
     # and some CFEngine acceptance tests
     hostname -f || hostname localhost
+    # Ensure reverse hostname resolution is correct and 127.0.0.1 is always 'localhost'.
+    # There's no nice shell command to test it but this one:
+    # python -c 'import socket;print socket.gethostbyaddr("127.0.0.1")'
+    sed -i -e '1s/^/127.0.0.1 localhost localhost.localdomian\n/' /etc/hosts
 fi
 
 apt_get() {
