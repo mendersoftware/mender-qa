@@ -141,6 +141,31 @@ apt_get() {
 alias apt=apt_get
 alias apt-get=apt_get
 
+reset_nested_vm() {
+    VM_id="$(sudo virsh list | cut -d' ' -f 2 | sed 's/[^0-9]//g;/^$/d')"
+    if [ -z "$VM_id" ]
+        echo "Couldn't find a VM number, is it even there?"
+        sudo virsh list
+        exit 1
+    fi
+    sudo virsh reset $VM_id
+    attempts=20
+    while true
+    do
+        if $RSH $login true
+        then
+            echo "Nested VM is back up, it seems. Happily continuing!"
+            break
+        fi
+        attempts=`expr $attempts - 1`
+        if [ $attempts -le 0 ]
+            echo "Timeout while waiting for nested VM to reboot"
+            exit 1
+        fi
+        sleep 10
+    done
+}
+
 if [ -f $HOME/proxy-target.txt ]
 then
     ret=0
@@ -153,10 +178,34 @@ then
     fi
 
     # --------------------------------------------------------------------------
-    # Populate build host.
+    # Check target machine health.
     # --------------------------------------------------------------------------
 
     login="$(cat $HOME/proxy-target.txt)"
+
+    if [ -z "$login" ]
+    then
+        echo "Proxy target address not available, aborting the build"
+        exit 1
+    fi
+
+    if $RSH $login true
+    then
+	:
+    else
+	if [ -f $HOME/on-vm-hypervisor ]
+            echo "Failed to SSH to nested VM, probably it's hanging, resetting it"
+            reset_nested_vm
+        else
+            echo "Failed to SSH to proxy target, aborting the build"
+	    exit 1
+        fi
+    fi
+
+
+    # --------------------------------------------------------------------------
+    # Populate build host.
+    # --------------------------------------------------------------------------
 
     # Put our currently executing script on the proxy target.
     $RSYNC -e "$RSH"   "$0"  $login:commands-from-proxy.sh
