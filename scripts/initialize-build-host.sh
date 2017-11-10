@@ -196,6 +196,7 @@ then
 	:
     else
 	if [ -f $HOME/on-vm-hypervisor ]
+	then
             echo "Failed to SSH to nested VM, probably it's hanging, resetting it"
             reset_nested_vm
         else
