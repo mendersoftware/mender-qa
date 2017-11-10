@@ -27,6 +27,7 @@ fi
 # Create an empty file early in case there is an error in this script. At least
 # then we will still detect correctly whether we are on a slave or a proxy.
 touch $HOME/proxy-target.txt
+touch $HOME/on-vm-hypervisor
 
 # Enabled nested VMs.
 sudo modprobe -r kvm_intel
