@@ -144,6 +144,7 @@ alias apt-get=apt_get
 reset_nested_vm() {
     VM_id="$(sudo virsh list | cut -d' ' -f 2 | sed 's/[^0-9]//g;/^$/d')"
     if [ -z "$VM_id" ]
+    then
         echo "Couldn't find a VM number, is it even there?"
         sudo virsh list
         exit 1
@@ -159,6 +160,7 @@ reset_nested_vm() {
         fi
         attempts=`expr $attempts - 1`
         if [ $attempts -le 0 ]
+	then
             echo "Timeout while waiting for nested VM to reboot"
             exit 1
         fi
