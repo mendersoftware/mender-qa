@@ -590,6 +590,9 @@ fi
 
 
 if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
+    cd $WORKSPACE/integration
+    patch -p1 < ../mender-qa/disable_state_scripts_test.patch
+
     if [ "$BUILD_QEMU" = "true" ]; then
         cd $WORKSPACE
         # Set build dir for qemu again, BBB build might possibly have overridden
