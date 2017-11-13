@@ -160,6 +160,21 @@ EOF
     fi
 
     # Figure out which branch of poky we're building.
+    echo "====================================================================="
+    echo "START DEBUG"
+    echo "====================================================================="
+    echo "WORKSPACE=$WORKSPACE"
+    ls -l $WORKSPACE/meta-poky/conf/distro/poky.conf
+    echo "Contents of poky.conf:"
+    cat $WORKSPACE/meta-poky/conf/distro/poky.conf
+    echo "End of poky.conf"
+    echo "Running egrep command manually"
+    egrep'^ *DISTRO_CODENAME *= *"morty" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf
+    echo "egrep RC=$?"
+    echo "====================================================================="
+    echo "END DEBUG"
+    echo "====================================================================="
+    
     if egrep -q '^ *DISTRO_CODENAME *= *"morty" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf; then
         # Morty needs oe-meta-go
         cat >> $BUILDDIR/conf/bblayers.conf <<EOF
