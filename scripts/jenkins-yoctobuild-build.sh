@@ -521,9 +521,16 @@ if [ "$BUILD_RPI3" = "true" ]
 then
     cd "$WORKSPACE"
     source oe-init-build-env build-rpi3
-
     prepare_build_config rpi3
     disable_mender_service
+
+    if egrep -q '^ *DISTRO_CODENAME *= *"pyro" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf; then
+        sed -i '/USE_U_BOOT/d' conf/local.conf
+        echo 'KERNEL_IMAGETYPE = "uImage"' >> conf/local.conf
+        echo 'IMAGE_BOOT_FILES_append = " boot.scr u-boot.bin;${SDIMG_KERNELIMAGE}"' >> conf/local.conf
+    fi
+
+    cat conf/local.conf
 
     bitbake core-image-full-cmdline || RPI3_BITBAKE_RESULT=$?
 
