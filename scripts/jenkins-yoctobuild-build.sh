@@ -456,11 +456,20 @@ fi
 
 if [ "$BUILD_BBB" = "true" ]
 then
+    github_pull_request_status "pending" "Beaglebone build started" "$BUILD_URL" "beaglebone_build"
     cd "$WORKSPACE"
     source oe-init-build-env build-bbb
     prepare_build_config bbb
     disable_mender_service
-    bitbake core-image-base
+    STATUS=0
+    bitbake core-image-base || STATUS=$?
+
+    if [[ $STATUS -eq 0 ]]; then
+        github_pull_request_status "success" "Beaglebone build completed" "$BUILD_URL" "beaglebone_build"
+    else
+        github_pull_request_status "failure" "Beaglebone build failed" "$BUILD_URL" "beaglebone_build"
+        exit $STATUS
+    fi
 
     OLD_PATH="$PATH"
     prepare_and_set_PATH
@@ -473,33 +482,41 @@ then
     cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg.clean
 
     if [ "$TEST_BBB" = "true" ]; then
-      rm -rf "$BUILDDIR"/tmp/
+        rm -rf "$BUILDDIR"/tmp/
 
-      /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci/recipes-mender/mender-qa/files/beaglebone/
-      bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
-      bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci
-      prepare_and_set_PATH
+        /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci/recipes-mender/mender-qa/files/beaglebone/
+        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
+        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci
+        prepare_and_set_PATH
 
-      bitbake core-image-base
-      ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa activate-test-image off" || true
+        bitbake core-image-base
+        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa activate-test-image off" || true
 
-      COUNTER=0
-      while [  $COUNTER -lt 5 ]; do
-        SCP_EXIT_CODE=0
-        scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${BBB_PORT} "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
-         if [ "$SCP_EXIT_CODE" -ne 0 ]; then
-            let COUNTER=COUNTER+1
-            sleep 30
-         else
-            ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa deploy-test-image" || true
-            break
-         fi
+        COUNTER=0
+        while [  $COUNTER -lt 5 ]; do
+            SCP_EXIT_CODE=0
+            scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${BBB_PORT} "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
+            if [ "$SCP_EXIT_CODE" -ne 0 ]; then
+                let COUNTER=COUNTER+1
+                sleep 30
+            else
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa deploy-test-image" || true
+                break
+            fi
         done
 
-      prepare_and_set_PATH
-      cd $WORKSPACE/meta-mender/tests/acceptance/
-      mender-artifact write rootfs-image -t beaglebone -n test-update -u "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 -o successful_image_update.mender
-      pytest --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb
+        prepare_and_set_PATH
+        cd $WORKSPACE/meta-mender/tests/acceptance/
+        mender-artifact write rootfs-image -t beaglebone -n test-update -u "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 -o successful_image_update.mender
+        github_pull_request_status "pending" "Beaglebone acceptance tests started" "$BUILD_URL" "beaglebone_acceptance_tests"
+        STATUS=0
+        pytest --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb || STATUS=$?
+        if [[ $STATUS -eq 0 ]]; then
+            github_pull_request_status "success" "Beaglebone acceptance tests completed" "$BUILD_URL" "beaglebone_acceptance_tests"
+        else
+            github_pull_request_status "failure" "Beaglebone acceptance tests failed" "$BUILD_URL" "beaglebone_acceptance_tests"
+            exit $STATUS
+        fi
     fi
 
     cp -L $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4.clean $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4
@@ -519,6 +536,7 @@ fi
 
 if [ "$BUILD_RPI3" = "true" ]
 then
+    github_pull_request_status "pending" "Raspberry Pi 3 build started" "$BUILD_URL" "rpi3_build"
     cd "$WORKSPACE"
     source oe-init-build-env build-rpi3
     prepare_build_config rpi3
@@ -535,10 +553,10 @@ then
     bitbake core-image-full-cmdline || RPI3_BITBAKE_RESULT=$?
 
     if [[ $RPI3_BITBAKE_RESULT -eq 0 ]]; then
-        github_pull_request_status "success" "raspberrypi 3 build completed" \
+        github_pull_request_status "success" "Raspberry Pi 3 build completed" \
                                    "$BUILD_URL" "rpi3_build"
     else
-        github_pull_request_status "failure" "raspberrypi 3 build failed" \
+        github_pull_request_status "failure" "Raspberry Pi 3 build failed" \
                                    "$BUILD_URL" "rpi3_build"
         exit $RPI3_BITBAKE_RESULT
     fi
@@ -579,7 +597,15 @@ then
         prepare_and_set_PATH
         cd "$WORKSPACE"/meta-mender/tests/acceptance/
         mender-artifact write rootfs-image -t raspberrypi3 -n test-update -u "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 -o successful_image_update.mender
-        pytest --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3
+        github_pull_request_status "pending" "Raspberry Pi 3 acceptance tests started" "$BUILD_URL" "rpi3_acceptance_tests"
+        STATUS=0
+        pytest --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3 || STATUS=$?
+        if [[ $STATUS -eq 0 ]]; then
+            github_pull_request_status "success" "Raspberry Pi 3 acceptance tests completed" "$BUILD_URL" "rpi3_acceptance_tests"
+        else
+            github_pull_request_status "failure" "Raspberry Pi 3 acceptance tests failed" "$BUILD_URL" "rpi3_acceptance_tests"
+            exit $STATUS
+        fi
     fi
 
     PATH="$OLD_PATH"
