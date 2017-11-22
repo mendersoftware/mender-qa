@@ -473,33 +473,33 @@ then
     cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg.clean
 
     if [ "$TEST_BBB" = "true" ]; then
-      rm -rf "$BUILDDIR"/tmp/
+        rm -rf "$BUILDDIR"/tmp/
 
-      /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci/recipes-mender/mender-qa/files/beaglebone/
-      bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
-      bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci
-      prepare_and_set_PATH
+        /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci/recipes-mender/mender-qa/files/beaglebone/
+        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
+        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci
+        prepare_and_set_PATH
 
-      bitbake core-image-base
-      ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa activate-test-image off" || true
+        bitbake core-image-base
+        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa activate-test-image off" || true
 
-      COUNTER=0
-      while [  $COUNTER -lt 5 ]; do
-        SCP_EXIT_CODE=0
-        scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${BBB_PORT} "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
-         if [ "$SCP_EXIT_CODE" -ne 0 ]; then
-            let COUNTER=COUNTER+1
-            sleep 30
-         else
-            ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa deploy-test-image" || true
-            break
-         fi
+        COUNTER=0
+        while [  $COUNTER -lt 5 ]; do
+            SCP_EXIT_CODE=0
+            scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${BBB_PORT} "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
+            if [ "$SCP_EXIT_CODE" -ne 0 ]; then
+                let COUNTER=COUNTER+1
+                sleep 30
+            else
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa deploy-test-image" || true
+                break
+            fi
         done
 
-      prepare_and_set_PATH
-      cd $WORKSPACE/meta-mender/tests/acceptance/
-      mender-artifact write rootfs-image -t beaglebone -n test-update -u "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 -o successful_image_update.mender
-      pytest --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb
+        prepare_and_set_PATH
+        cd $WORKSPACE/meta-mender/tests/acceptance/
+        mender-artifact write rootfs-image -t beaglebone -n test-update -u "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 -o successful_image_update.mender
+        pytest --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb
     fi
 
     cp -L $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4.clean $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4
