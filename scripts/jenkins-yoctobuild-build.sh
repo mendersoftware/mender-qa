@@ -289,9 +289,12 @@ then
 
     mkdir -p $WORKSPACE/vexpress-qemu
 
-    cd $WORKSPACE/meta-mender/tests/acceptance/
-
     export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
+
+    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 . )
+    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf . )
+    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg . )
+    (cd $WORKSPACE/meta-mender && cp {core-image-full-cmdline-vexpress-qemu.ext4,core-image-full-cmdline-vexpress-qemu.sdimg,u-boot.elf} $WORKSPACE/vexpress-qemu )
 
     # run tests on qemu
     if [ "$TEST_QEMU" = "true" ]; then
@@ -309,6 +312,18 @@ then
 
         github_pull_request_status "pending" "qemu acceptance tests started in Jenkins" "$BUILD_URL" "qemu_acceptance_tests"
 
+        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
+
+        QEMU_BITBAKE_RESULT=0
+        bitbake core-image-full-cmdline || QEMU_BITBAKE_RESULT=$?
+        if [ $QEMU_BITBAKE_RESULT -ne 0 ]; then
+            github_pull_request_status "failure" "qemu acceptance tests failed" "$BUILD_URL" "qemu_acceptance_tests"
+            exit $QEMU_BITBAKE_RESULT
+        else
+            github_pull_request_status "success" "qemu acceptance tests passed!" "$BUILD_URL" "qemu_acceptance_tests"
+        fi
+
+        cd $WORKSPACE/meta-mender/tests/acceptance/
 
         ACCEPTANCE_TEST_TO_RUN=""
 
@@ -341,10 +356,6 @@ then
         fi
     fi
 
-    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 . )
-    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf . )
-    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg . )
-    (cd $WORKSPACE/meta-mender && cp {core-image-full-cmdline-vexpress-qemu.ext4,core-image-full-cmdline-vexpress-qemu.sdimg,u-boot.elf} $WORKSPACE/vexpress-qemu )
     cd $WORKSPACE/
 
 
@@ -356,8 +367,6 @@ then
     fi
 
     PATH="$OLD_PATH"
-
-    rm -rf build
 fi
 
 if [ "$BUILD_QEMU_RAW_FLASH" = "true" ]
@@ -395,8 +404,6 @@ then
 
     mkdir -p $WORKSPACE/vexpress-qemu-flash
 
-    cd $WORKSPACE/meta-mender/tests/acceptance/
-
     export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
 
     # run tests on qemu
@@ -415,6 +422,20 @@ then
 
         github_pull_request_status "pending" "qemu-raw-flash acceptance tests started in Jenkins" \
                                    "$BUILD_URL" "qemu_flash_acceptance_tests"
+
+        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
+
+        bitbake core-image-minimal || QEMU_BITBAKE_RESULT=$?
+        if [ $QEMU_BITBAKE_RESULT -ne 0 ]; then
+            github_pull_request_status "failure" "qemu-raw-flash acceptance tests failed" \
+                                       $REPORT_URL "qemu_flash_acceptance_tests"
+            exit $QEMU_BITBAKE_RESULT
+        else
+            github_pull_request_status "success" "qemu-raw-flash acceptance tests passed!" \
+                                       $REPORT_URL "qemu_flash_acceptance_tests"
+        fi
+
+        cd $WORKSPACE/meta-mender/tests/acceptance/
 
         # install test dependencies
         sudo pip2 install -r requirements.txt
