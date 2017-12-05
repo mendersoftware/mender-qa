@@ -420,19 +420,19 @@ then
             echo "WARNING: install pytest-html for html results report"
         fi
 
-        github_pull_request_status "pending" "qemu-raw-flash acceptance tests started in Jenkins" \
-                                   "$BUILD_URL" "qemu_flash_acceptance_tests"
+        github_pull_request_status "pending" "qemu-raw-flash build started in Jenkins" \
+                                   "$BUILD_URL" "qemu_flash_build"
 
         bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
 
         bitbake core-image-minimal || QEMU_BITBAKE_RESULT=$?
         if [ $QEMU_BITBAKE_RESULT -ne 0 ]; then
-            github_pull_request_status "failure" "qemu-raw-flash acceptance tests failed" \
-                                       $REPORT_URL "qemu_flash_acceptance_tests"
+            github_pull_request_status "failure" "qemu-raw-flash build failed" \
+                                       "$BUILD_URL" "qemu_flash_build"
             exit $QEMU_BITBAKE_RESULT
         else
-            github_pull_request_status "success" "qemu-raw-flash acceptance tests passed!" \
-                                       $REPORT_URL "qemu_flash_acceptance_tests"
+            github_pull_request_status "success" "qemu-raw-flash build passed!" \
+                                       "$BUILD_URL" "qemu_flash_build"
         fi
 
         cd $WORKSPACE/meta-mender/tests/acceptance/
