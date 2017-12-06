@@ -83,6 +83,28 @@ EOF
          "$PR_STATUS_ENDPOINT"
 }
 
+
+board_support_update() {
+    local board=$1
+    local status=$2
+
+    local git_commit=$(cd "$WORKSPACE"/meta-mender/ && git log --pretty=format:"%h" | head -n 1)
+    local request_body=$(cat <<EOF
+    {
+      "jenkins_url": "$BUILD_URL",
+      "commit": "$git_commit",
+      "branch": "$META_MENDER_REV",
+      "build": $BUILD_NUMBER,
+      "status": "$status"
+    }
+EOF
+)
+
+    curl -u "$BS_JENKINS_AUTH" -H "Content-Type: application/json" \
+         -d "$request_body" \
+         -X POST https://board-support.mender.io/board/"$board"/ci_report || true
+}
+
 prepare_and_set_PATH() {
     # On branches without recipe specific sysroots, the next step will fail
     # because the prepare_recipe_sysroot task doesn't exist. Use that failure
@@ -505,6 +527,7 @@ then
             fi
         done
 
+
         prepare_and_set_PATH
         cd $WORKSPACE/meta-mender/tests/acceptance/
         mender-artifact write rootfs-image -t beaglebone -n test-update -u "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 -o successful_image_update.mender
@@ -512,8 +535,10 @@ then
         STATUS=0
         pytest --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb || STATUS=$?
         if [[ $STATUS -eq 0 ]]; then
+            board_support_update "beaglebone" "passed"
             github_pull_request_status "success" "Beaglebone acceptance tests completed" "$BUILD_URL" "beaglebone_acceptance_tests"
         else
+            board_support_update "beaglebone" "failed"
             github_pull_request_status "failure" "Beaglebone acceptance tests failed" "$BUILD_URL" "beaglebone_acceptance_tests"
             exit $STATUS
         fi
@@ -601,8 +626,10 @@ then
         STATUS=0
         pytest --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3 || STATUS=$?
         if [[ $STATUS -eq 0 ]]; then
+            board_support_update "rpi3" "passed"
             github_pull_request_status "success" "Raspberry Pi 3 acceptance tests completed" "$BUILD_URL" "rpi3_acceptance_tests"
         else
+            board_support_update "rpi3" "failed"
             github_pull_request_status "failure" "Raspberry Pi 3 acceptance tests failed" "$BUILD_URL" "rpi3_acceptance_tests"
             exit $STATUS
         fi
