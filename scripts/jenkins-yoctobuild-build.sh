@@ -531,7 +531,7 @@ then
         mender-artifact write rootfs-image -t beaglebone -n test-update -u "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 -o successful_image_update.mender
         github_pull_request_status "pending" "Beaglebone acceptance tests started" "$BUILD_URL" "beaglebone_acceptance_tests"
         STATUS=0
-        pytest --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb || STATUS=$?
+        pytest --verbose --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb || STATUS=$?
         if [[ $STATUS -eq 0 ]]; then
             github_pull_request_status "success" "Beaglebone acceptance tests completed" "$BUILD_URL" "beaglebone_acceptance_tests"
         else
@@ -620,7 +620,7 @@ then
         mender-artifact write rootfs-image -t raspberrypi3 -n test-update -u "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 -o successful_image_update.mender
         github_pull_request_status "pending" "Raspberry Pi 3 acceptance tests started" "$BUILD_URL" "rpi3_acceptance_tests"
         STATUS=0
-        pytest --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3 || STATUS=$?
+        pytest --verbose --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3 || STATUS=$?
         if [[ $STATUS -eq 0 ]]; then
             github_pull_request_status "success" "Raspberry Pi 3 acceptance tests completed" "$BUILD_URL" "rpi3_acceptance_tests"
         else
