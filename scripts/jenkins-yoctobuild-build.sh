@@ -3,20 +3,31 @@
 set -e -x
 
 echo $WORKSPACE
-#----
-echo "Debug Jenkins setup"
-ls /home/jenkins/.ssh
-#----
 
 PR_COMMENT_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/issues/$PR_TO_TEST/comments
 PR_STATUS_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/statuses/$GIT_COMMIT
 SSH_TUNNEL_IP=188.166.29.46
-RPI3_PORT=2210
-BBB_PORT=2211
+RASPBERRYPI3_PORT=2210
+BEAGLEBONEBLACK_PORT=2211
 
-export PATH=$PATH:~/workspace/yoctobuild/go/bin
+export PATH=$PATH:$WORKSPACE/go/bin
 
 declare -A TEST_TRACKER
+
+if [[ $STOP_SLAVE = "true" ]]; then
+	touch $HOME/stop_slave
+else
+	if [[ -f $HOME/stop_slave ]]; then
+        rm $HOME/stop_slave
+    fi
+fi
+
+# patch Fabric
+wget https://github.com/fabric/fabric/commit/b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
+sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
+
+# required to enable multi-tenant tests
+cp $WORKSPACE/go/src/github.com/mendersoftware/tenantadm/docker-compose.mt.yml $WORKSPACE/integration/
 
 function testFinished {
     for i in "${!TEST_TRACKER[@]}"
@@ -35,6 +46,49 @@ function testFinished {
 if [ -n "$PR_TO_TEST" ]; then
     trap testFinished SIGHUP SIGINT SIGTERM SIGKILL EXIT
 fi
+
+# Should not be called directly. See next two functions.
+is_doing_board() {
+    local ret=0
+    # The param is just to be able to test for both "BUILD" and "TEST" variables
+    # in the same case statement.
+    local param="$2"
+    case "$1" in
+        vexpress-qemu)
+            eval test "\$${param}_QEMU_SDIMG" = true && grep "mender_qemu_sdimg" <<<"$JOB_BASE_NAME" || ret=$?
+            ;;
+        vexpress-qemu-flash)
+            eval test "\$${param}_QEMU_RAW_FLASH" = true && grep "mender_qemu_flash" <<<"$JOB_BASE_NAME" || ret=$?
+            ;;
+        beagleboneblack)
+            eval test "\$${param}_BEAGLEBONEBLACK" = true && grep "mender_beagleboneblack" <<<"$JOB_BASE_NAME" || ret=$?
+            ;;
+        raspberrypi3)
+            eval test "\$${param}_RASPBERRYPI3" = true && grep "mender_raspberrypi3" <<<"$JOB_BASE_NAME" || ret=$?
+            ;;
+        *)
+            echo "Unrecognized board: $1"
+            exit 1
+            ;;
+    esac
+    return $ret
+}
+
+is_building_board() {
+    local ret=0
+    is_doing_board "$1" "BUILD" || ret=$?
+    return $ret
+}
+
+is_testing_board() {
+    local ret=0
+    is_doing_board "$1" "TEST" || ret=$?
+    return $ret
+}
+
+port_for_board() {
+    eval echo \$$(tr '[:lower:]' '[:upper:]' <<<"$1")_PORT
+}
 
 disable_mender_service() {
     if [ "$DISABLE_MENDER_SERVICE" = "true" ]
@@ -121,13 +175,13 @@ prepare_build_config() {
     machine=$1
 
     if [ -n "$machine" ]; then
-        if [ -d $WORKSPACE/mender-qa/build-conf-${machine} ]; then
-            /bin/cp $WORKSPACE/mender-qa/build-conf-${machine}/*  $BUILDDIR/conf/
+        if [ -d $WORKSPACE/mender-qa/build-conf/${machine} ]; then
+            /bin/cp $WORKSPACE/mender-qa/build-conf/${machine}/*  $BUILDDIR/conf/
         fi
     fi
 
-    CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
-    MENDER_ARTIFACT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
+    local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
+    local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
 
     # See comment in local.conf
     if egrep -q '^ *DISTRO_CODENAME *= *"morty" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf || \
@@ -138,12 +192,6 @@ EXTERNALSRC_pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
 EOF
-        if [ "$machine" = "bbb" ]; then
-            # In addition, they need Beaglebone layer.
-            cat >> $BUILDDIR/conf/bblayers.conf <<EOF
-BBLAYERS_append = " $WORKSPACE/meta-mender/meta-mender-beaglebone"
-EOF
-        fi
     else
         # Newer branches need new style single Go path
         cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -156,11 +204,11 @@ EOF
     cat >> $BUILDDIR/conf/local.conf <<EOF
 SSTATE_DIR = "/mnt/sstate-cache"
 
-MENDER_ARTIFACT_NAME = "mender-image-$CLIENT_VERSION"
+MENDER_ARTIFACT_NAME = "mender-image-$client_version"
 EOF
 
-    mender_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD 2>/dev/null) || mender_on_exact_tag=
-    mender_artifact_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && git describe --tags --exact-match HEAD 2>/dev/null) || mender_artifact_on_exact_tag=
+    local mender_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD 2>/dev/null) || mender_on_exact_tag=
+    local mender_artifact_on_exact_tag=$(cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && git describe --tags --exact-match HEAD 2>/dev/null) || mender_artifact_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
@@ -171,7 +219,7 @@ PREFERRED_VERSION_pn-mender = "$mender_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender = "$CLIENT_VERSION-git%"
+PREFERRED_VERSION_pn-mender = "$client_version-git%"
 EOF
     fi
 
@@ -182,19 +230,10 @@ PREFERRED_VERSION_pn-mender-artifact-native = "$mender_artifact_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-artifact = "$MENDER_ARTIFACT_VERSION-git%"
-PREFERRED_VERSION_pn-mender-artifact-native = "$MENDER_ARTIFACT_VERSION-git%"
+PREFERRED_VERSION_pn-mender-artifact = "$mender_artifact_version-git%"
+PREFERRED_VERSION_pn-mender-artifact-native = "$mender_artifact_version-git%"
 EOF
     fi
-
-    # Figure out which branch of poky we're building.
-    if egrep -q '^ *DISTRO_CODENAME *= *"morty" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf; then
-        # Morty needs oe-meta-go
-        cat >> $BUILDDIR/conf/bblayers.conf <<EOF
-BBLAYERS_append = " /home/jenkins/workspace/yoctobuild/oe-meta-go"
-EOF
-    fi
-
 }
 
 build_custom_qemu() {
@@ -236,6 +275,49 @@ build_custom_qemu() {
 # Verify that version references are up to date.
 $WORKSPACE/integration/extra/release_tool.py --verify-integration-references
 
+# Make sure that a stop_slave does not linger from a previous build.
+if [[ $STOP_SLAVE = "true" ]]; then
+    touch $HOME/stop_slave
+else
+    if [[ -f $HOME/stop_slave ]]; then
+        rm $HOME/stop_slave
+    fi
+fi
+
+if [ ! -d mender-qa ]
+then
+    echo "JENKINS SCRIPT: mender-qa directory is not present"
+    exit 1
+fi
+
+# ---------------------------------------------------
+# Clean up build server.
+# ---------------------------------------------------
+
+if [ "$CLEAN_BUILD_CACHE" = "true" ]
+then
+    sudo rm -rf /mnt/sstate-cache/*
+fi
+
+# if we abort a build, docker might still be up and running
+docker ps -q -a | xargs -r docker stop || true
+docker ps -q -a | xargs -r docker rm -f || true
+sudo chmod 777 /var/run/docker.sock
+
+docker system prune -f -a
+sudo systemctl restart docker
+sudo killall -s9 mender-stress-test-client || true
+
+# ---------------------------------------------------
+# Generic setup.
+# ---------------------------------------------------
+
+# required to enable multi-tenant tests
+cp $WORKSPACE/go/src/github.com/mendersoftware/tenantadm/docker-compose.mt.yml $WORKSPACE/integration/
+
+if is_testing_board vexpress-qemu || is_testing_board vexpress-qemu-flash; then
+    build_custom_qemu
+fi
 
 # ---------------------------------------------------
 # Build server repositories.
@@ -247,31 +329,6 @@ export GOPATH="$WORKSPACE/go"
     cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact
     make install
 )
-for build in deployments deviceadm deviceauth inventory useradm; do (
-
-    # If we are testing a specific microservice, only build that one.
-    if [[ -n $REPO_TO_TEST && $build != $REPO_TO_TEST ]]; then
-        continue
-    fi
-
-    $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
-    cd go/src/github.com/mendersoftware/$build
-    CGO_ENABLED=0 go build
-    docker build -t mendersoftware/$build:pr .
-); done
-# Build GUI
-(
-    $WORKSPACE/integration/extra/release_tool.py --set-version-of gui --version pr
-    cd gui
-    gulp build
-    docker build -t mendersoftware/gui:pr .
-)
-# Build other repositories
-(
-    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-api-gateway-docker --version pr
-    cd mender-api-gateway-docker
-    docker build -t mendersoftware/api-gateway:pr .
-)
 # Build fake client
 (
     cd go/src/github.com/mendersoftware/mender-stress-test-client
@@ -279,498 +336,364 @@ for build in deployments deviceadm deviceauth inventory useradm; do (
     go install
 )
 
+if grep mender_servers <<<"$JOB_BASE_NAME"; then
+    for build in deployments deviceadm deviceauth inventory useradm; do (
+
+        # If we are testing a specific microservice, only build that one.
+        if [[ -n $REPO_TO_TEST && $build != $REPO_TO_TEST ]]; then
+            continue
+        fi
+
+        $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
+        cd go/src/github.com/mendersoftware/$build
+        CGO_ENABLED=0 go build
+        docker build -t mendersoftware/$build:pr .
+    ); done
+    # Build GUI
+    (
+        $WORKSPACE/integration/extra/release_tool.py --set-version-of gui --version pr
+        cd gui
+        gulp build
+        docker build -t mendersoftware/gui:pr .
+    )
+    # Build other repositories
+    (
+        $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-api-gateway-docker --version pr
+        cd mender-api-gateway-docker
+        docker build -t mendersoftware/api-gateway:pr .
+    )
+fi
+
 # -----------------------
 # Done with server build.
 # -----------------------
 
-if [ "$CLEAN_BUILD_CACHE" = "true" ]
-then
-    sudo rm -rf /mnt/sstate-cache/*
-fi
+# Check whether the given board name is a hardware board or not.
+# Takes one argument: Board name
+is_hardware_board() {
+    case "$1" in
+        *qemu*)
+            return 1
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+}
 
-if [ "$BUILD_QEMU" = "true" ]
-then
-    github_pull_request_status "pending" "qemu build started" "$BUILD_URL" "qemu_build"
-    source oe-init-build-env build-qemu
-    cd ../
+# Prepare the board for testing. Arguments.
+# - machine name
+# - board name
+prepare_board_for_testing() {
+    local machine_name="$1"
+    local board_name="$2"
 
-    if [ ! -d mender-qa ]
-    then
-        echo "JENKINS SCRIPT: mender-qa directory is not present"
-        exit 1
-    fi
+    /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci/recipes-mender/mender-qa/files/*
+    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+        -t root@${SSH_TUNNEL_IP} \
+        -p $(port_for_board $board_name) \
+        "mender-qa activate-test-image off" \
+        || true
+}
 
-    prepare_build_config qemu
-    disable_mender_service
-    cd $BUILDDIR
-    bitbake core-image-full-cmdline || QEMU_BITBAKE_RESULT=$?
-
-    if [[ $QEMU_BITBAKE_RESULT -eq 0 ]]; then
-        github_pull_request_status "success" "qemu build completed" "$BUILD_URL" "qemu_build"
-    else
-        github_pull_request_status "failure" "qemu build failed" "$BUILD_URL" "qemu_build"
-        exit $QEMU_BITBAKE_RESULT
-    fi
-
-    OLD_PATH="$PATH"
-    prepare_and_set_PATH
-
-    mkdir -p $WORKSPACE/vexpress-qemu
-
-    export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
-
-    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 . )
-    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf . )
-    (cd $WORKSPACE/meta-mender && cp -L $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.sdimg . )
-    (cd $WORKSPACE/meta-mender && cp {core-image-full-cmdline-vexpress-qemu.ext4,core-image-full-cmdline-vexpress-qemu.sdimg,u-boot.elf} $WORKSPACE/vexpress-qemu )
-
-    # run tests on qemu
-    if [ "$TEST_QEMU" = "true" ]; then
-
-        # use original path when building qemu
-        export PATH=$OLD_PATH
-        build_custom_qemu
-        ( cd $BUILDDIR && prepare_and_set_PATH )
-
-        HTML_REPORT="--html=report.html --self-contained-html"
-        if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
-            HTML_REPORT=""
-            echo "WARNING: install pytest-html for html results report"
-        fi
-
-        github_pull_request_status "pending" "qemu acceptance tests started in Jenkins" "$BUILD_URL" "qemu_acceptance_tests"
-
-        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
-
-        QEMU_BITBAKE_RESULT=0
-        bitbake core-image-full-cmdline || QEMU_BITBAKE_RESULT=$?
-        if [ $QEMU_BITBAKE_RESULT -ne 0 ]; then
-            github_pull_request_status "failure" "qemu acceptance tests failed" "$BUILD_URL" "qemu_acceptance_tests"
-            exit $QEMU_BITBAKE_RESULT
+# Takes three arguments, the machine name, the board name, and image name.
+deploy_image_to_board() {
+    local counter=0
+    local machine_name="$1"
+    local board_name="$2"
+    local image_name="$3"
+    while [  $counter -lt 5 ]; do
+        local scp_exit_code=0
+        scp -o UserKnownHostsFile=/dev/null \
+            -o StrictHostKeyChecking=no -C \
+            -oPort=$(port_for_board $board_name) \
+            "$BUILDDIR"/tmp/deploy/images/$machine_name/$image_name-$machine_name.sdimg \
+            root@${SSH_TUNNEL_IP}:/tmp/ \
+            || scp_exit_code=$?
+        if [ "$scp_exit_code" -ne 0 ]; then
+            let counter=counter+1
+            sleep 30
         else
-            github_pull_request_status "success" "qemu acceptance tests passed!" "$BUILD_URL" "qemu_acceptance_tests"
+            ssh -o UserKnownHostsFile=/dev/null \
+                -o StrictHostKeyChecking=no \
+                -t root@${SSH_TUNNEL_IP} \
+                -p $(port_for_board $board_name) \
+                "env IMAGE_FILE=$image_name-$machine_name.sdimg mender-qa deploy-test-image" \
+                || true
+            break
+        fi
+    done
+}
+
+# ------------------------------------------------------------------------------
+# Generic function for building and testing client.
+#
+# Parameters:
+#   - machine name
+#   - board name (usually the same or similar to machine name, but each machine
+#                 name can have several boards)
+#   - image name
+# ------------------------------------------------------------------------------
+build_and_test_client() {
+    # This makes the whole function run in a subshell. So no need for path
+    # cleanups.
+    (
+        # Should be changed when the number of parameters below changes.
+        if [ -z "$3" -o -n "$4" ]; then
+            echo "Incorrect number of parameters passed"
+            exit 1
         fi
 
-        cd $WORKSPACE/meta-mender/tests/acceptance/
+        local machine_name="$1"
+        local board_name="$2"
+        local image_name="$3"
 
-        ACCEPTANCE_TEST_TO_RUN=""
-
-        # make it possible to run specific test
-        if [ -n "$ACCEPTANCE_TEST" ]; then
-            ACCEPTANCE_TEST_TO_RUN=" -k $ACCEPTANCE_TEST"
+        if ! is_building_board $board_name; then
+            return
         fi
 
-        # run tests with xdist explicitly disabled
-        QEMU_TESTING_STATUS=0
-        py.test -p no:xdist --verbose --junit-xml=results.xml \
-                $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN || QEMU_TESTING_STATUS=$?
+        github_pull_request_status "pending" "$board_name build started" "$BUILD_URL" "${board_name}_build"
+        source oe-init-build-env build-$machine_name
+        cd ../
 
-        if [ -n "$PR_TO_TEST" ]; then
-            HTML_REPORT=$(find . -iname report.html  | head -n 1)
-            REPORT_DIR=$BUILD_NUMBER
-            s3cmd put $HTML_REPORT s3://mender-acceptance-mmc-reports/$REPORT_DIR/
-            REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-mmc-reports/$REPORT_DIR/report.html
+        prepare_build_config $machine_name
+        disable_mender_service
 
-            if [ $QEMU_TESTING_STATUS -ne 0 ]; then
-                github_pull_request_status "failure" "qemu acceptance tests failed" $REPORT_URL "qemu_acceptance_tests"
-                exit $QEMU_TESTING_STATUS
-            else
-                github_pull_request_status "success" "qemu acceptance tests passed!" $REPORT_URL "qemu_acceptance_tests"
-            fi
-        fi
+        cd $BUILDDIR
+        local bitbake_result=0
+        bitbake $image_name || bitbake_result=$?
 
-        if [ $QEMU_TESTING_STATUS -ne 0 ]; then
-            exit $QEMU_TESTING_STATUS
-        fi
-    fi
-
-    cd $WORKSPACE/
-
-
-    if [ "$UPLOAD_OUTPUT" = "true" ]
-    then
-    # store useful output to directory
-    mkdir -p "vexpress-qemu-deploy"
-        cp -r $BUILDDIR/tmp/deploy/* "vexpress-qemu-deploy"
-    fi
-
-    PATH="$OLD_PATH"
-fi
-
-if [ "$BUILD_QEMU_RAW_FLASH" = "true" ]
-then
-    github_pull_request_status "pending" "qemu-raw-flash build started" \
-                               "$BUILD_URL" "qemu_flash_build"
-
-    source oe-init-build-env build-qemu-flash
-    cd ../
-
-    if [ ! -d mender-qa ]
-    then
-        echo "JENKINS SCRIPT: mender-qa directory is not present"
-        exit 1
-    fi
-
-    # use config for vexpress-qemu-flash
-    prepare_build_config vexpress-qemu-flash
-    disable_mender_service
-
-    cd $BUILDDIR
-    bitbake core-image-minimal || QEMU_BITBAKE_RESULT=$?
-
-    if [[ $QEMU_BITBAKE_RESULT -eq 0 ]]; then
-        github_pull_request_status "success" "qemu-raw-flash build completed" \
-                                   "$BUILD_URL" "qemu_flash_build"
-    else
-        github_pull_request_status "failure" "qemu-raw-flash build failed" \
-                                   "$BUILD_URL" "qemu_flash_build"
-        exit $QEMU_BITBAKE_RESULT
-    fi
-
-    OLD_PATH="$PATH"
-    prepare_and_set_PATH
-
-    mkdir -p $WORKSPACE/vexpress-qemu-flash
-
-    export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
-
-    # run tests on qemu
-    if [ "$TEST_QEMU" = "true" ]; then
-
-        # use original path when building qemu
-        export PATH=$OLD_PATH
-        build_custom_qemu
-        ( cd $BUILDDIR && prepare_and_set_PATH )
-
-        HTML_REPORT="--html=report.html --self-contained-html"
-        if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
-            HTML_REPORT=""
-            echo "WARNING: install pytest-html for html results report"
-        fi
-
-        github_pull_request_status "pending" "qemu-raw-flash build started in Jenkins" \
-                                   "$BUILD_URL" "qemu_flash_build"
-
-        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
-
-        bitbake core-image-minimal || QEMU_BITBAKE_RESULT=$?
-        if [ $QEMU_BITBAKE_RESULT -ne 0 ]; then
-            github_pull_request_status "failure" "qemu-raw-flash build failed" \
-                                       "$BUILD_URL" "qemu_flash_build"
-            exit $QEMU_BITBAKE_RESULT
+        if [[ $bitbake_result -eq 0 ]]; then
+            github_pull_request_status "success" "$board_name build completed" "$BUILD_URL" "${board_name}_build"
         else
-            github_pull_request_status "success" "qemu-raw-flash build passed!" \
-                                       "$BUILD_URL" "qemu_flash_build"
+            github_pull_request_status "failure" "$board_name build failed" "$BUILD_URL" "${board_name}_build"
+            exit $bitbake_result
         fi
 
-        cd $WORKSPACE/meta-mender/tests/acceptance/
-
-        # install test dependencies
-        sudo pip2 install -r requirements.txt
-
-        ACCEPTANCE_TEST_TO_RUN=""
-
-        # make it possible to run specific test
-        if [ -n "$ACCEPTANCE_TEST" ]; then
-            ACCEPTANCE_TEST_TO_RUN=" -k $ACCEPTANCE_TEST"
+        mkdir -p $WORKSPACE/$board_name
+        cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/$image_name-$machine_name.* $WORKSPACE/$board_name
+        if [ -e $BUILDDIR/tmp/deploy/images/$machine_name/u-boot.elf ]; then
+            cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/u-boot.elf $WORKSPACE/$board_name
         fi
-
-        # run tests with xdist explicitly disabled
-        QEMU_TESTING_STATUS=0
-        py.test -p no:xdist --verbose --junit-xml=results.xml \
-                --bitbake-image core-image-minimal \
-                $HTML_REPORT $ACCEPTANCE_TEST_TO_RUN || QEMU_TESTING_STATUS=$?
-
-        if [ -n "$PR_TO_TEST" ]; then
-            HTML_REPORT=$(find . -iname report.html  | head -n 1)
-            REPORT_DIR=$BUILD_NUMBER
-            s3cmd put $HTML_REPORT s3://mender-acceptance-raw-flash-reports/$REPORT_DIR/
-            REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-acceptance-raw-flash-reports/$REPORT_DIR/report.html
-
-            if [ $QEMU_TESTING_STATUS -ne 0 ]; then
-                github_pull_request_status "failure" "qemu-raw-flash acceptance tests failed" \
-                                           $REPORT_URL "qemu_flash_acceptance_tests"
-                exit $QEMU_TESTING_STATUS
-            else
-                github_pull_request_status "success" "qemu-raw-flash acceptance tests passed!" \
-                                           $REPORT_URL "qemu_flash_acceptance_tests"
-            fi
-        fi
-
-        if [ $QEMU_TESTING_STATUS -ne 0 ]; then
-            exit $QEMU_TESTING_STATUS
-        fi
-    fi
-fi
-
-if [ "$BUILD_BBB" = "true" ]
-then
-    github_pull_request_status "pending" "Beaglebone build started" "$BUILD_URL" "beaglebone_build"
-    cd "$WORKSPACE"
-    source oe-init-build-env build-bbb
-    prepare_build_config bbb
-    disable_mender_service
-    STATUS=0
-    bitbake core-image-base || STATUS=$?
-
-    if [[ $STATUS -eq 0 ]]; then
-        github_pull_request_status "success" "Beaglebone build completed" "$BUILD_URL" "beaglebone_build"
-    else
-        github_pull_request_status "failure" "Beaglebone build failed" "$BUILD_URL" "beaglebone_build"
-        exit $STATUS
-    fi
-
-    OLD_PATH="$PATH"
-    prepare_and_set_PATH
-
-    mkdir -p $WORKSPACE/beaglebone
-
-    cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4
-    cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg
-    cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4.clean
-    cp -L $BUILDDIR/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg.clean
-
-    if [ "$TEST_BBB" = "true" ]; then
-        rm -rf "$BUILDDIR"/tmp/
-
-        /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci/recipes-mender/mender-qa/files/beaglebone/
-        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
-        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-beaglebone-ci
-        prepare_and_set_PATH
-
-        bitbake core-image-base
-        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa activate-test-image off" || true
-
-        COUNTER=0
-        while [  $COUNTER -lt 5 ]; do
-            SCP_EXIT_CODE=0
-            scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${BBB_PORT} "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
-            if [ "$SCP_EXIT_CODE" -ne 0 ]; then
-                let COUNTER=COUNTER+1
-                sleep 30
-            else
-                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${BBB_PORT} "mender-qa deploy-test-image" || true
-                break
-            fi
-        done
-
-
-        prepare_and_set_PATH
-        cd $WORKSPACE/meta-mender/tests/acceptance/
-        mender-artifact write rootfs-image -t beaglebone -n test-update -u "$BUILDDIR"/tmp/deploy/images/beaglebone/core-image-base-beaglebone.ext4 -o successful_image_update.mender
-        github_pull_request_status "pending" "Beaglebone acceptance tests started" "$BUILD_URL" "beaglebone_acceptance_tests"
-        STATUS=0
-        pytest --verbose --host=${SSH_TUNNEL_IP}:${BBB_PORT} --board-type=bbb || STATUS=$?
-        if [[ $STATUS -eq 0 ]]; then
-            board_support_update "beaglebone" "passed"
-            github_pull_request_status "success" "Beaglebone acceptance tests completed" "$BUILD_URL" "beaglebone_acceptance_tests"
-        else
-            board_support_update "beaglebone" "failed"
-            github_pull_request_status "failure" "Beaglebone acceptance tests failed" "$BUILD_URL" "beaglebone_acceptance_tests"
-            exit $STATUS
-        fi
-    fi
-
-    cp -L $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4.clean $WORKSPACE/beaglebone/core-image-base-beaglebone.ext4
-    cp -L $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg.clean  $WORKSPACE/beaglebone/core-image-base-beaglebone.sdimg
-
-    # store useful output to directory
-
-    if [ "$UPLOAD_OUTPUT" = "true" ]
-    then
-        cd $WORKSPACE/
-        mkdir -p "beaglebone-deploy"
-        cp -r $BUILDDIR/tmp/deploy/* "beaglebone-deploy"
-    fi
-
-    PATH="$OLD_PATH"
-fi
-
-if [ "$BUILD_RPI3" = "true" ]
-then
-    github_pull_request_status "pending" "Raspberry Pi 3 build started" "$BUILD_URL" "rpi3_build"
-    cd "$WORKSPACE"
-    source oe-init-build-env build-rpi3
-    prepare_build_config rpi3
-    disable_mender_service
-
-    if egrep -q '^ *DISTRO_CODENAME *= *"pyro" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf; then
-        sed -i '/USE_U_BOOT/d' conf/local.conf
-        echo 'KERNEL_IMAGETYPE = "uImage"' >> conf/local.conf
-        echo 'IMAGE_BOOT_FILES_append = " boot.scr u-boot.bin;${SDIMG_KERNELIMAGE}"' >> conf/local.conf
-    fi
-
-    cat conf/local.conf
-
-    bitbake core-image-full-cmdline || RPI3_BITBAKE_RESULT=$?
-
-    if [[ $RPI3_BITBAKE_RESULT -eq 0 ]]; then
-        github_pull_request_status "success" "Raspberry Pi 3 build completed" \
-                                   "$BUILD_URL" "rpi3_build"
-    else
-        github_pull_request_status "failure" "Raspberry Pi 3 build failed" \
-                                   "$BUILD_URL" "rpi3_build"
-        exit $RPI3_BITBAKE_RESULT
-    fi
-
-
-    OLD_PATH="$PATH"
-    prepare_and_set_PATH
-
-    mkdir -p "$WORKSPACE"/rpi3
-
-    cp -L "$BUILDDIR"/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 "$WORKSPACE"/rpi3/core-image-full-cmdline-raspberrypi3.ext4
-    cp -L "$BUILDDIR"/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.sdimg "$WORKSPACE"/rpi3/core-image-full-cmdline-raspberrypi3.sdimg
-
-
-    if [ "$TEST_RPI3" = "true" ]; then
-        rm -rf "$BUILDDIR"/tmp/
-
-        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
-        bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-raspberrypi3-ci
-
-        cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-raspberrypi3-ci/recipes-mender/mender-qa/files/rpi/
-        bitbake core-image-full-cmdline
-        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${RPI3_PORT} "/usr/share/mender-qa/activate-test-image off" || true
-
-        COUNTER=0
-        while [  $COUNTER -lt 5 ]; do
-            SCP_EXIT_CODE=0
-           scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -C -oPort=${RPI3_PORT} "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.sdimg root@${SSH_TUNNEL_IP}:/tmp/ || SCP_EXIT_CODE=$?
-           if [ "$SCP_EXIT_CODE" -ne 0 ]; then
-              let COUNTER=COUNTER+1
-              sleep 30
-           else
-              ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t root@${SSH_TUNNEL_IP} -p ${RPI3_PORT} "/usr/share/mender-qa/deploy-test-image" || true
-              break
-           fi
+        for image in $WORKSPACE/$board_name/*; do
+            cp $image $image.clean
         done
 
         prepare_and_set_PATH
-        cd "$WORKSPACE"/meta-mender/tests/acceptance/
-        mender-artifact write rootfs-image -t raspberrypi3 -n test-update -u "$WORKSPACE"/build-rpi3/tmp/deploy/images/raspberrypi3/core-image-full-cmdline-raspberrypi3.ext4 -o successful_image_update.mender
-        github_pull_request_status "pending" "Raspberry Pi 3 acceptance tests started" "$BUILD_URL" "rpi3_acceptance_tests"
-        STATUS=0
-        pytest --verbose --host=${SSH_TUNNEL_IP}:${RPI3_PORT} --board-type=rpi3 || STATUS=$?
-        if [[ $STATUS -eq 0 ]]; then
-            board_support_update "rpi3" "passed"
-            github_pull_request_status "success" "Raspberry Pi 3 acceptance tests completed" "$BUILD_URL" "rpi3_acceptance_tests"
-        else
-            board_support_update "rpi3" "failed"
-            github_pull_request_status "failure" "Raspberry Pi 3 acceptance tests failed" "$BUILD_URL" "rpi3_acceptance_tests"
-            exit $STATUS
+
+        # run tests on qemu
+        if is_testing_board $board_name; then
+            export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
+
+            local html_report_args="--html=report.html --self-contained-html"
+            if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
+                html_report_args=""
+                echo "WARNING: install pytest-html for html results report"
+            fi
+
+            github_pull_request_status "pending" "$board_name acceptance tests started in Jenkins" "$BUILD_URL" "${board_name}_acceptance_tests"
+
+            bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
+            if [ -d "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci ]; then
+                bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci
+            fi
+
+            # install test dependencies
+            sudo pip2 install -r $WORKSPACE/meta-mender/tests/acceptance/requirements.txt
+
+            if is_hardware_board $board_name; then
+                prepare_board_for_testing $machine_name $board_name
+            fi
+
+            bitbake $image_name
+
+            if is_hardware_board $board_name; then
+                deploy_image_to_board $machine_name $board_name $image_name
+            fi
+
+            cd $WORKSPACE/meta-mender/tests/acceptance/
+
+            local acceptance_test_to_run=""
+
+            # make it possible to run specific test
+            if [ -n "$ACCEPTANCE_TEST" ]; then
+                acceptance_test_to_run=" -k $ACCEPTANCE_TEST"
+            fi
+
+            local host_args
+            if is_hardware_board $board_name; then
+                host_args="--host=$SSH_TUNNEL_IP:$(port_for_board $board_name)"
+            else
+                host_args=
+            fi
+
+            # run tests with xdist explicitly disabled
+            local qemu_testing_status=0
+            py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
+                    --bitbake-image $image_name --board-type=$board_name \
+                    $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
+
+            if [ -n "$PR_TO_TEST" ]; then
+                local html_report=$(find . -iname report.html  | head -n 1)
+                local report_dir=$BUILD_NUMBER
+                s3cmd put $html_report s3://mender-acceptance-$board_name/$report_dir/
+                local report_url=https://s3-eu-west-1.amazonaws.com/$report_bucket/$report_dir/report.html
+
+                if [ $qemu_testing_status -ne 0 ]; then
+                    if is_hardware_board "$board_name"; then
+                        board_support_update "$board_name" "failed"
+                    fi
+                    github_pull_request_status "failure" "$board_name acceptance tests failed" $report_url "${board_name}_acceptance_tests"
+                    exit $qemu_testing_status
+                else
+                    if is_hardware_board "$board_name"; then
+                        board_support_update "$board_name" "passed"
+                    fi
+                    github_pull_request_status "success" "$board_name acceptance tests passed!" $report_url "${board_name}_acceptance_tests"
+                fi
+            fi
+
+            if [ $qemu_testing_status -ne 0 ]; then
+                exit $qemu_testing_status
+            fi
+
+            cd $WORKSPACE/
         fi
-    fi
 
-    PATH="$OLD_PATH"
+        # Restore earlier backups of clean images.
+        for image in $WORKSPACE/$board_name/*.clean; do
+            cp $image $(sed -e 's/\.clean$//' <<<$image)
+        done
+
+        if [ "$UPLOAD_OUTPUT" = "true" ]
+        then
+            # store useful output to directory
+            mkdir -p "$board_name-deploy"
+            cp -r $BUILDDIR/tmp/deploy/* "$board_name-deploy"
+        fi
+
+        if [ "$PUBLISH_ARTIFACTS" = true ]; then
+            publish_artifacts $machine_name $board_name $image_name
+        fi
+    )
+}
+
+# Published the artifacts for the board in the argument.
+publish_artifacts() {
+    # Arguments
+    local machine_name="$1"
+    local board_name="$2"
+    local image_name="$3"
+
+    # This makes the whole function run in a subshell. So no need for path
+    # cleanups.
+    (
+        if [ ! -e "$WORKSPACE/$board_name/$image_name-$machine_name.ext4" ]; then
+            # Currently we don't support publishing non-ext4 images.
+            return
+        fi
+
+        local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
+        local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
+
+        s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/mender-artifact s3://mender/mender-artifact/${mender_artifact_version}/
+        s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact --acl-public
+
+        cd $WORKSPACE/$board_name/
+        s3cmd -F put core-image-full-cmdline-$machine_name.ext4 s3://mender/temp_${client_version}/core-image-full-cmdline-$machine_name.ext4
+        s3cmd setacl s3://mender/temp_${client_version}/core-image-full-cmdline-$machine_name.ext4 --acl-public
+
+        modify_ext4 core-image-full-cmdline-$machine_name.ext4 release-1_${client_version}
+        mender-artifact write rootfs-image -t $machine_name -n release-1_${client_version} -u core-image-full-cmdline-$machine_name.ext4 -o vexpress_release_1_${client_version}.mender
+        modify_ext4 core-image-full-cmdline-$machine_name.ext4 release-2_${client_version}
+        mender-artifact write rootfs-image -t $machine_name -n release-2_${client_version} -u core-image-full-cmdline-$machine_name.ext4 -o vexpress_release_2_${client_version}.mender
+        if is_hardware_board $board_name; then
+            gzip -c core-image-base-$machine_name.sdimg > mender-$machine_name_${client_version}.sdimg.gz
+            s3cmd --cf-invalidate -F put mender-$machine_name_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
+            s3cmd setacl s3://mender/${client_version}/$board_name/mender-$machine_name_${client_version}.sdimg.gz --acl-public
+        fi
+        s3cmd --cf-invalidate -F put vexpress_release_1_${client_version}.mender s3://mender/${client_version}/$board_name/
+        s3cmd --cf-invalidate -F put vexpress_release_2_${client_version}.mender s3://mender/${client_version}/$board_name/
+        s3cmd setacl s3://mender/${client_version}/$board_name/vexpress_release_1_${client_version}.mender --acl-public
+        s3cmd setacl s3://mender/${client_version}/$board_name/vexpress_release_2_${client_version}.mender --acl-public
+    )
+}
+
+upload_output() {
+    (
+        cd $WORKSPACE
+        tar acvf output.tar.xz  --ignore-failed-read *-deploy
+        s3cmd put output.tar.xz s3://mender/temp/yoctobuilds/$BUILD_TAG/
+        s3cmd setacl s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz --acl-public
+        echo "Download build output from: https://s3.amazonaws.com/mender/temp/yoctobuilds/${BUILD_TAG}/output.tar.xz"
+    )
+}
+
+run_integration_tests() {
+    (
+        if ! grep mender_servers <<<"$JOB_BASE_NAME"; then
+            return
+        fi
+
+        if is_building_board vexpress-qemu; then
+            cd $WORKSPACE
+            source oe-init-build-env build-vexpress-qemu
+            prepare_and_set_PATH
+
+            cd $WORKSPACE/meta-mender/meta-mender-qemu
+            cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
+            cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
+
+            docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
+            $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
+        fi
+
+        github_pull_request_status "pending" "integration tests have started in Jenkins" "$BUILD_URL" "integration_$INTEGRATION_REV"
+
+        local testing_status=0
+        cd $WORKSPACE/integration/tests && ./run.sh || testing_status=$?
+
+        local html_report=$(find . -iname report.html  | head -n 1)
+        local report_dir=$BUILD_NUMBER
+
+        s3cmd put $html_report s3://mender-integration-reports/$report_dir/
+        local report_url=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$report_dir/report.html
+
+        if [ $testing_status -ne 0 ]; then
+            github_pull_request_status "failure" "integration tests failed" $report_url "integration_$INTEGRATION_REV"
+        else
+            github_pull_request_status "success" "integration tests passed!" $report_url "integration_$INTEGRATION_REV"
+        fi
+
+        # Reset docker tag names to their cloned values after tests are done.
+        cd $WORKSPACE/integration
+        git checkout -f -- .
+
+        if [ "$testing_status" -ne 0 ]; then
+            exit $testing_status
+        fi
+
+        if [ "$PUBLISH_ARTIFACTS" = true ]; then
+            docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+
+            for container in mender-client-qemu api-gateway deployments deviceadm deviceauth gui inventory useradm; do
+                local version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
+                docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
+                docker push mendersoftware/$container:${version}
+            done
+        fi
+    )
+}
+
+build_and_test_client  vexpress-qemu        vexpress-qemu        core-image-full-cmdline
+build_and_test_client  vexpress-qemu-flash  vexpress-qemu-flash  core-image-minimal
+build_and_test_client  beaglebone           beagleboneblack      core-image-base
+build_and_test_client  raspberrypi3         raspberrypi3         core-image-full-cmdline
+
+if [ "$UPLOAD_OUTPUT" = "true" ]; then
+    upload_output
 fi
-
-
-if [ "$UPLOAD_OUTPUT" = "true" ]
-then
-    cd $WORKSPACE
-    tar acvf output.tar.xz  --ignore-failed-read "vexpress-qemu-deploy" "beaglebone-deploy"
-    s3cmd put output.tar.xz s3://mender/temp/yoctobuilds/$BUILD_TAG/
-    s3cmd setacl s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz --acl-public
-    echo "Download build output from: https://s3.amazonaws.com/mender/temp/yoctobuilds/${BUILD_TAG}/output.tar.xz"
-fi
-
 
 if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
-    if [ "$BUILD_QEMU" = "true" ]; then
-        cd $WORKSPACE
-        # Set build dir for qemu again, BBB build might possibly have overridden
-        # this.
-        source oe-init-build-env build-qemu
-        prepare_and_set_PATH
-
-        cd $WORKSPACE/meta-mender/meta-mender-qemu
-        cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
-        cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
-
-        docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
-        $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
-    fi
-
-    github_pull_request_status "pending" "integration tests have started in Jenkins" "$BUILD_URL" "integration_$INTEGRATION_REV"
-
-    INTEGRATION_TESTING_STATUS=0
-    cd $WORKSPACE/integration/tests && ./run.sh || INTEGRATION_TESTING_STATUS=$?
-
-
-    HTML_REPORT=$(find . -iname report.html  | head -n 1)
-    REPORT_DIR=$BUILD_NUMBER
-
-    s3cmd put $HTML_REPORT s3://mender-integration-reports/$REPORT_DIR/
-    REPORT_URL=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$REPORT_DIR/report.html
-
-    if [ $INTEGRATION_TESTING_STATUS -ne 0 ]; then
-        github_pull_request_status "failure" "integration tests failed" $REPORT_URL "integration_$INTEGRATION_REV"
-    else
-        github_pull_request_status "success" "integration tests passed!" $REPORT_URL "integration_$INTEGRATION_REV"
-    fi
-
-    # Reset docker tag names to their cloned values after tests are done.
-    cd $WORKSPACE/integration
-    git checkout -f -- .
-
-    if [ "$INTEGRATION_TESTING_STATUS" -ne 0 ]; then
-        exit $INTEGRATION_TESTING_STATUS
-    fi
-
-    if [ "$PUSH_CONTAINERS" = true ]; then
-        CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
-        MENDER_ARTIFACT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
-
-        s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/mender-artifact s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/
-        s3cmd setacl s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/mender-artifact --acl-public
-
-        cd $WORKSPACE/vexpress-qemu/
-        s3cmd -F put core-image-full-cmdline-vexpress-qemu.ext4 s3://mender/temp_${CLIENT_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4
-        s3cmd setacl s3://mender/temp_${CLIENT_VERSION}/core-image-full-cmdline-vexpress-qemu.ext4 --acl-public
-
-        modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-1_${CLIENT_VERSION}
-        mender-artifact write rootfs-image -t vexpress-qemu -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_1_${CLIENT_VERSION}.mender
-        modify_ext4 core-image-full-cmdline-vexpress-qemu.ext4 release-2_${CLIENT_VERSION}
-        mender-artifact write rootfs-image -t vexpress-qemu -n release-2_${CLIENT_VERSION} -u core-image-full-cmdline-vexpress-qemu.ext4 -o vexpress_release_2_${CLIENT_VERSION}.mender
-        s3cmd --cf-invalidate -F put vexpress_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/vexpress-qemu/
-        s3cmd --cf-invalidate -F put vexpress_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/vexpress-qemu/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/vexpress-qemu/vexpress_release_1_${CLIENT_VERSION}.mender --acl-public
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/vexpress-qemu/vexpress_release_2_${CLIENT_VERSION}.mender --acl-public
-
-        cd $WORKSPACE/beaglebone/
-        modify_ext4 core-image-base-beaglebone.ext4 release-1_${CLIENT_VERSION}
-        mender-artifact write rootfs-image -t beaglebone -n release-1_${CLIENT_VERSION} -u core-image-base-beaglebone.ext4 -o beaglebone_release_1_${CLIENT_VERSION}.mender
-        modify_ext4 core-image-base-beaglebone.ext4 release-2_${CLIENT_VERSION}
-        mender-artifact write rootfs-image -t beaglebone -n release-2_${CLIENT_VERSION} -u core-image-base-beaglebone.ext4 -o beaglebone_release_2_${CLIENT_VERSION}.mender
-        gzip -c core-image-base-beaglebone.sdimg > mender-beaglebone_${CLIENT_VERSION}.sdimg.gz
-        s3cmd --cf-invalidate -F put mender-beaglebone_${CLIENT_VERSION}.sdimg.gz s3://mender/${CLIENT_VERSION}/beaglebone/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/mender-beaglebone_${CLIENT_VERSION}.sdimg.gz --acl-public
-        s3cmd --cf-invalidate -F put beaglebone_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/beaglebone/
-        s3cmd --cf-invalidate -F put beaglebone_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/beaglebone/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_1_${CLIENT_VERSION}.mender --acl-public
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/beaglebone/beaglebone_release_2_${CLIENT_VERSION}.mender --acl-public
-
-
-        cd $WORKSPACE/rpi3/
-        modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-1_${CLIENT_VERSION}
-        mender-artifact write rootfs-image -t raspberrypi3 -n release-1_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_1_${CLIENT_VERSION}.mender
-        modify_ext4 core-image-full-cmdline-raspberrypi3.ext4 release-2_${CLIENT_VERSION}
-        mender-artifact write rootfs-image -t raspberrypi3 -n release-2_${CLIENT_VERSION} -u core-image-full-cmdline-raspberrypi3.ext4 -o raspberrypi3_release_2_${CLIENT_VERSION}.mender
-        gzip -c core-image-full-cmdline-raspberrypi3.sdimg > mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz
-        s3cmd --cf-invalidate -F put mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/mender-raspberrypi3_${CLIENT_VERSION}.sdimg.gz --acl-public
-        s3cmd --cf-invalidate -F put raspberrypi3_release_1_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        s3cmd --cf-invalidate -F put raspberrypi3_release_2_${CLIENT_VERSION}.mender s3://mender/${CLIENT_VERSION}/raspberrypi3/
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_1_${CLIENT_VERSION}.mender --acl-public
-        s3cmd setacl s3://mender/${CLIENT_VERSION}/raspberrypi3/raspberrypi3_release_2_${CLIENT_VERSION}.mender --acl-public
-
-        docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
-
-        for container in mender-client-qemu api-gateway deployments deviceadm deviceauth gui inventory useradm; do
-            VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
-            docker tag mendersoftware/$container:pr mendersoftware/$container:${VERSION}
-            docker push mendersoftware/$container:${VERSION}
-        done
-    fi
+    run_integration_tests
 fi
