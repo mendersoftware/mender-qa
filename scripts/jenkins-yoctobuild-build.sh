@@ -170,13 +170,38 @@ prepare_and_set_PATH() {
     fi
 }
 
+copy_build_conf() {
+    # Get dst from last argument.
+    eval "local dst=\"\$$#\""
+
+    while [ -n "$2" ]; do
+        local src="$1"
+        local tmpfile="$(mktemp)"
+
+        if grep /home/jenkins "$src"; then
+            echo "Please do not specify /home/jenkins directly in any build-conf files. Use @WORKSPACE@."
+            return 1
+        fi
+
+        sed -e "s%@WORKSPACE@%$WORKSPACE%g" "$src" > "$tmpfile"
+
+        if [ -d "$dst" ]; then
+            mv "$tmpfile" "$dst/$(basename "$src")"
+        else
+            mv "$tmpfile" "$dst"
+        fi
+
+        shift
+    done
+}
+
 prepare_build_config() {
     local machine
     machine=$1
 
     if [ -n "$machine" ]; then
-        if [ -d $WORKSPACE/mender-qa/build-conf/${machine} ]; then
-            /bin/cp $WORKSPACE/mender-qa/build-conf/${machine}/*  $BUILDDIR/conf/
+        if [ -d $WORKSPACE/meta-mender/tests/build-conf/${machine} ]; then
+            copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${machine}/*  $BUILDDIR/conf/
         fi
     fi
 
@@ -388,7 +413,7 @@ prepare_board_for_testing() {
     local machine_name="$1"
     local board_name="$2"
 
-    /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci/recipes-mender/mender-qa/files/*
+    /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci/recipes-mender/mender-qa/files/$board_name
     ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
         -t root@${SSH_TUNNEL_IP} \
         -p $(port_for_board $board_name) \
