@@ -239,7 +239,7 @@ $WORKSPACE/integration/extra/release_tool.py --verify-integration-references
 export GOPATH="$WORKSPACE/go"
 (
     cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact
-    CGO_ENABLED=0 go build
+    make install
 )
 for build in deployments deviceadm deviceauth inventory useradm; do (
 
@@ -716,7 +716,7 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
         CLIENT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
         MENDER_ARTIFACT_VERSION=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
 
-        s3cmd --cf-invalidate -F put $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/mender-artifact s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/
+        s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/mender-artifact s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/
         s3cmd setacl s3://mender/mender-artifact/${MENDER_ARTIFACT_VERSION}/mender-artifact --acl-public
 
         cd $WORKSPACE/vexpress-qemu/
