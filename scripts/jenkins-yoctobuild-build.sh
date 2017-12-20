@@ -138,6 +138,12 @@ EXTERNALSRC_pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
 EOF
+        if [ "$machine" = "bbb" ]; then
+            # In addition, they need Beaglebone layer.
+            cat >> $BUILDDIR/conf/bblayers.conf <<EOF
+BBLAYERS_append = " $WORKSPACE/meta-mender/meta-mender-beaglebone"
+EOF
+        fi
     else
         # Newer branches need new style single Go path
         cat >> $BUILDDIR/conf/local.conf <<EOF
