@@ -424,7 +424,11 @@ prepare_board_for_testing() {
     ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
         -t root@${SSH_TUNNEL_IP} \
         -p $(port_for_board $board_name) \
-        "mender-qa activate-test-image off" \
+        "mender-qa activate-test-image off"
+    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+        -t root@${SSH_TUNNEL_IP} \
+        -p $(port_for_board $board_name) \
+        "reboot" \
         || true
 }
 
@@ -450,7 +454,12 @@ deploy_image_to_board() {
                 -o StrictHostKeyChecking=no \
                 -t root@${SSH_TUNNEL_IP} \
                 -p $(port_for_board $board_name) \
-                "env IMAGE_FILE=$image_name-$machine_name.sdimg mender-qa deploy-test-image" \
+                "env IMAGE_FILE=$image_name-$machine_name.sdimg mender-qa deploy-test-image"
+            ssh -o UserKnownHostsFile=/dev/null \
+                -o StrictHostKeyChecking=no \
+                -t root@${SSH_TUNNEL_IP} \
+                -p $(port_for_board $board_name) \
+                "reboot" \
                 || true
             break
         fi
