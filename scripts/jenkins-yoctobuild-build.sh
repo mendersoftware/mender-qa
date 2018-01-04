@@ -47,6 +47,14 @@ if [ -n "$PR_TO_TEST" ]; then
     trap testFinished SIGHUP SIGINT SIGTERM SIGKILL EXIT
 fi
 
+is_poky_branch() {
+    if egrep -q "^ *DISTRO_CODENAME *= *\"$1\" *\$" $WORKSPACE/meta-poky/conf/distro/poky.conf; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Should not be called directly. See next two functions.
 is_doing_board() {
     local ret=0
@@ -209,8 +217,7 @@ prepare_build_config() {
     local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
 
     # See comment in local.conf
-    if egrep -q '^ *DISTRO_CODENAME *= *"morty" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf || \
-            egrep -q '^ *DISTRO_CODENAME *= *"pyro" *$' $WORKSPACE/meta-poky/conf/distro/poky.conf; then
+    if is_poky_branch morty || is_poky_branch pyro; then
         # Pyro and morty need old style full Go paths.
         cat >> $BUILDDIR/conf/local.conf <<EOF
 EXTERNALSRC_pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
@@ -710,10 +717,17 @@ run_integration_tests() {
     )
 }
 
-build_and_test_client  vexpress-qemu        vexpress-qemu        core-image-full-cmdline
-build_and_test_client  vexpress-qemu-flash  vexpress-qemu-flash  core-image-minimal
-build_and_test_client  beaglebone           beagleboneblack      core-image-base
-build_and_test_client  raspberrypi3         raspberrypi3         core-image-full-cmdline
+if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
+    # Rocko and earlier used this name.
+    beaglebone_machine_name=beaglebone
+else
+    beaglebone_machine_name=beaglebone-yocto
+fi
+
+build_and_test_client  vexpress-qemu             vexpress-qemu        core-image-full-cmdline
+build_and_test_client  vexpress-qemu-flash       vexpress-qemu-flash  core-image-minimal
+build_and_test_client  $beaglebone_machine_name  beagleboneblack      core-image-base
+build_and_test_client  raspberrypi3              raspberrypi3         core-image-full-cmdline
 
 if [ "$UPLOAD_OUTPUT" = "true" ]; then
     upload_output
