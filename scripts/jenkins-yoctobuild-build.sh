@@ -493,7 +493,7 @@ build_and_test_client() {
             return
         fi
 
-        github_pull_request_status "pending" "$board_name build started" "$BUILD_URL" "${board_name}_build"
+        github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build started" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
         source oe-init-build-env build-$machine_name
         cd ../
 
@@ -505,9 +505,9 @@ build_and_test_client() {
         bitbake $image_name || bitbake_result=$?
 
         if [[ $bitbake_result -eq 0 ]]; then
-            github_pull_request_status "success" "$board_name build completed" "$BUILD_URL" "${board_name}_build"
+            github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build completed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
         else
-            github_pull_request_status "failure" "$board_name build failed" "$BUILD_URL" "${board_name}_build"
+            github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build failed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
             exit $bitbake_result
         fi
 
@@ -532,7 +532,7 @@ build_and_test_client() {
                 echo "WARNING: install pytest-html for html results report"
             fi
 
-            github_pull_request_status "pending" "$board_name acceptance tests started in Jenkins" "$BUILD_URL" "${board_name}_acceptance_tests"
+            github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests started in Jenkins" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
 
             bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
             if [ -d "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci ]; then
@@ -584,13 +584,13 @@ build_and_test_client() {
                     if is_hardware_board "$board_name"; then
                         board_support_update "$board_name" "failed"
                     fi
-                    github_pull_request_status "failure" "$board_name acceptance tests failed" $report_url "${board_name}_acceptance_tests"
+                    github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests failed" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
                     exit $qemu_testing_status
                 else
                     if is_hardware_board "$board_name"; then
                         board_support_update "$board_name" "passed"
                     fi
-                    github_pull_request_status "success" "$board_name acceptance tests passed!" $report_url "${board_name}_acceptance_tests"
+                    github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests passed!" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
                 fi
             fi
 
@@ -689,7 +689,7 @@ run_integration_tests() {
             $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
         fi
 
-        github_pull_request_status "pending" "integration tests have started in Jenkins" "$BUILD_URL" "integration_$INTEGRATION_REV"
+        github_pull_request_status "pending" "integration:${INTEGRATION_REV} tests have started in Jenkins" "$BUILD_URL" "integration_$INTEGRATION_REV"
 
         local testing_status=0
         cd $WORKSPACE/integration/tests && ./run.sh || testing_status=$?
@@ -701,9 +701,9 @@ run_integration_tests() {
         local report_url=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$report_dir/report.html
 
         if [ $testing_status -ne 0 ]; then
-            github_pull_request_status "failure" "integration tests failed" $report_url "integration_$INTEGRATION_REV"
+            github_pull_request_status "failure" "integration:${INTEGRATION_REV} tests failed" $report_url "integration_$INTEGRATION_REV"
         else
-            github_pull_request_status "success" "integration tests passed!" $report_url "integration_$INTEGRATION_REV"
+            github_pull_request_status "success" "integration:${INTEGRATION_REV} tests passed!" $report_url "integration_$INTEGRATION_REV"
         fi
 
         # Reset docker tag names to their cloned values after tests are done.
