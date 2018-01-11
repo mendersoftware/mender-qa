@@ -573,8 +573,8 @@ build_and_test_client() {
             if [ -n "$PR_TO_TEST" ]; then
                 local html_report=$(find . -iname report.html  | head -n 1)
                 local report_dir=$BUILD_NUMBER
-                s3cmd put $html_report s3://mender-acceptance-$board_name/$report_dir/
-                local report_url=https://s3-eu-west-1.amazonaws.com/$report_bucket/$report_dir/report.html
+                s3cmd put $html_report s3://mender-testing-reports/acceptance-$board_name/$report_dir/
+                local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/acceptance-$board_name/$report_dir/report.html
 
                 if [ $qemu_testing_status -ne 0 ]; then
                     if is_hardware_board "$board_name"; then
@@ -693,8 +693,8 @@ run_integration_tests() {
         local html_report=$(find . -iname report.html  | head -n 1)
         local report_dir=$BUILD_NUMBER
 
-        s3cmd put $html_report s3://mender-integration-reports/$report_dir/
-        local report_url=https://s3-eu-west-1.amazonaws.com/mender-integration-reports/$report_dir/report.html
+        s3cmd put $html_report s3://mender-testing-reports/integration-reports/$report_dir/
+        local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/integration-reports/$report_dir/report.html
 
         if [ $testing_status -ne 0 ]; then
             github_pull_request_status "failure" "integration:${INTEGRATION_REV} tests failed" $report_url "integration_$INTEGRATION_REV"
