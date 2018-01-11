@@ -33,14 +33,10 @@ function testFinished {
     for i in "${!TEST_TRACKER[@]}"
     do
         if [[ "${TEST_TRACKER[$i]}" == "pending" ]]; then
-            github_pull_request_status "failure" "tests errored." $BUILD_URL $i
+            github_pull_request_status "failure" "Unknown failure, check log" $BUILD_URL $i
             return
         fi
     done
-
-    if [[ ${#TEST_TRACKER[@]} -eq 0 ]]; then
-        github_pull_request_comment "Jenkins build [job]($BUILD_URL) failed."
-    fi
 }
 
 if [ -n "$PR_TO_TEST" ]; then
