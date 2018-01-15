@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -x
+set -e -x -E
 
 echo $WORKSPACE
 
@@ -40,7 +40,7 @@ function testFinished {
 }
 
 if [ -n "$PR_TO_TEST" ]; then
-    trap testFinished SIGHUP SIGINT SIGTERM SIGKILL EXIT
+    trap testFinished SIGHUP SIGINT SIGTERM SIGKILL EXIT ERR
 fi
 
 is_poky_branch() {
