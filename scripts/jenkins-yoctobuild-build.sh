@@ -566,9 +566,9 @@ build_and_test_client() {
 
             # run tests with xdist explicitly disabled
             local qemu_testing_status=0
-            py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
-                    --bitbake-image $image_name --board-type=$board_name \
-                    $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
+            # py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
+            #         --bitbake-image $image_name --board-type=$board_name \
+            #         $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
 
             if [ -n "$PR_TO_TEST" ]; then
                 local html_report=$(find . -iname report.html  | head -n 1)
