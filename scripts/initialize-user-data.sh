@@ -81,9 +81,10 @@ apt_get() {
         fi
     done
 
+    ret_code=$(cat /tmp/apt-get-return-code.$pid.txt)
     rm -f /tmp/apt-get-return-code.$pid.txt /tmp/apt-get.$pid.log
 
-    return "$(cat /tmp/apt-get-return-code.$pid.txt)"
+    return $ret_code
 }
 alias apt=apt_get
 alias apt-get=apt_get
