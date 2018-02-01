@@ -637,15 +637,15 @@ publish_artifacts() {
         s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact --acl-public
 
         cd $WORKSPACE/$board_name/
-        s3cmd -F put core-image-full-cmdline-$machine_name.ext4 s3://mender/temp_${client_version}/core-image-full-cmdline-$machine_name.ext4
-        s3cmd setacl s3://mender/temp_${client_version}/core-image-full-cmdline-$machine_name.ext4 --acl-public
+        s3cmd -F put $image_name-$machine_name.ext4 s3://mender/temp_${client_version}/$image_name-$machine_name.ext4
+        s3cmd setacl s3://mender/temp_${client_version}/$image_name-$machine_name.ext4 --acl-public
 
-        modify_ext4 core-image-full-cmdline-$machine_name.ext4 release-1_${client_version}
-        mender-artifact write rootfs-image -t $machine_name -n release-1_${client_version} -u core-image-full-cmdline-$machine_name.ext4 -o vexpress_release_1_${client_version}.mender
-        modify_ext4 core-image-full-cmdline-$machine_name.ext4 release-2_${client_version}
-        mender-artifact write rootfs-image -t $machine_name -n release-2_${client_version} -u core-image-full-cmdline-$machine_name.ext4 -o vexpress_release_2_${client_version}.mender
+        modify_ext4 $image_name-$machine_name.ext4 release-1_${client_version}
+        mender-artifact write rootfs-image -t $machine_name -n release-1_${client_version} -u $image_name-$machine_name.ext4 -o vexpress_release_1_${client_version}.mender
+        modify_ext4 $image_name-$machine_name.ext4 release-2_${client_version}
+        mender-artifact write rootfs-image -t $machine_name -n release-2_${client_version} -u $image_name-$machine_name.ext4 -o vexpress_release_2_${client_version}.mender
         if is_hardware_board $board_name; then
-            gzip -c core-image-base-$machine_name.sdimg > mender-$machine_name_${client_version}.sdimg.gz
+            gzip -c $image_name-$machine_name.sdimg > mender-$machine_name_${client_version}.sdimg.gz
             s3cmd --cf-invalidate -F put mender-$machine_name_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
             s3cmd setacl s3://mender/${client_version}/$board_name/mender-$machine_name_${client_version}.sdimg.gz --acl-public
         fi
