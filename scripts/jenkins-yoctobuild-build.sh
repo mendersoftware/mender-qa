@@ -645,9 +645,9 @@ publish_artifacts() {
         modify_ext4 $image_name-$machine_name.ext4 release-2_${client_version}
         mender-artifact write rootfs-image -t $machine_name -n release-2_${client_version} -u $image_name-$machine_name.ext4 -o vexpress_release_2_${client_version}.mender
         if is_hardware_board $board_name; then
-            gzip -c $image_name-$machine_name.sdimg > mender-$machine_name_${client_version}.sdimg.gz
-            s3cmd --cf-invalidate -F put mender-$machine_name_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
-            s3cmd setacl s3://mender/${client_version}/$board_name/mender-$machine_name_${client_version}.sdimg.gz --acl-public
+            gzip -c $image_name-$machine_name.sdimg > mender-${machine_name}_${client_version}.sdimg.gz
+            s3cmd --cf-invalidate -F put mender-${machine_name}_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
+            s3cmd setacl s3://mender/${client_version}/$board_name/mender-${machine_name}_${client_version}.sdimg.gz --acl-public
         fi
         s3cmd --cf-invalidate -F put vexpress_release_1_${client_version}.mender s3://mender/${client_version}/$board_name/
         s3cmd --cf-invalidate -F put vexpress_release_2_${client_version}.mender s3://mender/${client_version}/$board_name/
