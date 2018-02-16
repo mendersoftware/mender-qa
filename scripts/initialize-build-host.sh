@@ -238,6 +238,7 @@ then
         NODE_LABELS \
         NODE_NAME \
         NO_TESTS \
+        RELEASE_BUILD \
         ROOT_BUILD_CAUSE \
         ROOT_BUILD_CAUSE_MANUALTRIGGER \
         WORKSPACE \
