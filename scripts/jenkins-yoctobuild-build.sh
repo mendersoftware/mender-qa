@@ -709,16 +709,6 @@ run_integration_tests() {
         if [ "$testing_status" -ne 0 ]; then
             exit $testing_status
         fi
-
-        if [ "$PUBLISH_ARTIFACTS" = true ]; then
-            docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
-
-            for container in mender-client-qemu api-gateway deployments deviceadm deviceauth gui inventory useradm; do
-                local version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
-                docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
-                docker push mendersoftware/$container:${version}
-            done
-        fi
     )
 }
 
@@ -740,4 +730,14 @@ fi
 
 if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     run_integration_tests
+fi
+
+if [ "$PUBLISH_ARTIFACTS" = true ] && [ "$BUILD_QEMU_SDIMG" = true ]; then
+    docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+
+    for container in mender-client-qemu api-gateway deployments deviceadm deviceauth gui inventory useradm; do
+        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
+        docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
+        docker push mendersoftware/$container:${version}
+    done
 fi
