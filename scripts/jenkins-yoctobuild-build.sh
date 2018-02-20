@@ -703,7 +703,18 @@ run_integration_tests() {
             $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
         fi
 
-        github_pull_request_status "pending" "integration:${INTEGRATION_REV} tests have started in Jenkins" "$BUILD_URL" "integration_$INTEGRATION_REV"
+        local extra_job_string=
+        local extra_job_info="tests"
+        if [ -n "$SPECIFIC_INTEGRATION_TEST" ]; then
+            extra_job_string="_$SPECIFIC_INTEGRATION_TEST"
+            extra_job_info="specific test:$SPECIFIC_INTEGRATION_TEST"
+        fi
+
+        github_pull_request_status \
+            "pending" \
+            "integration:${INTEGRATION_REV} $extra_job_info have started in Jenkins" \
+            "$BUILD_URL" \
+            "integration_${INTEGRATION_REV}$extra_job_string"
 
         local testing_status=0
         cd $WORKSPACE/integration/tests && ./run.sh || testing_status=$?
@@ -715,9 +726,17 @@ run_integration_tests() {
         local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/integration-reports/$report_dir/report.html
 
         if [ $testing_status -ne 0 ]; then
-            github_pull_request_status "failure" "integration:${INTEGRATION_REV} tests failed" $report_url "integration_$INTEGRATION_REV"
+            github_pull_request_status \
+                "failure" \
+                "integration:${INTEGRATION_REV} $extra_job_info failed" \
+                $report_url \
+                "integration_${INTEGRATION_REV}$extra_job_string"
         else
-            github_pull_request_status "success" "integration:${INTEGRATION_REV} tests passed!" $report_url "integration_$INTEGRATION_REV"
+            github_pull_request_status \
+                "success" \
+                "integration:${INTEGRATION_REV} $extra_job_info passed!" \
+                $report_url \
+                "integration_${INTEGRATION_REV}$extra_job_string"
         fi
 
         # Reset docker tag names to their cloned values after tests are done.
