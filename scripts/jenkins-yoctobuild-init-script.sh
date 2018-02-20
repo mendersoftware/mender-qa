@@ -40,6 +40,7 @@ sudo pip2 install pytest-html --upgrade
 sudo pip2 install fabric --upgrade
 sudo pip2 install psutil --upgrade
 sudo pip2 install boto3 --upgrade
+sudo pip2 install pycrypto --upgrade
 
 # Python 3 pip
 sudo apt-get -qy --force-yes install python3-pip
