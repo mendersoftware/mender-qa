@@ -4,7 +4,6 @@ set -e -x -E
 
 echo $WORKSPACE
 
-PR_COMMENT_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/issues/$PR_TO_TEST/comments
 PR_STATUS_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/statuses/$GIT_COMMIT
 SSH_TUNNEL_IP=188.166.29.46
 RASPBERRYPI3_PORT=2210
@@ -107,18 +106,6 @@ modify_ext4() {
     echo -n "artifact_name=$2" > /tmp/artifactfile
     debugfs -w -R "rm /etc/mender/artifact_info" $1
     printf "cd %s\nwrite %s %s\n" /etc/mender /tmp/artifactfile artifact_info | debugfs -w $1
-}
-
-github_pull_request_comment() {
-    local request_body=$(cat <<EOF
-    {
-      "body": "$1"
-    }
-EOF
-)
-    curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
-         -d "$request_body" \
-         "$PR_COMMENT_ENDPOINT"
 }
 
 github_pull_request_status() {
