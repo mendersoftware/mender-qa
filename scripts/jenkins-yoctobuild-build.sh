@@ -4,7 +4,6 @@ set -e -x -E
 
 echo $WORKSPACE
 
-PR_STATUS_ENDPOINT=https://api.github.com/repos/mendersoftware/$REPO_TO_TEST/statuses/$GIT_COMMIT
 SSH_TUNNEL_IP=188.166.29.46
 RASPBERRYPI3_PORT=2210
 BEAGLEBONEBLACK_PORT=2211
@@ -38,9 +37,7 @@ function testFinished {
     done
 }
 
-if [ -n "$PR_TO_TEST" ]; then
-    trap testFinished SIGHUP SIGINT SIGTERM SIGKILL EXIT ERR
-fi
+trap testFinished SIGHUP SIGINT SIGTERM SIGKILL EXIT ERR
 
 is_poky_branch() {
     if egrep -q "^ *DISTRO_CODENAME *= *\"$1\" *\$" $WORKSPACE/meta-poky/conf/distro/poky.conf; then
@@ -109,10 +106,6 @@ modify_ext4() {
 }
 
 github_pull_request_status() {
-    if [[ -z $PR_TO_TEST ]]; then
-        return
-    fi
-
     TEST_TRACKER[$4]=$1
     local request_body=$(cat <<EOF
     {
@@ -122,10 +115,50 @@ github_pull_request_status() {
       "context": "$4"
     }
 EOF
-)
-    curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
-         -d "$request_body" \
-         "$PR_STATUS_ENDPOINT"
+    )
+
+    # Split on newlines
+    local IFS='
+'
+    for decl in $(env); do
+        local key=${decl%%=*}
+        if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
+            # Not a pull request, skip.
+            continue
+        fi
+        case "$key" in
+            META_MENDER_REV)
+                local repo=meta-mender
+                local location=$WORKSPACE/meta-mender
+                ;;
+            *_REV)
+                local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
+                if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
+                    # If the release tool doesn't recognize the repository, don't use it.
+                    continue
+                fi
+                local location=
+                if [ -d "$WORKSPACE/$repo" ]; then
+                    location="$WORKSPACE/$repo"
+                elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
+                    location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
+                else
+                    echo "github_pull_request_status: Unable to find repository location: $repo"
+                    return 1
+                fi
+                ;;
+            *)
+                # Not a revision, go to next entry.
+                continue
+                ;;
+        esac
+        local git_commit=$(cd "$location" && git rev-parse HEAD)
+        local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
+
+        curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+             -d "$request_body" \
+             "$pr_status_endpoint"
+    done
 }
 
 
@@ -557,24 +590,22 @@ build_and_test_client() {
                     --bitbake-image $image_name --board-type=$board_name \
                     $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
 
-            if [ -n "$PR_TO_TEST" ]; then
-                local html_report=$(find . -iname report.html  | head -n 1)
-                local report_dir=$BUILD_NUMBER
-                s3cmd put $html_report s3://mender-testing-reports/acceptance-$board_name/$report_dir/
-                local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/acceptance-$board_name/$report_dir/report.html
+            local html_report=$(find . -iname report.html  | head -n 1)
+            local report_dir=$BUILD_NUMBER
+            s3cmd put $html_report s3://mender-testing-reports/acceptance-$board_name/$report_dir/
+            local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/acceptance-$board_name/$report_dir/report.html
 
-                if [ $qemu_testing_status -ne 0 ]; then
-                    if is_hardware_board "$board_name"; then
-                        board_support_update "$board_name" "failed"
-                    fi
-                    github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests failed" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
-                    exit $qemu_testing_status
-                else
-                    if is_hardware_board "$board_name"; then
-                        board_support_update "$board_name" "passed"
-                    fi
-                    github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests passed!" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
+            if [ $qemu_testing_status -ne 0 ]; then
+                if is_hardware_board "$board_name"; then
+                    board_support_update "$board_name" "failed"
                 fi
+                github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests failed" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
+                exit $qemu_testing_status
+            else
+                if is_hardware_board "$board_name"; then
+                    board_support_update "$board_name" "passed"
+                fi
+                github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests passed!" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
             fi
 
             if [ $qemu_testing_status -ne 0 ]; then
