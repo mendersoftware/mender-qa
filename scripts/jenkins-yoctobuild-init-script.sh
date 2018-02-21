@@ -31,7 +31,7 @@ sudo npm install -g gulp
 sudo npm install mocha selenium-webdriver@3.0.0-beta-2 saucelabs
 
 # Python 2 pip
-sudo easy_install pip
+sudo apt-get install python-pip
 sudo pip2 install requests --upgrade
 sudo pip2 install pytest==3.2.5
 sudo pip2 install filelock --upgrade
@@ -40,6 +40,7 @@ sudo pip2 install pytest-html --upgrade
 sudo pip2 install fabric --upgrade
 sudo pip2 install psutil --upgrade
 sudo pip2 install boto3 --upgrade
+sudo pip2 install pycrypto --upgrade
 
 # Python 3 pip
 sudo apt-get -qy --force-yes install python3-pip
