@@ -106,8 +106,13 @@ modify_ext4() {
 }
 
 github_pull_request_status() {
-    TEST_TRACKER[$4]=$1
-    local request_body=$(cat <<EOF
+    (
+        # Disable command echoing in here, it's quite verbose and not very
+        # helpful, since these aren't strictly build steps.
+        set +x
+
+        TEST_TRACKER[$4]=$1
+        local request_body=$(cat <<EOF
     {
       "state": "$1",
       "description": "$2",
@@ -115,50 +120,53 @@ github_pull_request_status() {
       "context": "$4"
     }
 EOF
-    )
+        )
 
-    # Split on newlines
-    local IFS='
+        # Split on newlines
+        local IFS='
 '
-    for decl in $(env); do
-        local key=${decl%%=*}
-        if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
-            # Not a pull request, skip.
-            continue
-        fi
-        case "$key" in
-            META_MENDER_REV)
-                local repo=meta-mender
-                local location=$WORKSPACE/meta-mender
-                ;;
-            *_REV)
-                local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
-                if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
-                    # If the release tool doesn't recognize the repository, don't use it.
-                    continue
-                fi
-                local location=
-                if [ -d "$WORKSPACE/$repo" ]; then
-                    location="$WORKSPACE/$repo"
-                elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
-                    location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
-                else
-                    echo "github_pull_request_status: Unable to find repository location: $repo"
-                    return 1
-                fi
-                ;;
-            *)
-                # Not a revision, go to next entry.
+        for decl in $(env); do
+            local key=${decl%%=*}
+            if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
+                # Not a pull request, skip.
                 continue
-                ;;
-        esac
-        local git_commit=$(cd "$location" && git rev-parse HEAD)
-        local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
+            fi
+            case "$key" in
+                META_MENDER_REV)
+                    local repo=meta-mender
+                    local location=$WORKSPACE/meta-mender
+                    ;;
+                *_REV)
+                    local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
+                    if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
+                        # If the release tool doesn't recognize the repository, don't use it.
+                        continue
+                    fi
+                    local location=
+                    if [ -d "$WORKSPACE/$repo" ]; then
+                        location="$WORKSPACE/$repo"
+                    elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
+                        location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
+                    else
+                        echo "github_pull_request_status: Unable to find repository location: $repo"
+                        return 1
+                    fi
+                    ;;
+                *)
+                    # Not a revision, go to next entry.
+                    continue
+                    ;;
+            esac
+            local git_commit=$(cd "$location" && git rev-parse HEAD)
+            local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
 
-        curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
-             -d "$request_body" \
-             "$pr_status_endpoint"
-    done
+            set -x
+            curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+                 -d "$request_body" \
+                 "$pr_status_endpoint"
+            set +x
+        done
+    )
 }
 
 
