@@ -257,9 +257,19 @@ EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go"
 EOF
     fi
 
-    cat >> $BUILDDIR/conf/local.conf <<EOF
+    # Use network cache if present, if not, use local cache.
+    if [ -d /mnt/sstate-cache ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
 SSTATE_DIR = "/mnt/sstate-cache"
+EOF
+    else
+        mkdir -p $HOME/sstate-cache
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+SSTATE_DIR = "$HOME/sstate-cache"
+EOF
+    fi
 
+    cat >> $BUILDDIR/conf/local.conf <<EOF
 MENDER_ARTIFACT_NAME = "mender-image-$client_version"
 EOF
 
