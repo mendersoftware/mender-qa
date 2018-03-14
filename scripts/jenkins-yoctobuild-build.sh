@@ -781,12 +781,19 @@ if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     run_integration_tests
 fi
 
-if [ "$PUBLISH_ARTIFACTS" = true ] && [ "$BUILD_QEMU_SDIMG" = true ]; then
+if [ "$PUBLISH_ARTIFACTS" = true ]; then
     docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 
-    for container in mender-client-qemu api-gateway deployments deviceadm deviceauth gui inventory useradm; do
+    for container in api-gateway deployments deviceadm deviceauth gui inventory useradm; do
         version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
         docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
         docker push mendersoftware/$container:${version}
     done
+
+    if is_building_board vexpress-qemu; then
+        container=mender-client-qemu
+        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
+        docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
+        docker push mendersoftware/$container:${version}
+    fi
 fi
