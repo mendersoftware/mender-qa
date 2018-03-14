@@ -597,6 +597,7 @@ build_and_test_client() {
             fi
 
             # run tests with xdist explicitly disabled
+            false
             local qemu_testing_status=0
             py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
                     --bitbake-image $image_name --board-type=$board_name \
