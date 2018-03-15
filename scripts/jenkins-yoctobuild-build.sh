@@ -782,11 +782,13 @@ fi
 if [ "$PUBLISH_ARTIFACTS" = true ]; then
     docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 
-    for container in api-gateway deployments deviceadm deviceauth gui inventory useradm; do
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
-        docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
-        docker push mendersoftware/$container:${version}
-    done
+    if grep mender_servers <<<"$JOB_BASE_NAME"; then
+        for container in api-gateway deployments deviceadm deviceauth gui inventory useradm; do
+            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
+            docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
+            docker push mendersoftware/$container:${version}
+        done
+    fi
 
     if is_building_board vexpress-qemu; then
         container=mender-client-qemu
