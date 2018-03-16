@@ -749,10 +749,6 @@ run_integration_tests() {
                 "integration_${INTEGRATION_REV}$extra_job_string"
         fi
 
-        # Reset docker tag names to their cloned values after tests are done.
-        cd $WORKSPACE/integration
-        git checkout -f -- .
-
         if [ "$testing_status" -ne 0 ]; then
             exit $testing_status
         fi
@@ -778,6 +774,10 @@ fi
 if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
     run_integration_tests
 fi
+
+# Reset docker tag names to their cloned values after tests are done.
+cd $WORKSPACE/integration
+git checkout -f -- .
 
 if [ "$PUBLISH_ARTIFACTS" = true ]; then
     docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
