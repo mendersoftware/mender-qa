@@ -339,7 +339,7 @@ build_custom_qemu() {
 # ---------------------------------------------------
 
 # Verify that version references are up to date.
-$WORKSPACE/integration/extra/release_tool.py --verify-integration-references
+#$WORKSPACE/integration/extra/release_tool.py --verify-integration-references
 
 # Make sure that a stop_slave does not linger from a previous build.
 if [[ $STOP_SLAVE = "true" ]]; then
