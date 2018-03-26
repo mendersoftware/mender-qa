@@ -726,6 +726,11 @@ run_integration_tests() {
             "$BUILD_URL" \
             "integration_${INTEGRATION_REV}$extra_job_string"
 
+        if is_building_board vexpress-qemu; then
+            cd $WORKSPACE
+            source oe-init-build-env build-vexpress-qemu
+        fi
+
         local testing_status=0
         cd $WORKSPACE/integration/tests && ./run.sh || testing_status=$?
 
