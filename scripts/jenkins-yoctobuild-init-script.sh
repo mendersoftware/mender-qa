@@ -4,8 +4,7 @@ cd $HOME
 
 . mender-qa/scripts/initialize-build-host.sh
 
-sudo curl -L https://github.com/docker/compose/releases/download/1.20.1/docker-compose-`uname -s`-`uname -m` > d
-ocker-compose
+sudo curl -L https://github.com/docker/compose/releases/download/1.20.1/docker-compose-`uname -s`-`uname -m` > docker-compose
 
 sudo cp docker-compose /usr/bin/docker-compose
 sudo chmod +x /usr/bin/docker-compose
