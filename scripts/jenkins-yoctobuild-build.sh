@@ -403,35 +403,47 @@ export GOPATH="$WORKSPACE/go"
 )
 
 if grep mender_servers <<<"$JOB_BASE_NAME"; then
-    for build in deployments deviceadm deviceauth inventory useradm; do (
+    # Use release tool to query for available repositories, and fall back to
+    # flat list for branches where we don't have that option.
+    for build in $($WORKSPACE/integration/extra/release_tool.py --list 2>/dev/null \
+                          || echo "deployments deviceadm deviceauth gui inventory mender-api-gateway-docker useradm" ); do (
+
         $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
-        cd go/src/github.com/mendersoftware/$build
-        CGO_ENABLED=0 go build
-        docker build -t mendersoftware/$build:pr .
+
+        case "$build" in
+            deployments|deviceadm|deviceauth|inventory|useradm)
+                cd go/src/github.com/mendersoftware/$build
+                CGO_ENABLED=0 go build
+                docker build -t mendersoftware/$build:pr .
+                ;;
+
+            gui)
+                cd gui
+                gulp build
+                docker build -t mendersoftware/gui:pr .
+                ;;
+
+            mender)
+                # Client is not built here.
+                :
+                ;;
+
+            mender-api-gateway-docker)
+                cd $build
+                docker build -t mendersoftware/api-gateway:pr .
+                ;;
+
+            mender-conductor)
+                cd go/src/github.com/mendersoftware/$build
+                docker build -t mendersoftware/mender-conductor:pr ./server
+                ;;
+
+            mender-conductor-enterprise)
+                cd go/src/github.com/mendersoftware/$build
+                docker build --build-arg REVISION=pr -t mendersoftware/mender-conductor-enterprise:pr ./server
+                ;;
+        esac
     ); done
-    # Build GUI
-    (
-        $WORKSPACE/integration/extra/release_tool.py --set-version-of gui --version pr
-        cd gui
-        gulp build
-        docker build -t mendersoftware/gui:pr .
-    )
-    # Build other repositories
-    (
-        $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-api-gateway-docker --version pr
-        cd mender-api-gateway-docker
-        docker build -t mendersoftware/api-gateway:pr .
-    )
-    (
-        $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-conductor --version pr
-        cd go/src/github.com/mendersoftware/mender-conductor
-        docker build -t mendersoftware/mender-conductor:pr ./server
-    )
-    (
-        $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-conductor-enterprise --version pr
-        cd go/src/github.com/mendersoftware/mender-conductor-enterprise
-        docker build --build-arg REVISION=pr -t mendersoftware/mender-conductor-enterprise:pr ./server
-    )
 fi
 
 # -----------------------
