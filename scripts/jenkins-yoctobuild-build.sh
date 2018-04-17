@@ -408,19 +408,19 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
     for build in $($WORKSPACE/integration/extra/release_tool.py --list 2>/dev/null \
                           || echo "deployments deviceadm deviceauth gui inventory mender-api-gateway-docker useradm" ); do (
 
-        $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
-
         case "$build" in
             deployments|deviceadm|deviceauth|inventory|useradm)
                 cd go/src/github.com/mendersoftware/$build
                 CGO_ENABLED=0 go build
                 docker build -t mendersoftware/$build:pr .
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
 
             gui)
                 cd gui
                 gulp build
                 docker build -t mendersoftware/gui:pr .
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
 
             mender)
@@ -431,16 +431,19 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
             mender-api-gateway-docker)
                 cd $build
                 docker build -t mendersoftware/api-gateway:pr .
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
 
             mender-conductor)
                 cd go/src/github.com/mendersoftware/$build
                 docker build -t mendersoftware/mender-conductor:pr ./server
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
 
             mender-conductor-enterprise)
                 cd go/src/github.com/mendersoftware/$build
                 docker build --build-arg REVISION=pr -t mendersoftware/mender-conductor-enterprise:pr ./server
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
         esac
     ); done
