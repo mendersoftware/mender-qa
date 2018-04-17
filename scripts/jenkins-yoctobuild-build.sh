@@ -47,42 +47,19 @@ is_poky_branch() {
     fi
 }
 
-# Should not be called directly. See next two functions.
-is_doing_board() {
-    local ret=0
-    # The param is just to be able to test for both "BUILD" and "TEST" variables
-    # in the same case statement.
-    local param="$2"
-    case "$1" in
-        vexpress-qemu)
-            eval test "\$${param}_QEMU_SDIMG" = true && grep "mender_qemu_sdimg" <<<"$JOB_BASE_NAME" || ret=$?
-            ;;
-        vexpress-qemu-flash)
-            eval test "\$${param}_QEMU_RAW_FLASH" = true && grep "mender_qemu_flash" <<<"$JOB_BASE_NAME" || ret=$?
-            ;;
-        beagleboneblack)
-            eval test "\$${param}_BEAGLEBONEBLACK" = true && grep "mender_beagleboneblack" <<<"$JOB_BASE_NAME" || ret=$?
-            ;;
-        raspberrypi3)
-            eval test "\$${param}_RASPBERRYPI3" = true && grep "mender_raspberrypi3" <<<"$JOB_BASE_NAME" || ret=$?
-            ;;
-        *)
-            echo "Unrecognized board: $1"
-            exit 1
-            ;;
-    esac
-    return $ret
-}
-
 is_building_board() {
     local ret=0
-    is_doing_board "$1" "BUILD" || ret=$?
+    local uc_board="$(tr [a-z-] [A-Z_] <<<$1)"
+    local lc_board="$(tr [A-Z-] [a-z_] <<<$1)"
+    test "BUILD_${uc_board}" = true && grep "mender_${lc_board}" <<<"$JOB_BASE_NAME" || ret=$?
     return $ret
 }
 
 is_testing_board() {
     local ret=0
-    is_doing_board "$1" "TEST" || ret=$?
+    local uc_board="$(tr [a-z] [A-Z] <<<$1)"
+    local lc_board="$(tr [A-Z] [a-z] <<<$1)"
+    test "TEST_${uc_board}" = true && grep "mender_${lc_board}" <<<"$JOB_BASE_NAME" || ret=$?
     return $ret
 }
 
