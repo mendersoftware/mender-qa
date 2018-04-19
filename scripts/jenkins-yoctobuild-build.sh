@@ -300,6 +300,13 @@ PREFERRED_VERSION_pn-mender-artifact = "$mender_artifact_version-git%"
 PREFERRED_VERSION_pn-mender-artifact-native = "$mender_artifact_version-git%"
 EOF
     fi
+
+    if is_poky_branch morty; then
+        # Morty needs oe-meta-go
+        cat >> $BUILDDIR/conf/bblayers.conf <<EOF
+BBLAYERS_append = " $WORKSPACE/oe-meta-go"
+EOF
+    fi
 }
 
 build_custom_qemu() {
