@@ -69,8 +69,8 @@ In this step we create a baseline VM image for build agents. The most basic Jenk
 
 1.  In Cloud Shell, download and unpack Packer: 
 ```
-wget https://releases.hashicorp.com/packer/0.12.3/packer_0.12.3_linux_amd64.zip
-unzip packer_0.12.3_linux_amd64.zip
+wget https://releases.hashicorp.com/packer/1.2.2/packer_1.2.2_linux_amd64.zip
+unzip packer_1.2.2_linux_amd64.zip
 ```
 
 2.  Create the configuration file for your Packer image builds for example: 
@@ -89,6 +89,7 @@ cat > jenkins-agent.json <<EOF
             "image_name": "jenkins-agent-{{timestamp}}",
             "image_family": "jenkins-agent",
             "ssh_username": "ubuntu"
+            "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"]
         }
     ],
     "provisioners": [
@@ -121,6 +122,7 @@ cat > jenkins-agent.json <<EOF
             "image_name": "jenkins-agent-{{timestamp}}",
             "image_family": "jenkins-agent",
             "ssh_username": "ubuntu"
+            "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"]
         }
     ],
     "provisioners": [
