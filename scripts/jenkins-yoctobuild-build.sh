@@ -2,6 +2,12 @@
 
 set -e -x -E
 
+while pgrep rc.local >/dev/null; do
+    # Wait for init-script to finish.
+    sleep 10
+done
+sudo journalctl -u rc-local | cat || true
+
 echo $WORKSPACE
 
 SSH_TUNNEL_IP=188.166.29.46
