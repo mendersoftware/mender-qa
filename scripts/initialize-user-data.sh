@@ -45,6 +45,9 @@ cp /root/mender-qa/data/known_hosts                    /home/jenkins/.ssh/known_
 # Make sure everything in jenkins' folder has right owner.
 chown -R jenkins:jenkins /home/jenkins
 
+groupadd -r kvm || true # In case it already exists.
+usermod -a -G kvm jenkins
+
 # change hostname to localhost
 # it will fix sudo complaining "unable to resolve host digitalocean",
 # and some tests

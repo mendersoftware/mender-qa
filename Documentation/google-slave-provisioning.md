@@ -69,8 +69,8 @@ In this step we create a baseline VM image for build agents. The most basic Jenk
 
 1.  In Cloud Shell, download and unpack Packer: 
 ```
-wget https://releases.hashicorp.com/packer/0.12.3/packer_0.12.3_linux_amd64.zip
-unzip packer_0.12.3_linux_amd64.zip
+wget https://releases.hashicorp.com/packer/1.2.2/packer_1.2.2_linux_amd64.zip
+unzip packer_1.2.2_linux_amd64.zip
 ```
 
 2.  Create the configuration file for your Packer image builds for example: 
@@ -89,6 +89,7 @@ cat > jenkins-agent.json <<EOF
             "image_name": "jenkins-agent-{{timestamp}}",
             "image_family": "jenkins-agent",
             "ssh_username": "ubuntu"
+            "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"]
         }
     ],
     "provisioners": [
@@ -105,7 +106,7 @@ EOF
 ```
 *However*; since you are not able to provide `user-data` and `init-script` with Jenkins at a later stage, this is where you'll need to add these scripts. To do this we will need to add additional [provisioners](https://www.packer.io/docs/provisioners/index.html). In short, there are two types of provisioners of interest: [shell](https://www.packer.io/docs/provisioners/shell.html) which runs the specified script(s) (can also be inline) **once** when packer builds the script. This is where you want to place your `user-data` script. The other provisioner you'll need is [file](https://www.packer.io/docs/provisioners/file.html), which adds a file from your local file system to the image, typically you have to add the file to some destination, and use shell to move it to where you want it if it requires sudo. 
 
-Now, typically you will want (part of) your `init-script` to run when the agent boots. *(You should put as much of your scripts as possible in the shell provisioner to save compute time and money.)* To make this happen, you will have to make a little work-around. One way to do this, is to provide your *script* as a *file*, and add it to `/etc/init.d/`, and finally use a *shell* provisioner to make it execute in `rc.local`. For example:
+Now, typically you will want (part of) your `init-script` to run when the agent boots. *(You should put as much of your scripts as possible in the init script which runs at boot to avoid having to make a new packer image every time there is a change in it.)* To make this happen, you will have to make a little work-around. One way to do this, is to provide your *script* as a *file*, and add it to `/etc/init.d/`, and finally use a *shell* provisioner to make it execute in `rc.local`. For example:
 ```
 export PROJECT=$(gcloud info --format='value(config.project)')
 cat > jenkins-agent.json <<EOF
@@ -121,6 +122,7 @@ cat > jenkins-agent.json <<EOF
             "image_name": "jenkins-agent-{{timestamp}}",
             "image_family": "jenkins-agent",
             "ssh_username": "ubuntu"
+            "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"]
         }
     ],
     "provisioners": [
@@ -150,6 +152,8 @@ cat > jenkins-agent.json <<EOF
 EOF
 ```
 *Replace /path/to/(...)/ with your local paths.* You might want to further modify your packer image by adding additional providers, or selecting another distro etc. but the above solution at least give you a setup for `user-data`/`init-scripts`.
+
+**Example files of the json and the init script and user data files are in the Google Storage bucket "mender-jenkins".**
 
 3.  Build the image by running Packer
 ```

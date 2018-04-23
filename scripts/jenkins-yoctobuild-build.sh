@@ -2,11 +2,21 @@
 
 set -e -x -E
 
+while pgrep rc.local >/dev/null; do
+    # Wait for init-script to finish.
+    sleep 10
+done
+sudo journalctl -u rc-local | cat || true
+
 echo $WORKSPACE
 
 SSH_TUNNEL_IP=188.166.29.46
 RASPBERRYPI3_PORT=2210
 BEAGLEBONEBLACK_PORT=2211
+
+declare -a CONFIG_MACHINE_NAMES
+declare -a CONFIG_BOARD_NAMES
+declare -a CONFIG_IMAGE_NAMES
 
 export PATH=$PATH:$WORKSPACE/go/bin
 
@@ -47,42 +57,27 @@ is_poky_branch() {
     fi
 }
 
-# Should not be called directly. See next two functions.
-is_doing_board() {
+is_building_dockerized_board() {
     local ret=0
-    # The param is just to be able to test for both "BUILD" and "TEST" variables
-    # in the same case statement.
-    local param="$2"
-    case "$1" in
-        vexpress-qemu)
-            eval test "\$${param}_QEMU_SDIMG" = true && grep "mender_qemu_sdimg" <<<"$JOB_BASE_NAME" || ret=$?
-            ;;
-        vexpress-qemu-flash)
-            eval test "\$${param}_QEMU_RAW_FLASH" = true && grep "mender_qemu_flash" <<<"$JOB_BASE_NAME" || ret=$?
-            ;;
-        beagleboneblack)
-            eval test "\$${param}_BEAGLEBONEBLACK" = true && grep "mender_beagleboneblack" <<<"$JOB_BASE_NAME" || ret=$?
-            ;;
-        raspberrypi3)
-            eval test "\$${param}_RASPBERRYPI3" = true && grep "mender_raspberrypi3" <<<"$JOB_BASE_NAME" || ret=$?
-            ;;
-        *)
-            echo "Unrecognized board: $1"
-            exit 1
-            ;;
-    esac
+    is_building_board vexpress-qemu \
+        || is_building_board qemux86-64-uefi-grub \
+        || ret=$?
     return $ret
 }
 
 is_building_board() {
     local ret=0
-    is_doing_board "$1" "BUILD" || ret=$?
+    local uc_board="$(tr [a-z-] [A-Z_] <<<$1)"
+    local lc_board="$(tr [A-Z-] [a-z_] <<<$1)"
+    eval test "\$BUILD_${uc_board}" = true && egrep "(^|[^_]\b)mender_${lc_board}(\$|\b[^_])" <<<"$JOB_BASE_NAME" || ret=$?
     return $ret
 }
 
 is_testing_board() {
     local ret=0
-    is_doing_board "$1" "TEST" || ret=$?
+    local uc_board="$(tr [a-z-] [A-Z_] <<<$1)"
+    local lc_board="$(tr [A-Z-] [a-z_] <<<$1)"
+    eval test "\$TEST_${uc_board}" = true && egrep "(^|[^_]\b)mender_${lc_board}(\$|\b[^_])" <<<"$JOB_BASE_NAME" || ret=$?
     return $ret
 }
 
@@ -527,6 +522,75 @@ deploy_image_to_board() {
 }
 
 # ------------------------------------------------------------------------------
+# Adds the given build configuration to the list of possibilities. Later, the
+# correct one will be chosen with build_and_test().
+#
+# Parameters:
+#   - machine name
+#   - board name (usually the same or similar to machine name, but each machine
+#                 name can have several boards)
+#   - image name
+# The last two parameters can be omitted, which indicates a server-only build,
+# using the given machine name.
+# ------------------------------------------------------------------------------
+add_to_build_list() {
+    CONFIG_MACHINE_NAMES[${#CONFIG_MACHINE_NAMES[@]}]="$1"
+    CONFIG_BOARD_NAMES[${#CONFIG_BOARD_NAMES[@]}]="$2"
+    CONFIG_IMAGE_NAMES[${#CONFIG_IMAGE_NAMES[@]}]="$3"
+}
+
+# Selects a configuration from the list to build. Client builds override
+# server-only builds, but the function otherwise tries to detect whether two
+# configurations conflict.
+build_and_test() {
+    local machine_to_build=
+    local board_to_build=
+    local image_to_build=
+
+    for config in ${!CONFIG_MACHINE_NAMES[@]}; do
+        local machine=${CONFIG_MACHINE_NAMES[$config]}
+        local board=${CONFIG_BOARD_NAMES[$config]}
+        local image=${CONFIG_IMAGE_NAMES[$config]}
+        if [ -n "$board" ]; then
+            # Configuration with client.
+            if is_building_board $board; then
+                if [ -n "$board_to_build" ]; then
+                    echo "Configurations ($machine_to_build, $board_to_build, $image_to_build) and ($machine, $board, $image) both scheduled to build! This is an error!"
+                    exit 1
+                fi
+                machine_to_build=$machine
+                board_to_build=$board
+                image_to_build=$image
+            fi
+        else
+            if [ -n "$board_to_build" ]; then
+                # Some client build is selected. Skip server-only build.
+                continue
+            fi
+            # Configuration with just servers.
+            if [ -n "$machine_to_build" ]; then
+                echo "Configurations ($machine_to_build, $board_to_build, $image_to_build) and ($machine, $board, $image) both scheduled to build! This is an error!"
+                exit 1
+            fi
+            machine_to_build=$machine
+            board_to_build=$board
+            image_to_build=$image
+        fi
+    done
+
+    if [ -z "$machine_to_build" ]; then
+        echo "No build configuration selected!"
+        exit 1
+    fi
+
+    if [ -n "$board_to_build" ]; then
+        build_and_test_client $machine_to_build $board_to_build $image_to_build
+    fi
+
+    run_integration_tests $machine_to_build $board_to_build
+}
+
+# ------------------------------------------------------------------------------
 # Generic function for building and testing client.
 #
 # Parameters:
@@ -550,11 +614,12 @@ build_and_test_client() {
         local image_name="$3"
 
         if ! is_building_board $board_name; then
-            return
+            echo "Not building board? We should never get here."
+            exit 1
         fi
 
         github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build started" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
-        source oe-init-build-env build-$machine_name
+        source oe-init-build-env build-$board_name
         cd ../
 
         prepare_build_config $machine_name
@@ -667,22 +732,29 @@ build_and_test_client() {
         if [ "$UPLOAD_OUTPUT" = "true" ]
         then
             # store useful output to directory
+            cd $WORKSPACE
             mkdir -p "$board_name-deploy"
             cp -r $BUILDDIR/tmp/deploy/* "$board_name-deploy"
+            upload_output
         fi
 
         if [ "$PUBLISH_ARTIFACTS" = true ]; then
             publish_artifacts $machine_name $board_name $image_name
         fi
 
-        if is_building_board vexpress-qemu; then
-            cd $BUILDDIR
+        if is_building_dockerized_board; then
+            cd $WORKSPACE/meta-mender/meta-mender-qemu/docker
+            if [ -x build-docker ]; then
+                # New style.
+                ./build-docker $machine_name -t mendersoftware/mender-client-qemu:pr
+            elif is_building_board vexpress-qemu; then
+                # Old style.
+                cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
+                cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
 
-            cd $WORKSPACE/meta-mender/meta-mender-qemu
-            cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
-            cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
+                docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
+            fi
 
-            docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
             $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
         fi
     )
@@ -739,9 +811,20 @@ upload_output() {
     )
 }
 
+# ------------------------------------------------------------------------------
+# Function for running integration tests.
+#
+# Parameters:
+#   - machine name
+#   - board name (usually the same or similar to machine name, but each machine
+#                 name can have several boards)
+# ------------------------------------------------------------------------------
 run_integration_tests() {
     (
-        if ! grep mender_servers <<<"$JOB_BASE_NAME"; then
+        local machine_name="$1"
+        local board_name="$2"
+
+        if [ "$RUN_INTEGRATION_TESTS" != "true" ] || ! grep mender_servers <<<"$JOB_BASE_NAME"; then
             return
         fi
 
@@ -754,17 +837,17 @@ run_integration_tests() {
 
         github_pull_request_status \
             "pending" \
-            "integration:${INTEGRATION_REV} $extra_job_info have started in Jenkins" \
+            "${board_name} integration:${INTEGRATION_REV} $extra_job_info have started in Jenkins" \
             "$BUILD_URL" \
-            "integration_${INTEGRATION_REV}$extra_job_string"
+            "${board_name}_integration_${INTEGRATION_REV}$extra_job_string"
 
-        if is_building_board vexpress-qemu; then
+        if is_building_dockerized_board; then
             cd $WORKSPACE
-            source oe-init-build-env build-vexpress-qemu
+            source oe-init-build-env build-$board_name
         fi
 
         local testing_status=0
-        cd $WORKSPACE/integration/tests && ./run.sh || testing_status=$?
+        cd $WORKSPACE/integration/tests && ./run.sh ${machine_name:+--machine-name=$machine_name} || testing_status=$?
 
         local html_report=$(find . -iname report.html  | head -n 1)
         local report_dir=$BUILD_NUMBER
@@ -775,15 +858,15 @@ run_integration_tests() {
         if [ $testing_status -ne 0 ]; then
             github_pull_request_status \
                 "failure" \
-                "integration:${INTEGRATION_REV} $extra_job_info failed" \
+                "${board_name} integration:${INTEGRATION_REV} $extra_job_info failed" \
                 $report_url \
-                "integration_${INTEGRATION_REV}$extra_job_string"
+                "${board_name}_integration_${INTEGRATION_REV}$extra_job_string"
         else
             github_pull_request_status \
                 "success" \
-                "integration:${INTEGRATION_REV} $extra_job_info passed!" \
+                "${board_name} integration:${INTEGRATION_REV} $extra_job_info passed!" \
                 $report_url \
-                "integration_${INTEGRATION_REV}$extra_job_string"
+                "${board_name}_integration_${INTEGRATION_REV}$extra_job_string"
         fi
 
         if [ "$testing_status" -ne 0 ]; then
@@ -799,18 +882,15 @@ else
     beaglebone_machine_name=beaglebone-yocto
 fi
 
-build_and_test_client  vexpress-qemu             vexpress-qemu        core-image-full-cmdline
-build_and_test_client  vexpress-qemu-flash       vexpress-qemu-flash  core-image-minimal
-build_and_test_client  $beaglebone_machine_name  beagleboneblack      core-image-base
-build_and_test_client  raspberrypi3              raspberrypi3         core-image-full-cmdline
+add_to_build_list  qemux86-64                qemux86-64-uefi-grub  core-image-full-cmdline
+add_to_build_list  vexpress-qemu             vexpress-qemu         core-image-full-cmdline
+add_to_build_list  vexpress-qemu-flash       vexpress-qemu-flash   core-image-minimal
+add_to_build_list  $beaglebone_machine_name  beagleboneblack       core-image-base
+add_to_build_list  raspberrypi3              raspberrypi3          core-image-full-cmdline
+# Server build, without client build.
+add_to_build_list  vexpress-qemu
 
-if [ "$UPLOAD_OUTPUT" = "true" ]; then
-    upload_output
-fi
-
-if [ "$RUN_INTEGRATION_TESTS" = "true" ]; then
-    run_integration_tests
-fi
+build_and_test
 
 # Reset docker tag names to their cloned values after tests are done.
 cd $WORKSPACE/integration
@@ -827,7 +907,12 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
         done
     fi
 
-    if is_building_board vexpress-qemu; then
+    if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
+        board_to_publish=vexpress-qemu
+    else
+        board_to_publish=qemux86-64-uefi-grub
+    fi
+    if is_building_board $board_to_publish; then
         container=mender-client-qemu
         version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
         docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
