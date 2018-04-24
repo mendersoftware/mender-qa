@@ -837,9 +837,9 @@ run_integration_tests() {
 
         github_pull_request_status \
             "pending" \
-            "${board_name} integration:${INTEGRATION_REV} $extra_job_info have started in Jenkins" \
+            "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info have started in Jenkins" \
             "$BUILD_URL" \
-            "${board_name}_integration_${INTEGRATION_REV}$extra_job_string"
+            "${board_name:+${board_name}_}integration_${INTEGRATION_REV}$extra_job_string"
 
         if is_building_dockerized_board; then
             cd $WORKSPACE
@@ -858,15 +858,15 @@ run_integration_tests() {
         if [ $testing_status -ne 0 ]; then
             github_pull_request_status \
                 "failure" \
-                "${board_name} integration:${INTEGRATION_REV} $extra_job_info failed" \
+                "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info failed" \
                 $report_url \
-                "${board_name}_integration_${INTEGRATION_REV}$extra_job_string"
+                "${board_name:+${board_name}_}integration_${INTEGRATION_REV}$extra_job_string"
         else
             github_pull_request_status \
                 "success" \
-                "${board_name} integration:${INTEGRATION_REV} $extra_job_info passed!" \
+                "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info passed!" \
                 $report_url \
-                "${board_name}_integration_${INTEGRATION_REV}$extra_job_string"
+                "${board_name:+${board_name}_}integration_${INTEGRATION_REV}$extra_job_string"
         fi
 
         if [ "$testing_status" -ne 0 ]; then
