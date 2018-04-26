@@ -743,9 +743,10 @@ build_and_test_client() {
         fi
 
         if is_building_dockerized_board; then
-            cd $WORKSPACE/meta-mender/meta-mender-qemu/docker
-            if [ -x build-docker ]; then
+            cd $WORKSPACE/meta-mender/meta-mender-qemu
+            if [ -x docker/build-docker ]; then
                 # New style.
+                cd docker
                 ./build-docker $machine_name -t mendersoftware/mender-client-qemu:pr
             elif is_building_board vexpress-qemu; then
                 # Old style.
