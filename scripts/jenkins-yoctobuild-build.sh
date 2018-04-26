@@ -908,7 +908,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
         done
     fi
 
-    if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
+    if is_poky_branch morty || is_poky_branch pyro; then
         board_to_publish=vexpress-qemu
     else
         board_to_publish=qemux86-64-uefi-grub
