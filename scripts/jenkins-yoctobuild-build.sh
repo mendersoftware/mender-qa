@@ -236,8 +236,8 @@ prepare_build_config() {
     local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
 
     # See comment in local.conf
-    if is_poky_branch morty || is_poky_branch pyro; then
-        # Pyro and morty need old style full Go paths.
+    if is_poky_branch morty; then
+        # morty needs old style full Go paths.
         cat >> $BUILDDIR/conf/local.conf <<EOF
 EXTERNALSRC_pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
