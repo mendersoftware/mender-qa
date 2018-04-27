@@ -587,7 +587,11 @@ build_and_test() {
         build_and_test_client $machine_to_build $board_to_build $image_to_build
     fi
 
-    run_integration_tests $machine_to_build $board_to_build
+    if [ "$machine_to_build" = "mender_servers" ]; then
+        run_integration_tests
+    else
+        run_integration_tests $machine_to_build $board_to_build
+    fi
 }
 
 # ------------------------------------------------------------------------------
@@ -889,7 +893,7 @@ add_to_build_list  vexpress-qemu-flash       vexpress-qemu-flash   core-image-mi
 add_to_build_list  $beaglebone_machine_name  beagleboneblack       core-image-base
 add_to_build_list  raspberrypi3              raspberrypi3          core-image-full-cmdline
 # Server build, without client build.
-add_to_build_list  vexpress-qemu
+add_to_build_list  mender_servers
 
 build_and_test
 
