@@ -16,6 +16,11 @@
 # Make sure error detection and verbose output is on, if they aren't already.
 set -x -e
 
+# Immediately close SSH so that it is not available until the Jenkins user is
+# available and Java is installed. Same reason as for the port 222 workaround.
+REJECT_SSH_RULE="-p tcp --dport 22 -j REJECT --reject-with tcp-reset"
+iptables -t nat -I PREROUTING 1 $REJECT_SSH_RULE
+
 # Add jenkins user and copy credentials.
 useradd -m -u 1010 jenkins
 mkdir -p /home/jenkins/.ssh
@@ -57,10 +62,6 @@ hostname localhost
 # python -c 'import socket;print socket.gethostbyaddr("127.0.0.1")'
 sed -i -e '1s/^/127.0.0.1 localhost localhost.localdomian\n/' /etc/hosts
 
-# Open SSH port on 222.
-iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
-iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
-
 apt_get() {
     # Work around apt-get not waiting for a lock if it's taken. We want to wait
     # for it instead of bailing out. No good return code to check unfortunately,
@@ -91,3 +92,14 @@ apt_get() {
 }
 alias apt=apt_get
 alias apt-get=apt_get
+
+if [ -x /usr/bin/apt ]; then
+    apt -qy update
+    apt -qy --force-yes default-jre-headless
+fi
+
+# Reopen SSH again.
+iptables -t nat -D PREROUTING $REJECT_SSH_RULE
+# Open SSH port on 222.
+iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
+iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
