@@ -37,7 +37,7 @@ sudo pip2 install pytest==3.2.5
 sudo pip2 install filelock --upgrade
 sudo pip2 install pytest-xdist --upgrade
 sudo pip2 install pytest-html --upgrade
-sudo pip2 install fabric --upgrade
+sudo pip2 install -I fabric==1.14.0
 sudo pip2 install psutil --upgrade
 sudo pip2 install boto3 --upgrade
 sudo pip2 install pycrypto --upgrade
