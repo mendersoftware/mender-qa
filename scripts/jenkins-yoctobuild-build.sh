@@ -436,6 +436,11 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
 
+            mender-cli)
+                cd $WORKSPACE/go/src/github.com/mendersoftware/$build
+                make install
+                ;;
+
             mender-conductor)
                 cd go/src/github.com/mendersoftware/$build
                 docker build -t mendersoftware/mender-conductor:pr ./server
@@ -905,11 +910,22 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
     docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 
     if grep mender_servers <<<"$JOB_BASE_NAME"; then
-        for container in api-gateway deployments deviceadm deviceauth gui inventory useradm; do
-            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
-            docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
-            docker push mendersoftware/$container:${version}
-        done
+        # Use release tool to query for available repositories, and fall back to
+        # flat list for branches where we don't have that option.
+        for image in $($WORKSPACE/integration/extra/release_tool.py --list docker 2>/dev/null \
+                              || echo "api-gateway deployments deviceadm deviceauth gui inventory useradm" ); do (
+            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
+            case "$image" in
+                api-gateway|deployments|deviceadm|deviceauth|gui|inventory|useradm)
+                    docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
+                    docker push mendersoftware/$image:${version}
+                    ;;
+                mender-cli)
+                    s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/$image s3://mender/$image/$version/
+                    s3cmd setacl s3://mender/$image/$version/$image --acl-public
+                    ;;
+            esac
+        ); done
     fi
 
     if is_poky_branch morty || is_poky_branch pyro; then
