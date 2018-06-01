@@ -225,11 +225,18 @@ copy_build_conf() {
 prepare_build_config() {
     local machine
     machine=$1
+    local board
+    board=$2
 
-    if [ -n "$machine" ]; then
-        if [ -d $WORKSPACE/meta-mender/tests/build-conf/${machine} ]; then
-            copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${machine}/*  $BUILDDIR/conf/
-        fi
+    if [ -d $WORKSPACE/meta-mender/tests/build-conf/${board} ]; then
+        copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${board}/*  $BUILDDIR/conf/
+    elif [ -d $WORKSPACE/meta-mender/tests/build-conf/${machine} ]; then
+        # Fallback for older branches, should not be necessary on any new
+        # branch.
+        copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${machine}/*  $BUILDDIR/conf/
+    else
+        echo "Could not find build-conf for $board board."
+        return 1
     fi
 
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
@@ -631,7 +638,7 @@ build_and_test_client() {
         source oe-init-build-env build-$board_name
         cd ../
 
-        prepare_build_config $machine_name
+        prepare_build_config $machine_name $board_name
         disable_mender_service
 
         cd $BUILDDIR
