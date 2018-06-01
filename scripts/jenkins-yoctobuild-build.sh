@@ -890,15 +890,17 @@ if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
     beaglebone_machine_name=beaglebone
 else
     beaglebone_machine_name=beaglebone-yocto
+
+    add_to_build_list  qemux86-64                qemux86-64-bios-grub  core-image-full-cmdline
 fi
 
-add_to_build_list  qemux86-64                qemux86-64-uefi-grub  core-image-full-cmdline
-add_to_build_list  vexpress-qemu             vexpress-qemu         core-image-full-cmdline
-add_to_build_list  vexpress-qemu-flash       vexpress-qemu-flash   core-image-minimal
-add_to_build_list  $beaglebone_machine_name  beagleboneblack       core-image-base
-add_to_build_list  raspberrypi3              raspberrypi3          core-image-full-cmdline
+add_to_build_list      qemux86-64                qemux86-64-uefi-grub  core-image-full-cmdline
+add_to_build_list      vexpress-qemu             vexpress-qemu         core-image-full-cmdline
+add_to_build_list      vexpress-qemu-flash       vexpress-qemu-flash   core-image-minimal
+add_to_build_list      $beaglebone_machine_name  beagleboneblack       core-image-base
+add_to_build_list      raspberrypi3              raspberrypi3          core-image-full-cmdline
 # Server build, without client build.
-add_to_build_list  mender_servers
+add_to_build_list      mender_servers
 
 build_and_test
 
