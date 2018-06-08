@@ -407,11 +407,11 @@ export GOPATH="$WORKSPACE/go"
 if grep mender_servers <<<"$JOB_BASE_NAME"; then
     # Use release tool to query for available repositories, and fall back to
     # flat list for branches where we don't have that option.
-    for build in $($WORKSPACE/integration/extra/release_tool.py --list 2>/dev/null \
+    for build in $($WORKSPACE/integration/extra/release_tool.py --list -a 2>/dev/null \
                           || echo "deployments deviceadm deviceauth gui inventory mender-api-gateway-docker useradm" ); do (
 
         case "$build" in
-            deployments|deviceadm|deviceauth|inventory|useradm)
+            deployments|deviceadm|deviceauth|inventory|tenantadm|useradm)
                 cd go/src/github.com/mendersoftware/$build
                 CGO_ENABLED=0 go build
                 docker build -t mendersoftware/$build:pr .
@@ -912,13 +912,18 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
     if grep mender_servers <<<"$JOB_BASE_NAME"; then
         # Use release tool to query for available repositories, and fall back to
         # flat list for branches where we don't have that option.
-        for image in $($WORKSPACE/integration/extra/release_tool.py --list docker 2>/dev/null \
+        for image in $($WORKSPACE/integration/extra/release_tool.py --list docker -a 2>/dev/null \
                               || echo "api-gateway deployments deviceadm deviceauth gui inventory useradm" ); do (
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
             case "$image" in
                 api-gateway|deployments|deviceadm|deviceauth|gui|inventory|useradm)
                     docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
                     docker push mendersoftware/$image:${version}
+                    ;;
+                tenantadm)
+                    # No releasing of tenantadm images from Jenkins. They are
+                    # not versioned and hence managed by Travis.
+                    :
                     ;;
                 mender-cli)
                     s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/$image s3://mender/$image/$version/
