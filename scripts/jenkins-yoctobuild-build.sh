@@ -225,11 +225,18 @@ copy_build_conf() {
 prepare_build_config() {
     local machine
     machine=$1
+    local board
+    board=$2
 
-    if [ -n "$machine" ]; then
-        if [ -d $WORKSPACE/meta-mender/tests/build-conf/${machine} ]; then
-            copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${machine}/*  $BUILDDIR/conf/
-        fi
+    if [ -d $WORKSPACE/meta-mender/tests/build-conf/${board} ]; then
+        copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${board}/*  $BUILDDIR/conf/
+    elif [ -d $WORKSPACE/meta-mender/tests/build-conf/${machine} ]; then
+        # Fallback for older branches, should not be necessary on any new
+        # branch.
+        copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${machine}/*  $BUILDDIR/conf/
+    else
+        echo "Could not find build-conf for $board board."
+        return 1
     fi
 
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
@@ -631,7 +638,7 @@ build_and_test_client() {
         source oe-init-build-env build-$board_name
         cd ../
 
-        prepare_build_config $machine_name
+        prepare_build_config $machine_name $board_name
         disable_mender_service
 
         cd $BUILDDIR
@@ -890,15 +897,17 @@ if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
     beaglebone_machine_name=beaglebone
 else
     beaglebone_machine_name=beaglebone-yocto
+
+    add_to_build_list  qemux86-64                qemux86-64-bios-grub  core-image-full-cmdline
 fi
 
-add_to_build_list  qemux86-64                qemux86-64-uefi-grub  core-image-full-cmdline
-add_to_build_list  vexpress-qemu             vexpress-qemu         core-image-full-cmdline
-add_to_build_list  vexpress-qemu-flash       vexpress-qemu-flash   core-image-minimal
-add_to_build_list  $beaglebone_machine_name  beagleboneblack       core-image-base
-add_to_build_list  raspberrypi3              raspberrypi3          core-image-full-cmdline
+add_to_build_list      qemux86-64                qemux86-64-uefi-grub  core-image-full-cmdline
+add_to_build_list      vexpress-qemu             vexpress-qemu         core-image-full-cmdline
+add_to_build_list      vexpress-qemu-flash       vexpress-qemu-flash   core-image-minimal
+add_to_build_list      $beaglebone_machine_name  beagleboneblack       core-image-base
+add_to_build_list      raspberrypi3              raspberrypi3          core-image-full-cmdline
 # Server build, without client build.
-add_to_build_list  mender_servers
+add_to_build_list      mender_servers
 
 build_and_test
 
