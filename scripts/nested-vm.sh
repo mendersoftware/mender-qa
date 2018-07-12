@@ -30,7 +30,7 @@ touch $HOME/proxy-target.txt
 touch $HOME/on-vm-hypervisor
 
 # Enabled nested VMs.
-sudo modprobe -r kvm_intel
+sudo modprobe -r kvm_intel || true
 sudo modprobe kvm_intel nested=1
 
 # Verify that nested VMs are supported.
@@ -39,24 +39,35 @@ egrep -q '^flags\b.*\bvmx\b' /proc/cpuinfo
 
 # Path where images are stored on build-artifacts-cache
 DISKIMAGE="/export/images/$1"
-
-# We append '*', which will be expanded on the SFTP server
-echo "
-lcd $HOME
-get $DISKIMAGE*
-"  | sftp -o Ciphers=aes128-gcm@openssh.com -o Compression=yes -o PreferredAuthentications=publickey -b -  \
-         jenkins_sftp_cache@build-artifacts-cache.cloud.cfengine.com
-
 BASEDISK=`echo $1 | sed 's/.*\///'`
 DISK="$HOME/$BASEDISK"
 XML="$DISK.xml"
 
+if [ ! -f $DISK ]
+then
+    # We append '*', which will be expanded on the SFTP server
+    echo "
+    lcd $HOME
+    get $DISKIMAGE*
+    "  | sftp -o Ciphers=aes128-gcm@openssh.com -o Compression=yes -o PreferredAuthentications=publickey -b -  \
+             jenkins_sftp_cache@build-artifacts-cache.cloud.cfengine.com
+fi
+
 # Install KVM and other tools.
 sudo apt -qy update
-sudo apt -qy install libvirt-bin rsync
+sudo apt -qy install rsync
+# Since Debian 9, single libvirt-bin was split into two
+# Note that we don't run this script on other platforms but Debian 8 and 9,
+# so we don't need to care about, say, Ubuntu VERSION=18.04
+if grep -q VERSION.*8 /etc/os-release
+then
+    sudo apt -qy install libvirt-bin
+else
+    sudo apt -qy install libvirt-daemon-system libvirt-clients
+fi
 
 # Enable nbd devices to have partitions.
-sudo modprobe -r nbd
+sudo modprobe -r nbd || true
 sudo modprobe nbd max_part=16
 
 # Make temporary keys for logging into nested VM from this host.
@@ -68,6 +79,7 @@ then
 fi
 
 # Mount the image and add some keys.
+sudo qemu-nbd -d /dev/nbd0 || true
 sudo qemu-nbd -c /dev/nbd0 $DISK
 sudo mkdir -p /mnt/vm
 success=0
@@ -87,18 +99,20 @@ do
         do
             if sudo file -sL $LV | grep -q 'ext[234]'
             then
+                sudo umount /mnt/vm || true
                 sudo mount $LV /mnt/vm || continue
                 break
             fi
         done
     else
         # Normal partitions.
+        sudo umount /mnt/vm || true
         sudo mount /dev/nbd0p$i /mnt/vm || continue
     fi
     # Look for /usr directory to identify Linux partition.
     if [ ! -d /mnt/vm/usr ]
     then
-       sudo umount /mnt/vm
+       sudo umount /mnt/vm || true
        if [ -n "$VG" ]
        then
            sudo vgchange -an $VG
@@ -132,8 +146,26 @@ chmod go+rx $HOME
 sudo chown libvirt-qemu:libvirt-qemu $DISK $XML
 
 # Start the VM
-sudo virsh net-start default || true
-sudo virsh create $XML
+if sudo dmesg | grep -q "BIOS Google"
+then
+    # We're in Google Cloud, so follow the Google guide:
+    # https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances
+    sudo apt-get install uml-utilities qemu-kvm bridge-utils virtinst -y
+    sudo virsh net-start default || true
+    sudo modprobe dummy
+    sudo brctl delif virbr0 dummy0 || true
+    sudo brctl addif virbr0 dummy0
+    sudo tunctl -t tap0
+    sudo ifconfig tap0 up
+    sudo brctl delif virbr0 tap0 || true
+    sudo brctl addif virbr0 tap0
+    sudo apt-get install dtach
+    MAC=`sed -e '/mac address/!d' -e "s/.*'\(.*\)'.*/\1/" $XML`
+    sudo dtach -n virt qemu-system-x86_64 -enable-kvm -hda $DISK -m 512 -curses -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3
+else
+    # do it like we did before
+    sudo virsh create $XML
+fi
 
 # WAIT for host and find its IP
 IP=
