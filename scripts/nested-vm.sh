@@ -146,12 +146,12 @@ chmod go+rx $HOME
 sudo chown libvirt-qemu:libvirt-qemu $DISK $XML
 
 # Start the VM
+sudo virsh net-start default || true
 if sudo dmesg | grep -q "BIOS Google"
 then
     # We're in Google Cloud, so follow the Google guide:
     # https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances
     sudo apt-get install uml-utilities qemu-kvm bridge-utils virtinst -y
-    sudo virsh net-start default || true
     sudo modprobe dummy
     sudo brctl delif virbr0 dummy0 || true
     sudo brctl addif virbr0 dummy0
