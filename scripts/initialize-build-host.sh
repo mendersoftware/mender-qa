@@ -88,6 +88,14 @@ do
     sleep 10
 done
 
+# same for Google
+while pgrep google_metadata >/dev/null 2>&1
+do
+    echo "Waiting 10 seconds until the google_metadata stage is done..."
+    sleep 10
+done
+ 
+
 echo '========================================= PRINTING CLOUD-INIT LOG ==================================================='
 sed 's/^.*/>>> &/' /var/log/cloud-init-output.log || true
 echo '======================================= DONE PRINTING CLOUD-INIT LOG ================================================'
