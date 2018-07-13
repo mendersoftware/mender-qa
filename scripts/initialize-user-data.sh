@@ -17,9 +17,9 @@
 set -x -e
 
 # Add jenkins user and copy credentials.
-useradd -m -u 1010 jenkins
+useradd -m -u 1010 jenkins || true
 mkdir -p /home/jenkins/.ssh
-cp /root/.ssh/authorized_keys /home/jenkins/.ssh
+cp /root/.ssh/authorized_keys /home/jenkins/.ssh || true
 
 # Enable sudo access for jenkins.
 echo "jenkins ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers

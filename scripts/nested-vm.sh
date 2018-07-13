@@ -122,7 +122,7 @@ do
 
     # Install keys.
     sudo mkdir -p /mnt/vm/root/.ssh
-    sudo bash -c "cat $HOME/.ssh/id_rsa.pub $HOME/.ssh/authorized_keys >> /mnt/vm/root/.ssh/authorized_keys"
+    sudo bash -c "cat $HOME/.ssh/id_rsa.pub $HOME/.ssh/authorized_keys >> /mnt/vm/root/.ssh/authorized_keys" || true
     sudo umount /mnt/vm
     if [ -n "$VG" ]
     then
@@ -151,7 +151,7 @@ if sudo dmesg | grep -q "BIOS Google"
 then
     # We're in Google Cloud, so follow the Google guide:
     # https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances
-    sudo apt-get install uml-utilities qemu-kvm bridge-utils virtinst -y
+    sudo apt-get -y install uml-utilities qemu-kvm bridge-utils # virtinst
     sudo modprobe dummy
     sudo brctl delif virbr0 dummy0 || true
     sudo brctl addif virbr0 dummy0
@@ -159,9 +159,8 @@ then
     sudo ifconfig tap0 up
     sudo brctl delif virbr0 tap0 || true
     sudo brctl addif virbr0 tap0
-    sudo apt-get install dtach
     MAC=`sed -e '/mac address/!d' -e "s/.*'\(.*\)'.*/\1/" $XML`
-    sudo dtach -n virt qemu-system-x86_64 -enable-kvm -hda $DISK -m 512 -curses -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3
+    sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -nographic -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3 &
 else
     # do it like we did before
     sudo virsh create $XML
@@ -169,7 +168,7 @@ fi
 
 # WAIT for host and find its IP
 IP=
-attempts=20
+attempts=60
 while [ -z "$IP" ]
 do
     attempts=$(($attempts - 1))
