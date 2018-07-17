@@ -253,6 +253,7 @@ scp -o BatchMode=yes  /home/jenkins/.ssh/id_rsa* root@$IP:/home/jenkins/.ssh/
 $RSH root@$IP  "chown -R jenkins:jenkins /home/jenkins/.ssh"
 PKG_MANAGER="apt-get -q --force-yes"
 $RSH root@$IP  "test -x /usr/bin/yum"  &&  PKG_MANAGER=yum
-$RSH root@$IP  "$PKG_MANAGER -y update && $PKG_MANAGER -y install rsync"
+$RSH root@$IP  "$PKG_MANAGER -y update && $PKG_MANAGER -y install rsync ntpdate"
+$RSH root@$IP  "ntpdate -u time.nist.gov" || true
 
 exit 0
