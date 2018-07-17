@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# A script that launches a nested VM inside an already running VM. The only
+# A script that launches a nested VM inside an already running VM. First
 # argument is an image file, which is expected to be accompanied by a KVM xml
 # domain specification with the same name + ".xml". The script also creates a
 # proxy-target.txt file which can be used to automatically enter the host later
 # using enter-proxy-target.sh.
+# Second argument is optional and is hda1 by default. It is a name of disk in
+# VM image to boot from. It should be sda1 for Debian 6 and other modern distros
 
 # After the VM is launched, an extra login port is available on the proxy host:
 # Port 2222 - Login to the proxy target, IOW the build slave. This won't be used
@@ -23,6 +25,8 @@ then
     echo "Requires image name as argument"
     exit 1
 fi
+
+startup_disk=${2-hda1}
 
 # Create an empty file early in case there is an error in this script. At least
 # then we will still detect correctly whether we are on a slave or a proxy.
@@ -109,6 +113,40 @@ do
         sudo umount /mnt/vm || true
         sudo mount /dev/nbd0p$i /mnt/vm || continue
     fi
+
+    # Extract kernel and initrd
+    # Note that this might be both a separate 'boot' partition,
+    # and a 'Linux partition with /boot' dir
+    if [ -n "$(ls -A /mnt/vm/)" ]
+    then
+        # this partition has some files in it
+        # look for kernel files in partition itself
+        kernel=$(echo /mnt/vm/* | xargs file | grep kernel | head -n1 | sed 's,:.*,,')
+        if [ -z "$kernel" -a -d /mnt/vm/boot/ -a -n "$(ls -A /mnt/vm/)" ]
+        then
+            # kernel not found, but there is a non-empty /boot directory here - look there
+            kernel=$(echo /mnt/vm/boot/* | xargs file | grep kernel | head -n1 | sed 's,:.*,,')
+        fi
+    fi
+    if [ -n "$kernel" ]
+    then
+        initrd=$(echo "$kernel" | sed 's/vmlinuz/initrd.img/')
+	if [ ! -f "$initrd" ]
+	then
+            initrd=$(echo "$kernel" | sed 's/vmlinuz/initrd/;s/$/.img/')
+	fi
+        if [ -f "$initrd" ]
+        then
+            cp $kernel $HOME/kernel
+            cp $initrd $HOME/initrd
+        else
+            echo "ERROR: initrd file [$initrd] corresponding to kernel file [$kernel] not found:"
+            ls -lap /mnt/vm/
+            ls -lap /mnt/vm/boot || true
+            kernel=
+        fi
+    fi
+
     # Look for /usr directory to identify Linux partition.
     if [ ! -d /mnt/vm/usr ]
     then
@@ -123,30 +161,6 @@ do
     # Install keys.
     sudo mkdir -p /mnt/vm/root/.ssh
     sudo bash -c "cat $HOME/.ssh/id_rsa.pub $HOME/.ssh/authorized_keys >> /mnt/vm/root/.ssh/authorized_keys" || true
-    # Extract kernel and initrd
-    if [ -f /mnt/vm/vmlinuz -a -f /mnt/vm/initrd.img ]
-    then
-	kernel=/mnt/vm/vmlinuz
-    else
-	kernel=$(echo /mnt/vm/boot/* | xargs file | grep kernel | sed 's,:.*,,')
-    fi
-    if [ -z $kernel ]
-    then
-	echo "kernel not found! look for yourself:"
-	ls -lap /mnt/vm/
-	ls -lap /mnt/vm/boot
-	exit 1
-    fi
-    initrd=$(echo "$kernel" | sed 's/vmlinuz/initrd.img/')
-    if [ ! -f $initrd ]
-    then
-	echo "initrd not found! look for yourself:"
-	ls -lap /mnt/vm/
-	ls -lap /mnt/vm/boot
-	exit 1
-    fi
-    cp $kernel $HOME/kernel
-    cp $initrd $HOME/initrd
     sudo umount /mnt/vm
     if [ -n "$VG" ]
     then
@@ -185,7 +199,7 @@ then
     sudo brctl addif virbr0 tap0
     MAC=`sed -e '/mac address/!d' -e "s/.*'\(.*\)'.*/\1/" $XML`
     sudo pkill qemu-system-x86_64 || true
-    sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -nographic -kernel $HOME/kernel -initrd $HOME/initrd -append 'console=ttyS0 root=/dev/hda1 ro' -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3 >$HOME/nested-vm.log &
+    sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -nographic -kernel $HOME/kernel -initrd $HOME/initrd -append "console=ttyS0 root=/dev/$startup_disk ro" -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3 >$HOME/nested-vm.log &
 else
     # do it like we did before
     sudo virsh create $XML
