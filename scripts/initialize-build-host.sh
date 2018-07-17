@@ -191,6 +191,11 @@ reset_nested_vm() {
         fi
     else
 	# Restart using virsh
+	if [ -z $login ]
+	then
+	    echo "Sorry, proxy-target.txt is empty - restarting virsh won't help here"
+	    echo "TODO: get IP address if we ever happen here"
+	fi
         VM_id="$(sudo virsh list | cut -d' ' -f 2 | sed 's/[^0-9]//g;/^$/d')"
         if [ -z "$VM_id" ]
         then
@@ -235,13 +240,7 @@ then
 
     login="$(cat $HOME/proxy-target.txt)"
 
-    if [ -z "$login" ]
-    then
-        echo "Proxy target address not available, aborting the build"
-        exit 1
-    fi
-
-    if $RSH $login true
+    if [ ! -z "$login" ] && $RSH $login true
     then
 	:
     else
