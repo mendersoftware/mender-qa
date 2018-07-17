@@ -82,23 +82,32 @@ fi
 # In the "user-data" script, i.e. the one that runs on VM boot by
 # cloud-init process, there are a bunch of commands running even *after*
 # the 222 port has been opened. Wait for it to complete.
-while pgrep cloud-init >/dev/null 2>&1
+# Same on Google Cloud, the only difference is that process name is
+# google_metadata, and we don't use port 222, since it can't be
+# Configured in Jenkins.
+# Also, we timeout (and abort the build) after 25 minutes.
+attempts=150
+while pgrep cloud-init >/dev/null 2>&1 || pgrep google_metadata >/dev/null 2>&1
 do
+    attempts=$(($attempts - 1))
+    if [ $attempts -le 0 ]
+    then
+        break
+    fi
     echo "Waiting 10 seconds until the cloud-init stage is done..."
     sleep 10
 done
 
-# same for Google
-while pgrep google_metadata >/dev/null 2>&1
-do
-    echo "Waiting 10 seconds until the google_metadata stage is done..."
-    sleep 10
-done
- 
-
 echo '========================================= PRINTING CLOUD-INIT LOG ==================================================='
 sed 's/^.*/>>> &/' /var/log/cloud-init-output.log || true
 echo '======================================= DONE PRINTING CLOUD-INIT LOG ================================================'
+
+if [ $attempts -le 0 ]
+then
+    echo "Timeout when waiting for cloud-init stage to finish"
+    ps -efH
+    exit 1
+fi
 
 echo '=========================================== CURRENT ENVIRONMENT ====================================================='
 export
@@ -153,30 +162,74 @@ alias apt=apt_get
 alias apt-get=apt_get
 
 reset_nested_vm() {
-    VM_id="$(sudo virsh list | cut -d' ' -f 2 | sed 's/[^0-9]//g;/^$/d')"
-    if [ -z "$VM_id" ]
+    if sudo dmesg | grep -q "BIOS Google"
     then
-        echo "Couldn't find a VM number, is it even there?"
-        sudo virsh list
-        exit 1
-    fi
-    sudo virsh reset $VM_id
-    attempts=20
-    while true
-    do
+	# We're in Google Cloud, so just need to run nested-vm script again
+        if [ ! -d $HOME/mender-qa ]
+	then
+            echo "Where is mender-qa repo gone?"
+	    sudo ls -lap $HOME
+	    exit 1
+        fi
+	files=$(ls $HOME/*.qcow2 | wc -l )
+	if [ $files -gt 1 ]
+	then
+	    echo "too many *.qcow files found:"
+	    sudo ls -lap $HOME
+	    exit 1
+        fi
+	if [ ! -f $HOME/*.qcow2 ]
+	then
+	    echo "no *.qcow file found:"
+	    sudo ls -lap $HOME
+	    exit 1
+        fi
+	if [ ! -z $login ]
+	then
+	    ip=$(sed 's/.*@//' $HOME/proxy-target.txt)
+	    sudo arp -d $ip
+	fi
+	$HOME/mender-qa/scripts/nested-vm.sh $HOME/*.qcow2
+        login="$(cat $HOME/proxy-target.txt)"
         if $RSH $login true
         then
             echo "Nested VM is back up, it seems. Happily continuing!"
-            break
+	else
+	    echo "Failed to SSH into restarted nested VM, abourting the build"
+	    exit 1
         fi
-        attempts=`expr $attempts - 1`
-        if [ $attempts -le 0 ]
+    else
+	# Restart using virsh
+	if [ -z $login ]
 	then
-            echo "Timeout while waiting for nested VM to reboot"
+	    echo "Sorry, proxy-target.txt is empty - restarting virsh won't help here"
+	    echo "TODO: get IP address if we ever happen here"
+	fi
+        VM_id="$(sudo virsh list | cut -d' ' -f 2 | sed 's/[^0-9]//g;/^$/d')"
+        if [ -z "$VM_id" ]
+        then
+            echo "Couldn't find a VM number, is it even there?"
+            sudo virsh list
             exit 1
         fi
-        sleep 10
-    done
+        sudo virsh reset $VM_id
+        attempts=20
+        while true
+        do
+            if $RSH $login true
+            then
+                echo "Nested VM is back up, it seems. Happily continuing!"
+                break
+            fi
+            attempts=`expr $attempts - 1`
+            if [ $attempts -le 0 ]
+	    then
+                echo "Timeout while waiting for nested VM to reboot"
+                exit 1
+            fi
+            sleep 10
+        done
+    fi
 }
 
 if [ -f $HOME/proxy-target.txt ]
@@ -196,13 +249,7 @@ then
 
     login="$(cat $HOME/proxy-target.txt)"
 
-    if [ -z "$login" ]
-    then
-        echo "Proxy target address not available, aborting the build"
-        exit 1
-    fi
-
-    if $RSH $login true
+    if [ ! -z "$login" ] && $RSH $login true
     then
 	:
     else
