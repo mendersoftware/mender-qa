@@ -82,23 +82,32 @@ fi
 # In the "user-data" script, i.e. the one that runs on VM boot by
 # cloud-init process, there are a bunch of commands running even *after*
 # the 222 port has been opened. Wait for it to complete.
-while pgrep cloud-init >/dev/null 2>&1
+# Same on Google Cloud, the only difference is that process name is
+# google_metadata, and we don't use port 222, since it can't be
+# Configured in Jenkins.
+# Also, we timeout (and abort the build) after 25 minutes.
+attempts=150
+while pgrep cloud-init >/dev/null 2>&1 || pgrep google_metadata >/dev/null 2>&1
 do
+    attempts=$(($attempts - 1))
+    if [ $attempts -le 0 ]
+    then
+        break
+    fi
     echo "Waiting 10 seconds until the cloud-init stage is done..."
     sleep 10
 done
 
-# same for Google
-while pgrep google_metadata >/dev/null 2>&1
-do
-    echo "Waiting 10 seconds until the google_metadata stage is done..."
-    sleep 10
-done
- 
-
 echo '========================================= PRINTING CLOUD-INIT LOG ==================================================='
 sed 's/^.*/>>> &/' /var/log/cloud-init-output.log || true
 echo '======================================= DONE PRINTING CLOUD-INIT LOG ================================================'
+
+if [ $attempts -le 0 ]
+then
+    echo "Timeout when waiting for cloud-init stage to finish"
+    ps -efH
+    exit 1
+fi
 
 echo '=========================================== CURRENT ENVIRONMENT ====================================================='
 export
