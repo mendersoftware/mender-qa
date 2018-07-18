@@ -1,12 +1,10 @@
 #!/bin/bash
 
-# A script that launches a nested VM inside an already running VM. First
+# A script that launches a nested VM inside an already running VM. The only
 # argument is an image file, which is expected to be accompanied by a KVM xml
 # domain specification with the same name + ".xml". The script also creates a
 # proxy-target.txt file which can be used to automatically enter the host later
 # using enter-proxy-target.sh.
-# Second argument is optional and is hda1 by default. It is a name of disk in
-# VM image to boot from. It should be sda1 for Debian 6 and other modern distros
 
 # After the VM is launched, an extra login port is available on the proxy host:
 # Port 2222 - Login to the proxy target, IOW the build slave. This won't be used
@@ -25,8 +23,6 @@ then
     echo "Requires image name as argument"
     exit 1
 fi
-
-startup_disk=${2-hda1}
 
 # Create an empty file early in case there is an error in this script. At least
 # then we will still detect correctly whether we are on a slave or a proxy.
@@ -114,39 +110,6 @@ do
         sudo mount /dev/nbd0p$i /mnt/vm || continue
     fi
 
-    # Extract kernel and initrd
-    # Note that this might be both a separate 'boot' partition,
-    # and a 'Linux partition with /boot' dir
-    if [ -n "$(ls -A /mnt/vm/)" ]
-    then
-        # this partition has some files in it
-        # look for kernel files in partition itself
-        kernel=$(echo /mnt/vm/* | xargs file | grep kernel | head -n1 | sed 's,:.*,,')
-        if [ -z "$kernel" -a -d /mnt/vm/boot/ -a -n "$(ls -A /mnt/vm/)" ]
-        then
-            # kernel not found, but there is a non-empty /boot directory here - look there
-            kernel=$(echo /mnt/vm/boot/* | xargs file | grep kernel | head -n1 | sed 's,:.*,,')
-        fi
-    fi
-    if [ -n "$kernel" ]
-    then
-        initrd=$(echo "$kernel" | sed 's/vmlinuz/initrd.img/')
-	if [ ! -f "$initrd" ]
-	then
-            initrd=$(echo "$kernel" | sed 's/vmlinuz/initrd/;s/$/.img/')
-	fi
-        if [ -f "$initrd" ]
-        then
-            cp $kernel $HOME/kernel
-            cp $initrd $HOME/initrd
-        else
-            echo "ERROR: initrd file [$initrd] corresponding to kernel file [$kernel] not found:"
-            ls -lap /mnt/vm/
-            ls -lap /mnt/vm/boot || true
-            kernel=
-        fi
-    fi
-
     # Look for /usr directory to identify Linux partition.
     if [ ! -d /mnt/vm/usr ]
     then
@@ -189,7 +152,7 @@ if sudo dmesg | grep -q "BIOS Google"
 then
     # We're in Google Cloud, so follow the Google guide:
     # https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances
-    sudo apt-get -y install uml-utilities qemu-kvm bridge-utils # virtinst
+    sudo apt-get -y install uml-utilities qemu-kvm bridge-utils tmux
     sudo modprobe dummy
     sudo brctl delif virbr0 dummy0 || true
     sudo brctl addif virbr0 dummy0
@@ -199,7 +162,7 @@ then
     sudo brctl addif virbr0 tap0
     MAC=`sed -e '/mac address/!d' -e "s/.*'\(.*\)'.*/\1/" $XML`
     sudo pkill qemu-system-x86_64 || true
-    sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -nographic -kernel $HOME/kernel -initrd $HOME/initrd -append "console=ttyS0 root=/dev/$startup_disk ro" -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3 >$HOME/nested-vm.log &
+    tmux new-session -d "sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -curses -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3"
 else
     # do it like we did before
     sudo virsh create $XML
@@ -219,13 +182,6 @@ do
     sleep 10
     IP="$(sudo arp | grep virbr0 | awk '{print $1}')"
 done
-
-if [ -f $HOME/nested-vm.log ]
-then
-    echo '========================================= PRINTING NESTED VM LOG ==================================================='
-    sed 's/^/VM: /' $HOME/nested-vm.log || true
-    echo '======================================= DONE PRINTING NESTED VM LOG ================================================'
-fi
 
 if [ -z "$IP" ]
 then
