@@ -109,6 +109,7 @@ do
         sudo umount /mnt/vm || true
         sudo mount /dev/nbd0p$i /mnt/vm || continue
     fi
+
     # Look for /usr directory to identify Linux partition.
     if [ ! -d /mnt/vm/usr ]
     then
@@ -123,30 +124,6 @@ do
     # Install keys.
     sudo mkdir -p /mnt/vm/root/.ssh
     sudo bash -c "cat $HOME/.ssh/id_rsa.pub $HOME/.ssh/authorized_keys >> /mnt/vm/root/.ssh/authorized_keys" || true
-    # Extract kernel and initrd
-    if [ -f /mnt/vm/vmlinuz -a -f /mnt/vm/initrd.img ]
-    then
-	kernel=/mnt/vm/vmlinuz
-    else
-	kernel=$(echo /mnt/vm/boot/* | xargs file | grep kernel | sed 's,:.*,,')
-    fi
-    if [ -z $kernel ]
-    then
-	echo "kernel not found! look for yourself:"
-	ls -lap /mnt/vm/
-	ls -lap /mnt/vm/boot
-	exit 1
-    fi
-    initrd=$(echo "$kernel" | sed 's/vmlinuz/initrd.img/')
-    if [ ! -f $initrd ]
-    then
-	echo "initrd not found! look for yourself:"
-	ls -lap /mnt/vm/
-	ls -lap /mnt/vm/boot
-	exit 1
-    fi
-    cp $kernel $HOME/kernel
-    cp $initrd $HOME/initrd
     sudo umount /mnt/vm
     if [ -n "$VG" ]
     then
@@ -175,7 +152,7 @@ if sudo dmesg | grep -q "BIOS Google"
 then
     # We're in Google Cloud, so follow the Google guide:
     # https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances
-    sudo apt-get -y install uml-utilities qemu-kvm bridge-utils # virtinst
+    sudo apt-get -y install uml-utilities qemu-kvm bridge-utils tmux
     sudo modprobe dummy
     sudo brctl delif virbr0 dummy0 || true
     sudo brctl addif virbr0 dummy0
@@ -185,7 +162,7 @@ then
     sudo brctl addif virbr0 tap0
     MAC=`sed -e '/mac address/!d' -e "s/.*'\(.*\)'.*/\1/" $XML`
     sudo pkill qemu-system-x86_64 || true
-    sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -nographic -kernel $HOME/kernel -initrd $HOME/initrd -append 'console=ttyS0 root=/dev/hda1 ro' -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3 >$HOME/nested-vm.log &
+    tmux new-session -d "sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -curses -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3"
 else
     # do it like we did before
     sudo virsh create $XML
@@ -205,13 +182,6 @@ do
     sleep 10
     IP="$(sudo arp | grep virbr0 | awk '{print $1}')"
 done
-
-if [ -f $HOME/nested-vm.log ]
-then
-    echo '========================================= PRINTING NESTED VM LOG ==================================================='
-    sed 's/^/VM: /' $HOME/nested-vm.log || true
-    echo '======================================= DONE PRINTING NESTED VM LOG ================================================'
-fi
 
 if [ -z "$IP" ]
 then
