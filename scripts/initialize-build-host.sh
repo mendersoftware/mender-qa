@@ -89,7 +89,7 @@ fi
 attempts=150
 while pgrep cloud-init >/dev/null 2>&1 || pgrep google_metadata >/dev/null 2>&1
 do
-    attempts=$(($attempts - 1))
+    attempts=`expr $attempts - 1`
     if [ $attempts -le 0 ]
     then
         break
@@ -171,7 +171,7 @@ reset_nested_vm() {
 	    sudo ls -lap $HOME
 	    exit 1
         fi
-	files=$(ls $HOME/*.qcow2 | wc -l )
+	files=`ls $HOME/*.qcow2 | wc -l`
 	if [ $files -gt 1 ]
 	then
 	    echo "too many *.qcow files found:"
@@ -184,13 +184,13 @@ reset_nested_vm() {
 	    sudo ls -lap $HOME
 	    exit 1
         fi
-	if [ ! -z $login ]
+	if [ ! -z "$login" ]
 	then
-	    ip=$(sed 's/.*@//' $HOME/proxy-target.txt)
+	    ip=`sed 's/.*@//' $HOME/proxy-target.txt`
 	    sudo arp -d $ip
 	fi
 	$HOME/mender-qa/scripts/nested-vm.sh $HOME/*.qcow2
-        login="$(cat $HOME/proxy-target.txt)"
+        login="`cat $HOME/proxy-target.txt`"
         if $RSH $login true
         then
             echo "Nested VM is back up, it seems. Happily continuing!"
