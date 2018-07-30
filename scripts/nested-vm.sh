@@ -42,15 +42,26 @@ DISKIMAGE="/export/images/$1"
 BASEDISK=`echo $1 | sed 's/.*\///'`
 DISK="$HOME/$BASEDISK"
 XML="$DISK.xml"
+MD5="$DISK.md5"
 
 if [ ! -f $DISK ]
 then
-    # We append '*', which will be expanded on the SFTP server
-    echo "
-    lcd $HOME
-    get $DISKIMAGE*
-    "  | sftp -o Ciphers=aes128-gcm@openssh.com -o Compression=yes -o PreferredAuthentications=publickey -b -  \
-             jenkins_sftp_cache@build-artifacts-cache.cloud.cfengine.com
+    while true
+    do
+        # We append '*', which will be expanded on the SFTP server
+        echo "
+        lcd $HOME
+        get $DISKIMAGE*
+        "  | sftp -o Ciphers=aes128-gcm@openssh.com -o Compression=yes -o PreferredAuthentications=publickey -b -  \
+                 jenkins_sftp_cache@build-artifacts-cache.cloud.cfengine.com
+        # check md5sum of downloaded image
+        ls -l $DISK*
+        if md5sum --check "$MD5"
+        then
+            break
+        fi
+        echo "Download failed, retrying"
+    done
 fi
 
 # Install KVM and other tools.
