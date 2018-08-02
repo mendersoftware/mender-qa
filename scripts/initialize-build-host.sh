@@ -51,11 +51,41 @@ broken_posix_shell()
     return 0
 }
 
+set_github_status()
+{
+    # first check if already reported
+    if [ "x$GH_STATUS_REPORTED" = "x1" ]
+    then
+        return 0
+    fi
+
+    set +e  # this is not critical
+    if [ -f "$WORKSPACE"/GITHUB_STATUS_TOKEN ] && [ -f "$WORKSPACE"/GH_status_info.json ] &&
+       [ -f "$WORKSPACE"/output/PRs ] &&
+       [ -f "$WORKSPACE"/buildscripts/build-scripts/set_github_status.sh ]
+    then
+        GITHUB_STATUS_TOKEN=`cat "$WORKSPACE"/GITHUB_STATUS_TOKEN`
+        export GITHUB_STATUS_TOKEN
+        rm -f "$WORKSPACE"/GITHUB_STATUS_TOKEN
+        bash -x "$WORKSPACE"/buildscripts/build-scripts/set_github_status.sh "$WORKSPACE"/output/PRs "$WORKSPACE"/GH_status_info.json
+    fi
+    set -e
+    return 0
+}
+
 if broken_posix_shell >/dev/null 2>&1; then
     try_exec /usr/xpg4/bin/sh "$0" "$@"
     echo "No compatible shell script interpreter found."
     echo "Please find a POSIX shell for your system."
     exit 42
+fi
+
+# Make sure the GH PR status is attempted to be set at the end, but not multiple
+# times and only in the proxy if this is a proxied job.
+if [ -z "$PROXIED" ] || [ "x$PROXIED" = "x0" ];
+then
+    GH_STATUS_REPORTED=0
+    trap set_github_status EXIT
 fi
 
 # Make sure error detection and verbose output is on, if they aren't already.
@@ -358,6 +388,12 @@ then
     then
         $RSYNC -e "$RSH"    $login:"$WORKSPACE_REMOTE"/  "$WORKSPACE"/
     fi
+
+    # --------------------------------------------------------------------------
+    # Set GitHub PR status (if possible)
+    # --------------------------------------------------------------------------
+    set_github_status
+    GH_STATUS_REPORTED=1  # record that the GH PR status was reported
 
     # Return the error code from the job.
     exit $ret
