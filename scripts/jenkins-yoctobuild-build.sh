@@ -802,10 +802,22 @@ publish_artifacts() {
         s3cmd -F put $image_name-$machine_name.ext4 s3://mender/temp_${client_version}/$image_name-$machine_name.ext4
         s3cmd setacl s3://mender/temp_${client_version}/$image_name-$machine_name.ext4 --acl-public
 
+        # Artifact may have more than one machine_name defined (beaglebone-yocto
+        # and beaglebone, for example), and the only way we can find out is to
+        # inspect the artifact that Yocto built, since the job info itself does
+        # not provide this info.
+        device_types="$(mender-artifact read $image_name-$machine_name.mender | sed -rne "/^ *Compatible devices:/ {
+            s/^[^[]*\\[//;
+            s/][^]]*$//;
+            s/ +/ -t /g;
+            s/^/-t /;
+            p;
+        }")"
+
         modify_ext4 $image_name-$machine_name.ext4 release-1_${client_version}
-        mender-artifact write rootfs-image -t $machine_name -n release-1_${client_version} -u $image_name-$machine_name.ext4 -o ${board_name}_release_1_${client_version}.mender
+        mender-artifact write rootfs-image $device_types -n release-1_${client_version} -u $image_name-$machine_name.ext4 -o ${board_name}_release_1_${client_version}.mender
         modify_ext4 $image_name-$machine_name.ext4 release-2_${client_version}
-        mender-artifact write rootfs-image -t $machine_name -n release-2_${client_version} -u $image_name-$machine_name.ext4 -o ${board_name}_release_2_${client_version}.mender
+        mender-artifact write rootfs-image $device_types -n release-2_${client_version} -u $image_name-$machine_name.ext4 -o ${board_name}_release_2_${client_version}.mender
         if is_hardware_board $board_name; then
             gzip -c $image_name-$machine_name.sdimg > mender-${board_name}_${client_version}.sdimg.gz
             s3cmd --cf-invalidate -F put mender-${board_name}_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
