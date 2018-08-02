@@ -898,7 +898,7 @@ if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
 else
     beaglebone_machine_name=beaglebone-yocto
 
-    add_to_build_list  qemux86-64                qemux86-64-bios-grub  core-image-full-cmdline
+    add_to_build_list  mender-qemux86-64-bios    qemux86-64-bios-grub  core-image-full-cmdline
 fi
 
 add_to_build_list      qemux86-64                qemux86-64-uefi-grub  core-image-full-cmdline
