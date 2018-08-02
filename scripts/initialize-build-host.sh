@@ -315,6 +315,11 @@ then
                 ;;
         esac
     done > env.sh
+
+    # make it easy to check if running in a proxied target
+    echo "PROXIED=1" >> env.sh
+    echo "export PROXIED" >> env.sh
+
     $RSYNC -e "$RSH"    env.sh  $login:.
 
     # And the helper tools, including this script.
