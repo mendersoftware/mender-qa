@@ -331,6 +331,7 @@ then
     # job section yet.
     if [ -n "$WORKSPACE" ]
     then
+        $RSH  $login  sudo rm -rf "$WORKSPACE_REMOTE" || true
         $RSH  $login  mkdir -p "$WORKSPACE_REMOTE"
         $RSYNC -e "$RSH"    "$WORKSPACE"/  $login:"$WORKSPACE_REMOTE"/
     fi
