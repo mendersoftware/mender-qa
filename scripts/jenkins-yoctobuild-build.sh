@@ -390,7 +390,7 @@ sudo killall -s9 mender-stress-test-client || true
 # required to enable multi-tenant tests
 cp $WORKSPACE/go/src/github.com/mendersoftware/tenantadm/docker-compose.mt.yml $WORKSPACE/integration/
 
-if is_testing_board vexpress-qemu || is_testing_board vexpress-qemu-flash; then
+if is_testing_board vexpress-qemu || is_testing_board vexpress-qemu-flash || is_testing_board vexpress-qemu-uboot-uefi-grub; then
     build_custom_qemu
 fi
 
@@ -910,14 +910,16 @@ if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
 else
     beaglebone_machine_name=beaglebone-yocto
 
-    add_to_build_list  qemux86-64                qemux86-64-bios-grub  core-image-full-cmdline
+    add_to_build_list  qemux86-64                qemux86-64-bios-grub           core-image-full-cmdline
+    add_to_build_list  vexpress-qemu             vexpress-qemu-uboot-uefi-grub  core-image-full-cmdline
 fi
 
-add_to_build_list      qemux86-64                qemux86-64-uefi-grub  core-image-full-cmdline
-add_to_build_list      vexpress-qemu             vexpress-qemu         core-image-full-cmdline
-add_to_build_list      vexpress-qemu-flash       vexpress-qemu-flash   core-image-minimal
-add_to_build_list      $beaglebone_machine_name  beagleboneblack       core-image-base
-add_to_build_list      raspberrypi3              raspberrypi3          core-image-full-cmdline
+# Arguments: Machine name, board name and image name.
+add_to_build_list      qemux86-64                qemux86-64-uefi-grub           core-image-full-cmdline
+add_to_build_list      vexpress-qemu             vexpress-qemu                  core-image-full-cmdline
+add_to_build_list      vexpress-qemu-flash       vexpress-qemu-flash            core-image-minimal
+add_to_build_list      $beaglebone_machine_name  beagleboneblack                core-image-base
+add_to_build_list      raspberrypi3              raspberrypi3                   core-image-full-cmdline
 # Server build, without client build.
 add_to_build_list      mender_servers
 
