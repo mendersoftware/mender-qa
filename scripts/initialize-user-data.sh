@@ -77,7 +77,7 @@ apt_get() {
                [ "$(cat /tmp/apt-get-return-code.$pid.txt)" -ne 0 ] && \
                fgrep "Could not get lock" /tmp/apt-get.$pid.log > /dev/null
         then
-            attempts=$(expr $attempts - 1)
+            attempts=$(expr $attempts - 1 || true)
             sleep 10
         else
             break

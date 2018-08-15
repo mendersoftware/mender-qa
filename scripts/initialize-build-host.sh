@@ -119,7 +119,7 @@ fi
 attempts=150
 while pgrep cloud-init >/dev/null 2>&1 || pgrep google_metadata >/dev/null 2>&1
 do
-    attempts=`expr $attempts - 1`
+    attempts=`expr $attempts - 1 || true`
     if [ $attempts -le 0 ]
     then
         break
@@ -177,7 +177,7 @@ apt_get() {
                [ "$(cat /tmp/apt-get-return-code.$pid.txt)" -ne 0 ] && \
                fgrep "Could not get lock" /tmp/apt-get.$pid.log > /dev/null
         then
-            attempts=`expr $attempts - 1`
+            attempts=`expr $attempts - 1 || true`
             sleep 10
         else
             break
@@ -251,7 +251,7 @@ reset_nested_vm() {
                 echo "Nested VM is back up, it seems. Happily continuing!"
                 break
             fi
-            attempts=`expr $attempts - 1`
+            attempts=`expr $attempts - 1 || true`
             if [ $attempts -le 0 ]
 	    then
                 echo "Timeout while waiting for nested VM to reboot"
