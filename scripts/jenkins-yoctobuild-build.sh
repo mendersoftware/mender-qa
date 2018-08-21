@@ -17,6 +17,7 @@ BEAGLEBONEBLACK_PORT=2211
 declare -a CONFIG_MACHINE_NAMES
 declare -a CONFIG_BOARD_NAMES
 declare -a CONFIG_IMAGE_NAMES
+declare -a CONFIG_DEVICE_TYPES
 
 export PATH=$PATH:$WORKSPACE/go/bin
 
@@ -505,12 +506,13 @@ deploy_image_to_board() {
     local machine_name="$1"
     local board_name="$2"
     local image_name="$3"
+    local device_type="$4"
     while [  $counter -lt 5 ]; do
         local scp_exit_code=0
         scp -o UserKnownHostsFile=/dev/null \
             -o StrictHostKeyChecking=no -C \
             -oPort=$(port_for_board $board_name) \
-            "$BUILDDIR"/tmp/deploy/images/$machine_name/$image_name-$machine_name.sdimg \
+            "$BUILDDIR"/tmp/deploy/images/$machine_name/$image_name-$device_type.sdimg \
             root@${SSH_TUNNEL_IP}:/tmp/ \
             || scp_exit_code=$?
         if [ "$scp_exit_code" -ne 0 ]; then
@@ -521,7 +523,7 @@ deploy_image_to_board() {
                 -o StrictHostKeyChecking=no \
                 -t root@${SSH_TUNNEL_IP} \
                 -p $(port_for_board $board_name) \
-                "env IMAGE_FILE=$image_name-$machine_name.sdimg mender-qa deploy-test-image"
+                "env IMAGE_FILE=$image_name-$device_type.sdimg mender-qa deploy-test-image"
             ssh -o UserKnownHostsFile=/dev/null \
                 -o StrictHostKeyChecking=no \
                 -t root@${SSH_TUNNEL_IP} \
@@ -538,17 +540,27 @@ deploy_image_to_board() {
 # correct one will be chosen with build_and_test().
 #
 # Parameters:
-#   - machine name
-#   - board name (usually the same or similar to machine name, but each machine
-#                 name can have several boards)
-#   - image name
-# The last two parameters can be omitted, which indicates a server-only build,
+#   - machine name - Yocto MACHINE name
+#   - board name - usually the same or similar to machine name, but each machine
+#                  name can have several boards
+#   - image name - Yocto image name
+#   - device type - Mender device type. In most cases the same as machine name,
+#                   but some machines and boards may have more than one device
+#                   type, for example with different boot loaders
+# The last three parameters can be omitted, which indicates a server-only build,
 # using the given machine name.
+# The last one argument may also be omitted, in which case it device type is set
+# to machine name.
 # ------------------------------------------------------------------------------
 add_to_build_list() {
     CONFIG_MACHINE_NAMES[${#CONFIG_MACHINE_NAMES[@]}]="$1"
     CONFIG_BOARD_NAMES[${#CONFIG_BOARD_NAMES[@]}]="$2"
     CONFIG_IMAGE_NAMES[${#CONFIG_IMAGE_NAMES[@]}]="$3"
+    if [ -n "$4" ]; then
+        CONFIG_DEVICE_TYPES[${#CONFIG_DEVICE_TYPES[@]}]="$4"
+    else
+        CONFIG_DEVICE_TYPES[${#CONFIG_DEVICE_TYPES[@]}]="$1"
+    fi
 }
 
 # Selects a configuration from the list to build. Client builds override
@@ -563,6 +575,7 @@ build_and_test() {
         local machine=${CONFIG_MACHINE_NAMES[$config]}
         local board=${CONFIG_BOARD_NAMES[$config]}
         local image=${CONFIG_IMAGE_NAMES[$config]}
+        local device_type=${CONFIG_DEVICE_TYPES[$config]}
         if [ -n "$board" ]; then
             # Configuration with client.
             if is_building_board $board; then
@@ -573,6 +586,7 @@ build_and_test() {
                 machine_to_build=$machine
                 board_to_build=$board
                 image_to_build=$image
+                device_type_to_build=$device_type
             fi
         else
             if [ -n "$board_to_build" ]; then
@@ -587,6 +601,7 @@ build_and_test() {
             machine_to_build=$machine
             board_to_build=$board
             image_to_build=$image
+            device_type_to_build=$device_type
         fi
     done
 
@@ -596,7 +611,8 @@ build_and_test() {
     fi
 
     if [ -n "$board_to_build" ]; then
-        build_and_test_client $machine_to_build $board_to_build $image_to_build
+        build_and_test_client $machine_to_build $board_to_build $image_to_build $device_type_to_build
+
     fi
 
     if [ "$machine_to_build" = "mender_servers" ]; then
@@ -620,7 +636,7 @@ build_and_test_client() {
     # cleanups.
     (
         # Should be changed when the number of parameters below changes.
-        if [ -z "$3" -o -n "$4" ]; then
+        if [ -z "$4" -o -n "$5" ]; then
             echo "Incorrect number of parameters passed"
             exit 1
         fi
@@ -628,6 +644,7 @@ build_and_test_client() {
         local machine_name="$1"
         local board_name="$2"
         local image_name="$3"
+        local device_type="$4"
 
         if ! is_building_board $board_name; then
             echo "Not building board? We should never get here."
@@ -653,7 +670,7 @@ build_and_test_client() {
         fi
 
         mkdir -p $WORKSPACE/$board_name
-        cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/$image_name-$machine_name.* $WORKSPACE/$board_name
+        cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/$image_name-$device_type.* $WORKSPACE/$board_name
         if [ -e $BUILDDIR/tmp/deploy/images/$machine_name/u-boot.elf ]; then
             cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/u-boot.elf $WORKSPACE/$board_name
         fi
@@ -690,7 +707,7 @@ build_and_test_client() {
             bitbake $image_name
 
             if is_hardware_board $board_name; then
-                deploy_image_to_board $machine_name $board_name $image_name
+                deploy_image_to_board $machine_name $board_name $image_name $device_type
             fi
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
@@ -755,7 +772,7 @@ build_and_test_client() {
         fi
 
         if [ "$PUBLISH_ARTIFACTS" = true ]; then
-            publish_artifacts $machine_name $board_name $image_name
+            publish_artifacts $machine_name $board_name $image_name $device_type
         fi
 
         if is_building_dockerized_board; then
@@ -783,11 +800,12 @@ publish_artifacts() {
     local machine_name="$1"
     local board_name="$2"
     local image_name="$3"
+    local device_type="$4"
 
     # This makes the whole function run in a subshell. So no need for path
     # cleanups.
     (
-        if [ ! -e "$WORKSPACE/$board_name/$image_name-$machine_name.ext4" ]; then
+        if [ ! -e "$WORKSPACE/$board_name/$image_name-$device_type.ext4" ]; then
             # Currently we don't support publishing non-ext4 images.
             return
         fi
@@ -799,14 +817,14 @@ publish_artifacts() {
         s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact --acl-public
 
         cd $WORKSPACE/$board_name/
-        s3cmd -F put $image_name-$machine_name.ext4 s3://mender/temp_${client_version}/$image_name-$machine_name.ext4
-        s3cmd setacl s3://mender/temp_${client_version}/$image_name-$machine_name.ext4 --acl-public
+        s3cmd -F put $image_name-$device_type.ext4 s3://mender/temp_${client_version}/$image_name-$device_type.ext4
+        s3cmd setacl s3://mender/temp_${client_version}/$image_name-$device_type.ext4 --acl-public
 
-        # Artifact may have more than one machine_name defined (beaglebone-yocto
+        # Artifact may have more than one device type defined (beaglebone-yocto
         # and beaglebone, for example), and the only way we can find out is to
         # inspect the artifact that Yocto built, since the job info itself does
         # not provide this info.
-        device_types="$(mender-artifact read $image_name-$machine_name.mender | sed -rne "/^ *Compatible devices:/ {
+        device_types="$(mender-artifact read $image_name-$device_type.mender | sed -rne "/^ *Compatible devices:/ {
             s/^[^[]*\\[//;
             s/][^]]*$//;
             s/ +/ -t /g;
@@ -814,12 +832,12 @@ publish_artifacts() {
             p;
         }")"
 
-        modify_ext4 $image_name-$machine_name.ext4 release-1_${client_version}
-        mender-artifact write rootfs-image $device_types -n release-1_${client_version} -u $image_name-$machine_name.ext4 -o ${board_name}_release_1_${client_version}.mender
-        modify_ext4 $image_name-$machine_name.ext4 release-2_${client_version}
-        mender-artifact write rootfs-image $device_types -n release-2_${client_version} -u $image_name-$machine_name.ext4 -o ${board_name}_release_2_${client_version}.mender
+        modify_ext4 $image_name-$device_type.ext4 release-1_${client_version}
+        mender-artifact write rootfs-image $device_types -n release-1_${client_version} -u $image_name-$device_type.ext4 -o ${board_name}_release_1_${client_version}.mender
+        modify_ext4 $image_name-$device_type.ext4 release-2_${client_version}
+        mender-artifact write rootfs-image $device_types -n release-2_${client_version} -u $image_name-$device_type.ext4 -o ${board_name}_release_2_${client_version}.mender
         if is_hardware_board $board_name; then
-            gzip -c $image_name-$machine_name.sdimg > mender-${board_name}_${client_version}.sdimg.gz
+            gzip -c $image_name-$device_type.sdimg > mender-${board_name}_${client_version}.sdimg.gz
             s3cmd --cf-invalidate -F put mender-${board_name}_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
             s3cmd setacl s3://mender/${client_version}/$board_name/mender-${board_name}_${client_version}.sdimg.gz --acl-public
         fi
@@ -904,24 +922,31 @@ run_integration_tests() {
     )
 }
 
-if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
-    # Rocko and earlier used this name.
-    beaglebone_machine_name=beaglebone
-else
-    beaglebone_machine_name=beaglebone-yocto
-
-    add_to_build_list  qemux86-64                qemux86-64-bios-grub           core-image-full-cmdline
-    add_to_build_list  vexpress-qemu             vexpress-qemu-uboot-uefi-grub  core-image-full-cmdline
-fi
-
-# Arguments: Machine name, board name and image name.
-add_to_build_list      qemux86-64                qemux86-64-uefi-grub           core-image-full-cmdline
-add_to_build_list      vexpress-qemu             vexpress-qemu                  core-image-full-cmdline
-add_to_build_list      vexpress-qemu-flash       vexpress-qemu-flash            core-image-minimal
-add_to_build_list      $beaglebone_machine_name  beagleboneblack                core-image-base
-add_to_build_list      raspberrypi3              raspberrypi3                   core-image-full-cmdline
+# Arguments:
+# add_to_build_list        MACHINE_NAME              BOARD_NAME                     IMAGE_NAME               [DEVICE_TYPE]
+#
+# If DEVICE_TYPE is not given, MACHINE_NAME is assumed.
+add_to_build_list          qemux86-64                qemux86-64-uefi-grub           core-image-full-cmdline
+add_to_build_list          vexpress-qemu             vexpress-qemu                  core-image-full-cmdline
+add_to_build_list          vexpress-qemu-flash       vexpress-qemu-flash            core-image-minimal
+add_to_build_list          raspberrypi3              raspberrypi3                   core-image-full-cmdline
 # Server build, without client build.
-add_to_build_list      mender_servers
+add_to_build_list          mender_servers
+
+if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
+    # Rocko and earlier used "beaglebone" MACHINE name.
+    add_to_build_list      beaglebone                beagleboneblack                core-image-base
+else
+    if is_poky_branch sumo; then
+        add_to_build_list  beaglebone-yocto          beagleboneblack                core-image-base
+    else
+        # In post-sumo we started compiling for Beaglebone using GRUB instead.
+        add_to_build_list  beaglebone-yocto          beagleboneblack                core-image-base          beaglebone-yocto-grub
+    fi
+
+    add_to_build_list      qemux86-64                qemux86-64-bios-grub           core-image-full-cmdline  qemux86-64-bios
+    add_to_build_list      vexpress-qemu             vexpress-qemu-uboot-uefi-grub  core-image-full-cmdline  vexpress-qemu-grub
+fi
 
 build_and_test
 
