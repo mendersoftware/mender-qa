@@ -964,18 +964,30 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
                               || echo "api-gateway deployments deviceadm deviceauth gui inventory useradm" ); do (
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
             case "$image" in
-                api-gateway|deployments|deviceadm|deviceauth|gui|inventory|useradm)
+                api-gateway|deployments|deviceadm|deviceauth|gui|inventory|mender-conductor|mender-conductor-enterprise|useradm)
                     docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
                     docker push mendersoftware/$image:${version}
+                    ;;
+                mender-cli)
+                    s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/$image s3://mender/$image/$version/
+                    s3cmd setacl s3://mender/$image/$version/$image --acl-public
                     ;;
                 tenantadm)
                     # No releasing of tenantadm images from Jenkins. They are
                     # not versioned and hence managed by Travis.
                     :
                     ;;
-                mender-cli)
-                    s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/$image s3://mender/$image/$version/
-                    s3cmd setacl s3://mender/$image/$version/$image --acl-public
+                integration)
+                    # No uploads from integration.
+                    :
+                    ;;
+                mender-artifact|mender-client-qemu)
+                    # Handled in publish_artifacts().
+                    :
+                    ;;
+                *)
+                    echo "Don't know how to upload $image!"
+                    exit 1
                     ;;
             esac
         ); done
