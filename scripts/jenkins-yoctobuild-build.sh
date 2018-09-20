@@ -712,6 +712,9 @@ build_and_test_client() {
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
 
+            # Add mutual tests for non-Yocto & Yocto builds.
+            cp -t . $WORKSPACE/mender-image-tests/tests/*
+
             local acceptance_test_to_run=""
 
             # make it possible to run specific test
