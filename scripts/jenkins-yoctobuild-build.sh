@@ -616,6 +616,7 @@ build_and_test() {
     fi
 
     if [ "$machine_to_build" = "mender_servers" ]; then
+        run_backend_integration_tests
         run_integration_tests
     else
         run_integration_tests $machine_to_build $board_to_build
@@ -917,6 +918,44 @@ run_integration_tests() {
                 "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info passed!" \
                 $report_url \
                 "${board_name:+${board_name}_}integration_${INTEGRATION_REV}$extra_job_string"
+        fi
+
+        if [ "$testing_status" -ne 0 ]; then
+            exit $testing_status
+        fi
+    )
+}
+
+# ------------------------------------------------------------------------------
+# Function for running backend specific integration tests.
+# ------------------------------------------------------------------------------
+run_backend_integration_tests() {
+    (
+        if [ "$RUN_INTEGRATION_TESTS" != "true" ] || ! grep mender_servers <<<"$JOB_BASE_NAME"; then
+            return
+        fi
+
+        github_pull_request_status \
+            "pending" \
+            "integration:${INTEGRATION_REV} have started in Jenkins" \
+            "$BUILD_URL" \
+            "backend_integration_${INTEGRATION_REV}"
+
+        local testing_status=0
+        cd $WORKSPACE/integration/backend-tests && PYTEST_ARGS="-k 'not Multitenant'" ./run || testing_status=$?
+
+        if [ $testing_status -ne 0 ]; then
+            github_pull_request_status \
+                "failure" \
+                "integration:${INTEGRATION_REV}" \
+                "" \
+                "backend_integration_${INTEGRATION_REV}"
+        else
+            github_pull_request_status \
+                "success" \
+                "integration:${INTEGRATION_REV}" \
+                "" \
+                "backend_integration_${INTEGRATION_REV}"
         fi
 
         if [ "$testing_status" -ne 0 ]; then
