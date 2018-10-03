@@ -35,9 +35,6 @@ fi
 wget https://github.com/fabric/fabric/commit/b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
 sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
 
-# required to enable multi-tenant tests
-cp $WORKSPACE/go/src/github.com/mendersoftware/tenantadm/docker-compose.mt.yml $WORKSPACE/integration/
-
 function testFinished {
     for i in "${!TEST_TRACKER[@]}"
     do
