@@ -35,9 +35,6 @@ fi
 wget https://github.com/fabric/fabric/commit/b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
 sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
 
-# required to enable multi-tenant tests
-cp $WORKSPACE/go/src/github.com/mendersoftware/tenantadm/docker-compose.mt.yml $WORKSPACE/integration/
-
 function testFinished {
     for i in "${!TEST_TRACKER[@]}"
     do
@@ -391,6 +388,20 @@ sudo killall -s9 mender-stress-test-client || true
 # required to enable multi-tenant tests
 cp $WORKSPACE/go/src/github.com/mendersoftware/tenantadm/docker-compose.mt.yml $WORKSPACE/integration/
 
+# Handle sub modules. This is a noop for branches that don't have them. It only
+# looks complicated because in Jenkins we want to build the repository it
+# cloned, not the upstream repository.
+cd $WORKSPACE/meta-mender
+git submodule deinit -f . || true
+rm -rf .git/modules
+git submodule init
+git config submodule.tests/acceptance/image-tests.url $WORKSPACE/mender-image-tests
+# This may fail if a branch is missing from Jenkins' clone. Doesn't matter, we
+# will checkout HEAD instead.
+git submodule update || git submodule foreach git reset --hard
+git submodule foreach "git fetch origin HEAD && git checkout FETCH_HEAD"
+cd $WORKSPACE
+
 if is_testing_board vexpress-qemu || is_testing_board vexpress-qemu-flash || is_testing_board vexpress-qemu-uboot-uefi-grub; then
     build_custom_qemu
 fi
@@ -713,9 +724,6 @@ build_and_test_client() {
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
 
-            # Add mutual tests for non-Yocto & Yocto builds.
-            cp -t . $WORKSPACE/mender-image-tests/tests/*
-
             local acceptance_test_to_run=""
 
             # make it possible to run specific test
@@ -730,10 +738,15 @@ build_and_test_client() {
                 host_args=
             fi
 
+            local pytest_args=
+            if ! ( is_poky_branch morty || is_poky_branch rocko || is_poky_branch sumo ); then
+                pytest_args="--no-pull"
+            fi
+
             # run tests with xdist explicitly disabled
             local qemu_testing_status=0
             py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
-                    --bitbake-image $image_name --board-type=$board_name \
+                    --bitbake-image $image_name --board-type=$board_name $pytest_args \
                     $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
 
             local html_report=$(find . -iname report.html  | head -n 1)
