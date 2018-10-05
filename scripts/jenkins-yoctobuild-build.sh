@@ -739,7 +739,7 @@ build_and_test_client() {
             fi
 
             local pytest_args=
-            if ! ( is_poky_branch morty || is_poky_branch rocko || is_poky_branch sumo ); then
+            if ! ( is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko || is_poky_branch sumo ); then
                 pytest_args="--no-pull"
             fi
 
