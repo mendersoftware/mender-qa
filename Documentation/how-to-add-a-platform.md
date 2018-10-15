@@ -107,18 +107,6 @@ build node. For example:
 ![Adding node label](images/adding-node-label.png)
 
 
-## Release tool
-
-Once all the Jenkins pieces are done, the build parameters need to be added to
-the `release_tool.py` script, which is used both during releases and during the
-build steps of the Mender build. [This
-commit](https://github.com/mendersoftware/integration/commit/1cb19e63e27d1d791b02bdb7340d991e71cc37f7)
-is a good example of how to update the script.
-
-Remember that this should be cherry-picked to all branches of integration that
-are still being maintained.
-
-
 ## integration-test-runner
 
 integration-test-runner is the program we currently use to automatically trigger
