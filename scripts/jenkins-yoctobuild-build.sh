@@ -997,6 +997,8 @@ else
     else
         # In post-sumo we started compiling for Beaglebone using GRUB instead.
         add_to_build_list  beaglebone-yocto          beagleboneblack                core-image-base          beaglebone-yocto-grub
+
+        add_to_build_list  qemux86-64                qemux86-64-bios-grub-gpt       core-image-full-cmdline  qemux86-64-bios-grub-gpt
     fi
 
     add_to_build_list      qemux86-64                qemux86-64-bios-grub           core-image-full-cmdline  qemux86-64-bios
