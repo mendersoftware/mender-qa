@@ -955,7 +955,11 @@ run_backend_integration_tests() {
             "backend_integration_${INTEGRATION_REV}"
 
         local testing_status=0
-        cd $WORKSPACE/integration/backend-tests && PYTEST_ARGS="-k 'not Multitenant'" ./run || testing_status=$?
+
+        cd $WORKSPACE/integration/backend-tests && \
+           PYTEST_ARGS="-k 'not Multitenant'" ./run && \
+           PYTEST_ARGS="-k Multitenant" ./run -f=../docker-compose.tenant.yml -f=../docker-compose.mt.yml -f=../docker-compose.storage.minio.yml || \
+           testing_status=$?
 
         if [ $testing_status -ne 0 ]; then
             github_pull_request_status \
