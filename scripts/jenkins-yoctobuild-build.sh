@@ -154,7 +154,7 @@ EOF
             local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
 
             set -x
-            curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+            curl -iv --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
                  -d "$request_body" \
                  "$pr_status_endpoint"
             set +x
