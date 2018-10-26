@@ -628,9 +628,12 @@ build_and_test() {
 
     if [ "$machine_to_build" = "mender_servers" ]; then
         run_backend_integration_tests && \
+        sudo journalctl -u docker.service
         run_integration_tests
+        sudo journalctl -u docker.service
     else
         run_integration_tests $machine_to_build $board_to_build
+        sudo journalctl -u docker.service
     fi
 }
 
