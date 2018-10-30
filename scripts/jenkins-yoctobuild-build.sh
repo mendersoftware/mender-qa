@@ -960,7 +960,7 @@ run_backend_integration_tests() {
         local testing_status=0
 
         cd $WORKSPACE/integration/backend-tests && \
-           PYTEST_ARGS="-k Multitenant" ./run -f=../docker-compose.tenant.yml -f=../docker-compose.mt.yml -f=../docker-compose.storage.minio.yml || \
+           PYTEST_ARGS="-k 'not Multitenant'" ./run || \
            testing_status=$?
 
         if [ $testing_status -ne 0 ]; then
