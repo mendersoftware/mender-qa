@@ -381,6 +381,10 @@ docker system prune -f -a
 sudo systemctl restart docker
 sudo killall -s9 mender-stress-test-client || true
 
+# For some reason Jenkins is not able to do this properly itself after having
+# used a submodule.
+( cd $WORKSPACE/meta-mender && git clean -dxf )
+
 # ---------------------------------------------------
 # Generic setup.
 # ---------------------------------------------------
