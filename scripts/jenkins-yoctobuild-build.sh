@@ -1024,33 +1024,45 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
     if grep mender_servers <<<"$JOB_BASE_NAME"; then
         # Use release tool to query for available repositories, and fall back to
         # flat list for branches where we don't have that option.
-        for image in $($WORKSPACE/integration/extra/release_tool.py --list docker -a 2>/dev/null \
+        # Listing all docker image components.
+        for image in $($WORKSPACE/integration/extra/release_tool.py --list docker 2>/dev/null \
                               || echo "api-gateway deployments deviceadm deviceauth gui inventory useradm" ); do (
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
+            # Upload containers.
             case "$image" in
-                api-gateway|deployments|deviceadm|deviceauth|gui|inventory|mender-conductor|mender-conductor-enterprise|useradm)
+                api-gateway|deployments|deviceadm|deviceauth|email-sender|gui|inventory|mender-conductor|mender-conductor-enterprise|useradm)
                     docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
                     docker push mendersoftware/$image:${version}
+                    ;;
+                mender-client-qemu)
+                    # Handled in publish_artifacts().
+                    :
+                    ;;
+                *)
+                    echo "Don't know how to upload containers for $image!"
+                    exit 1
+                    ;;
+            esac
+        ); done
+        # Listing all git components.
+        for image in $($WORKSPACE/integration/extra/release_tool.py --list git 2>/dev/null || echo ); do (
+            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
+            # Upload binaries.
+            case "$image" in
+                deployments|deviceadm|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor*|useradm)
+                    # No binaries.
+                    :
                     ;;
                 mender-cli)
                     s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/$image s3://mender/$image/$version/
                     s3cmd setacl s3://mender/$image/$version/$image --acl-public
                     ;;
-                tenantadm)
-                    # No releasing of tenantadm images from Jenkins. They are
-                    # not versioned and hence managed by Travis.
-                    :
-                    ;;
-                integration)
-                    # No uploads from integration.
-                    :
-                    ;;
-                mender-artifact|mender-client-qemu)
+                mender-artifact|mender)
                     # Handled in publish_artifacts().
                     :
                     ;;
                 *)
-                    echo "Don't know how to upload $image!"
+                    echo "Don't know how to upload binaries for $image!"
                     exit 1
                     ;;
             esac
