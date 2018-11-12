@@ -467,6 +467,9 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
             mender-conductor)
                 cd go/src/github.com/mendersoftware/$build
                 docker build -t mendersoftware/mender-conductor:pr ./server
+                if [ -f ./workers/send_email/Dockerfile ]; then
+                    docker build -t mendersoftware/email-sender:pr ./workers/send_email
+                fi
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
 
