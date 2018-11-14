@@ -8,7 +8,7 @@ export IN_CLOUD_INIT_SCRIPT=1
 
 # Install java first so that Jenkins gets going.
 apt_get -qy update
-apt_get -qy default-jre-headless
+apt_get -qy --force-yes install default-jre-headless
 
 curl -L https://github.com/docker/compose/releases/download/1.20.1/docker-compose-`uname -s`-`uname -m` > docker-compose
 
