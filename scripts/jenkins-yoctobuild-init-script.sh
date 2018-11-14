@@ -2,6 +2,8 @@
 
 cd $HOME
 
+export IN_CLOUD_INIT_SCRIPT=1
+
 . mender-qa/scripts/initialize-build-host.sh
 
 curl -L https://github.com/docker/compose/releases/download/1.20.1/docker-compose-`uname -s`-`uname -m` > docker-compose
