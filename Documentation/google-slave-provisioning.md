@@ -153,7 +153,7 @@ EOF
 ```
 *Replace /path/to/(...)/ with your local paths.* You might want to further modify your packer image by adding additional providers, or selecting another distro etc. but the above solution at least give you a setup for `user-data`/`init-scripts`.
 
-**Example files of the json and the init script and user data files are in the Google Storage bucket "mender-jenkins".**
+**Example files of the json and the init script and user data files are in the Google Storage bucket "mender-jenkins". You can copy them to the cloud shell with:** `gsutil cp gs://mender-jenkins/* .`
 
 3.  Build the image by running Packer
 ```
@@ -266,4 +266,4 @@ Click *Add*.
 Now you can go ahead and create a test project. 
 
 ## Note on Google Cloud firewall settings.
-By default, Google Cloud has only opened port 22 in the firewall settings. If you want to use additional ports you will have to make an exception in the [Firewall Rules](https://console.cloud.google.com/networking/firewalls/list) settings. Please refer to https://cloud.google.com/vpc/docs/firewalls for additional information. 
+By default, Google Cloud has only opened port 22 in the firewall settings. If you want to use additional ports you will have to make an exception in the [Firewall Rules](https://console.cloud.google.com/networking/firewalls/list) settings. Please refer to https://cloud.google.com/vpc/docs/firewalls for additional information.
