@@ -2,8 +2,6 @@
 
 cd $HOME
 
-export IN_CLOUD_INIT_SCRIPT=1
-
 . mender-qa/scripts/initialize-build-host.sh
 
 # Install java first so that Jenkins gets going.
