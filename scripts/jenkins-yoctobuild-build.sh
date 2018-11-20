@@ -154,7 +154,7 @@ EOF
             local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
 
             set -x
-            curl --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+            curl -iv --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
                  -d "$request_body" \
                  "$pr_status_endpoint"
             set +x
@@ -634,7 +634,7 @@ build_and_test() {
     fi
 
     if [ "$machine_to_build" = "mender_servers" ]; then
-        run_backend_integration_tests
+        run_backend_integration_tests && \
         run_integration_tests
     else
         run_integration_tests $machine_to_build $board_to_build
@@ -962,7 +962,11 @@ run_backend_integration_tests() {
             "backend_integration_${INTEGRATION_REV}"
 
         local testing_status=0
-        cd $WORKSPACE/integration/backend-tests && PYTEST_ARGS="-k 'not Multitenant'" ./run || testing_status=$?
+
+        cd $WORKSPACE/integration/backend-tests && \
+           PYTEST_ARGS="-k 'not Multitenant'" ./run && \
+           PYTEST_ARGS="-k Multitenant" ./run -f=../docker-compose.tenant.yml -f=../docker-compose.mt.yml -f=../docker-compose.storage.minio.yml || \
+           testing_status=$?
 
         if [ $testing_status -ne 0 ]; then
             github_pull_request_status \
@@ -977,6 +981,8 @@ run_backend_integration_tests() {
                 "" \
                 "backend_integration_${INTEGRATION_REV}"
         fi
+
+        docker ps -q | xargs -r docker rm -v -f
 
         if [ "$testing_status" -ne 0 ]; then
             exit $testing_status
