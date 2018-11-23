@@ -378,6 +378,9 @@ then
     sudo rm -rf /mnt/sstate-cache/*
 fi
 
+# private docker containers, require login:
+docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+
 # if we abort a build, docker might still be up and running
 docker ps -q -a | xargs -r docker stop || true
 docker ps -q -a | xargs -r docker rm -f || true
