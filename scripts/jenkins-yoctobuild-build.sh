@@ -1043,10 +1043,6 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
                     # Handled in publish_artifacts().
                     :
                     ;;
-                integration)
-                    # No uploads.
-                    :
-                    ;;
                 *)
                     echo "Don't know how to upload containers for $image!"
                     exit 1
