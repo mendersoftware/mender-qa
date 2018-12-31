@@ -435,7 +435,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
         case "$build" in
             deployments|deviceadm|deviceauth|inventory|tenantadm|useradm)
                 cd go/src/github.com/mendersoftware/$build
-                CGO_ENABLED=0 go build
+                CPATH=/usr/local/musl/include LIBRARY_PATH=/usr/local/musl/lib CC=musl-gcc go build --ldflags '-linkmode external -extldflags "-static -llzma"'
                 docker build -t mendersoftware/$build:pr .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;

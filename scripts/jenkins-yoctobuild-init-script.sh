@@ -21,7 +21,7 @@ echo "deb http://apt.dockerproject.org/repo debian-jessie main" | tee -a /etc/ap
 curl -sL https://deb.nodesource.com/setup_8.x | bash -
 
 apt_get -qy update
-apt_get -qy --force-yes install git autoconf automake build-essential diffstat gawk chrpath libsdl1.2-dev e2tools nfs-client  s3cmd psmisc screen libssl-dev python-dev libxml2-dev libxslt-dev libffi-dev nodejs libyaml-dev sysbench texinfo pkg-config zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler qemu-system-x86 bc kpartx liblzma-dev
+apt_get -qy --force-yes install git autoconf automake build-essential diffstat gawk chrpath libsdl1.2-dev e2tools nfs-client  s3cmd psmisc screen libssl-dev python-dev libxml2-dev libxslt-dev libffi-dev nodejs libyaml-dev sysbench texinfo pkg-config zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler qemu-system-x86 bc kpartx musl-dev musl-tools
 apt_get -qy --force-yes install docker-ce || apt_get -qy --force-yes install docker-ce
 cp /sbin/debugfs /usr/bin/ || echo "debugfs not in /sbin/"
 
@@ -30,6 +30,12 @@ gunzip -c go1.10.linux-amd64.tar.gz | (cd /usr/local && tar x)
 ln -sf ../go/bin/go /usr/local/bin/go
 ln -sf ../go/bin/godoc /usr/local/bin/godoc
 ln -sf ../go/bin/gofmt /usr/local/bin/gofmt
+
+# Download and install lzma using muslc.
+wget https://tukaani.org/xz/xz-5.2.4.tar.gz
+tar -xf xz-5.2.4.tar.gz
+mkdir /usr/local/musl
+(cd xz-5.2.4 && ./configure CC=musl-gcc --disable-shared --prefix=/usr/local/musl/ && make && sudo make install)
 
 service docker restart
 
