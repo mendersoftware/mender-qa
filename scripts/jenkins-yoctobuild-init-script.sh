@@ -4,9 +4,9 @@ cd $HOME
 
 . mender-qa/scripts/initialize-build-host.sh
 
-# Install java first so that Jenkins gets going.
-apt_get -qy update
-apt_get -qy --force-yes install default-jre-headless
+# This is now done in the init-script.sh on Google Cloud instead.
+# apt_get -qy update
+# apt_get -qy --force-yes install default-jre-headless
 
 curl -L https://github.com/docker/compose/releases/download/1.20.1/docker-compose-`uname -s`-`uname -m` > docker-compose
 
