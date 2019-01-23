@@ -8,6 +8,10 @@ cd $HOME
 # apt_get -qy update
 # apt_get -qy --force-yes install default-jre-headless
 
+# Reenable SSH that was disabled in the user-data.sh script of the build host.
+systemctl enable ssh
+systemctl start ssh
+
 curl -L https://github.com/docker/compose/releases/download/1.20.1/docker-compose-`uname -s`-`uname -m` > docker-compose
 
 cp docker-compose /usr/bin/docker-compose
