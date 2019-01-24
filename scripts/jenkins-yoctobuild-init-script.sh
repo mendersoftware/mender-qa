@@ -12,6 +12,11 @@ cd $HOME
 systemctl enable ssh
 systemctl start ssh
 
+# Disable annoying sshguard that prevents logins forever if you try a few times
+# unsuccessfully.
+systemctl disable sshguard
+systemctl stop sshguard
+
 curl -L https://github.com/docker/compose/releases/download/1.20.1/docker-compose-`uname -s`-`uname -m` > docker-compose
 
 cp docker-compose /usr/bin/docker-compose
