@@ -9,13 +9,14 @@ cd $HOME
 # apt_get -qy --force-yes install default-jre-headless
 
 # Reenable SSH that was disabled in the user-data.sh script of the build host.
-sudo echo 'LogLevel DEBUG3' >> /etc/ssh/sshd_config
+sudo sed -i '/^LogLevel/s/INFO/DEBUG3/' /etc/ssh/sshd_config
 echo "DBG SSHD CONFIG"
 sudo cat /etc/ssh/sshd_config
 echo "DBG SSHD CONFIG END"
 
 systemctl enable ssh
 systemctl start ssh
+systemctl reload ssh
 
 # Disable annoying sshguard that prevents logins forever if you try a few times
 # unsuccessfully.
