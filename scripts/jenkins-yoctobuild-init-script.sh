@@ -10,6 +10,7 @@ cd $HOME
 
 # Reenable SSH that was disabled in the user-data.sh script of the build host.
 sudo sed -i '/^LogLevel/s/INFO/DEBUG3/' /etc/ssh/sshd_config
+sudo sed -i '/^ClientAliveInterval/s/120/60/' /etc/ssh/sshd_config
 echo "DBG SSHD CONFIG"
 sudo cat /etc/ssh/sshd_config
 echo "DBG SSHD CONFIG END"
