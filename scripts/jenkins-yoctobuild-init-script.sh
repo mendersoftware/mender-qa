@@ -67,3 +67,11 @@ pip2 install pycrypto --upgrade
 # Python 3 pip
 apt_get -qy --force-yes install python3-pip
 pip3 install pyyaml --upgrade
+
+# sysstat monitoring suite
+# collect cpu, load avg, memory and io usage every 2 secs forever
+# use 'sadf' from sysstat to render the result file (~/sysstat.log) manually
+apt_get -qy --force-yes install sysstat
+sudo sed -i 's/false/true/g' /etc/default/sysstat
+sudo service sysstat start 
+sar -P ALL 2 -o ~/sysstat.log -uqrb  --human >/dev/null 2>&1 &                           
