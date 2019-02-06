@@ -74,4 +74,4 @@ pip3 install pyyaml --upgrade
 apt_get -qy --force-yes install sysstat
 sudo sed -i 's/false/true/g' /etc/default/sysstat
 sudo service sysstat start 
-sar -P ALL 2 -o ~/sysstat.log -uqrb  --human >/dev/null 2>&1 &                           
+sar -P ALL 2 -o ~/sysstat.log -uqrb >/dev/null 2>&1 &                           
