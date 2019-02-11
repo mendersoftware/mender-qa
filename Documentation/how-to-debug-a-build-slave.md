@@ -16,7 +16,7 @@ Obviously this needs to be merged into the master branch before it will be used
 (or it would be very insecure). Once this is done, the next build slave that is
 launched should have your key in it.
 
-## How to debug
+## How to debug via SSH
 
 ### Preparing
 
@@ -72,12 +72,14 @@ At this point you are ready to log in.
    ```
    ssh jenkins@<IP>
    ```
-
    Getting warnings about mismatched SSH keys is pretty common, since the
    machines are respawning again and again and getting new SSH keys all the
    time. Just follow the steps on the screen.
 
-6. Once inside, at least for Mender jobs, the workspace is in
+6. Alternatively, if you don't see the IP, copy it from the Google Cloud Platform console. The instances page
+   maps host names to their external IPs.
+
+7. Once inside, at least for Mender jobs, the workspace is in
    `$HOME/workspace/yoctobuild`.
 
 Keep in mind that the shell environment of your login is not the same as for the
@@ -102,6 +104,51 @@ diff hack -->
 -using the slave.-
 ```
 
+## Debugging with monitoring tools
+Slaves are being constantly monitored via two utilities:
+
+- [Jenkins Monitoring Plugin](https://wiki.jenkins.io/display/JENKINS/Monitoring)
+- [sysstat](https://github.com/sysstat/sysstat), specifically `sar`
+
+### Jenkins Monitoring Plugin
+The [Monitoring dashboard](https://mender-jenkins.mender.io/monitoring)  is the entrypoint
+to the plugin's reporting functonality, and displays various performance metrics of the Jenkins master server.
+It's what you'd typically expect: cpu usage, mem usage, top-like OS-processes view, etc. It's just best
+to poke around and see what's available.
+
+A more interesting view can be accessed at `https://mender-jenkins.mender.io/monitoring/nodes`. This dashboard
+aggregates stats pertaining to all slave nodes launched by Jenkins and gives some insight into individual nodes.
+
+You can access individual nodes' dashboard at `https://mender-jenkins.mender.io/monitoring/nodes/<node_name>`.
+Note that the graphs here still refer to the combined capacity of the whole slave farm; everything else is per-node though.
+
+One major gotcha with the plugin is that it doesn't persist any slave data. You can observe reports on the fly,
+but as soon as GCP kills the slave, the stats are gone too. That's not useful for a post-mortem analysis, and `sysstat` is the
+better option.
+
+### sysstat
+The `sar` utility is started in the init script; it collects:
+- cpu usage
+- load averages
+- memory usage
+- swap usage
+
+over the whole lifetime of the slave (interval: 2 secs).
+
+The output file is at `/var/log/sysstat/sysstat.log`.
+
+For post mortem analysis, grab the file e.g. via scp:
+
+`scp jenkins@host:/var/log/sysstat/sysstat.log <your_file_path>`
+
+This file can be processed and reviewed by sysstat's `sadf` utility. The simplest operation
+is to dump all charts to svg:
+
+`sadf <your_file_path> -g -- -qurbS > out.svg`
+
+!['sar' output from a test run](images/sysstat-chart.png)
+
+See `man sadf` for othe tips (exporting to other formats, slicing by time and metric, etc.)
 
 ## Tips and tricks
 
