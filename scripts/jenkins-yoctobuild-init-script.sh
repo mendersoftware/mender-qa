@@ -54,8 +54,9 @@ npm install mocha selenium-webdriver@3.0.0-beta-2 saucelabs
 
 # Python 2 pip
 apt_get -qy --force-yes install python-pip
+pip2 install more-itertools==5.0.0
 pip2 install requests --upgrade
-pip2 install pytest --upgrade
+pip2 install pytest --upgrade --upgrade-strategy=only-if-needed
 pip2 install filelock --upgrade
 pip2 install pytest-xdist --upgrade
 pip2 install pytest-html --upgrade
