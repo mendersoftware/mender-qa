@@ -6,6 +6,9 @@ $WORKSPACE/mender-qa/scripts/wait-until-build-host-ready.sh
 
 echo $WORKSPACE
 
+apt_get -qy --force-yes install docker-ce || apt_get -qy --force-yes install docker-ce
+service docker restart
+
 SSH_TUNNEL_IP=188.166.29.46
 RASPBERRYPI3_PORT=2210
 BEAGLEBONEBLACK_PORT=2211
