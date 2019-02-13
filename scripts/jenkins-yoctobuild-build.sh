@@ -6,8 +6,15 @@ $WORKSPACE/mender-qa/scripts/wait-until-build-host-ready.sh
 
 echo $WORKSPACE
 
-apt_get -qy --force-yes install docker-ce || apt_get -qy --force-yes install docker-ce
-service docker restart
+sudo apt-get -qy --force-yes install docker-ce || apt-get -qy --force-yes install docker-ce
+# make sure Docker uses the block storage to store docker containers.
+sudo bash -c 'cat << EOF > /etc/docker/daemon.json
+{
+"data-root": "/var/lib/docker/",
+"storage-driver": "overlay2"
+}
+EOF'
+sudo service docker restart
 
 SSH_TUNNEL_IP=188.166.29.46
 RASPBERRYPI3_PORT=2210
