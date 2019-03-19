@@ -452,7 +452,11 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
 
             gui)
                 cd gui
-                gulp build
+                # Versions of gui before 2.0.0 used "gulp build", later ones
+                # build everything inside multi-stage docker builds.
+                if ! grep "COPY --from=build" Dockerfile; then
+                    gulp build
+                fi
                 docker build -t mendersoftware/gui:pr .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
