@@ -462,8 +462,20 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 ;;
 
             mender)
-                # Client is not built here.
-                :
+                # We build the docker-client here, as well as some support
+                # tools, but the Yocto based image is too expensive to build
+                # here, since this section is run by pure server builds as
+                # well. See the build_and_test_client function for that.
+                cd go/src/github.com/mendersoftware/$build
+
+                if [ -x ./tests/build-docker ]; then
+                    ./tests/build-docker -t mendersoftware/mender-client-docker:pr
+                    $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
+                fi
+
+                if grep -q install-modules-gen Makefile; then
+                    make prefix=$WORKSPACE/go bindir=/bin install-modules-gen
+                fi
                 ;;
 
             mender-api-gateway-docker)
@@ -1049,7 +1061,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
             # Upload containers.
             case "$image" in
-                api-gateway|deployments|deviceadm|deviceauth|email-sender|gui|inventory|mender-conductor|mender-conductor-enterprise|useradm)
+                api-gateway|deployments|deviceadm|deviceauth|email-sender|gui|inventory|mender-conductor|mender-conductor-enterprise|mender-client-docker|useradm)
                     docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
                     docker push mendersoftware/$image:${version}
                     ;;
