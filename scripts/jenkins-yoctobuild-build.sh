@@ -881,10 +881,18 @@ publish_artifacts() {
             p;
         }")"
 
+        if mender-artifact write rootfs-image --help | grep -e '-u FILE'; then
+            # Pre-3.0.0
+            file_flag=-u
+        else
+            # Post-3.0.0
+            file_flag=-f
+        fi
+
         modify_ext4 $image_name-$device_type.ext4 release-1_${client_version}
-        mender-artifact write rootfs-image $device_types -n release-1_${client_version} -u $image_name-$device_type.ext4 -o ${board_name}_release_1_${client_version}.mender
+        mender-artifact write rootfs-image $device_types -n release-1_${client_version} $file_flag $image_name-$device_type.ext4 -o ${board_name}_release_1_${client_version}.mender
         modify_ext4 $image_name-$device_type.ext4 release-2_${client_version}
-        mender-artifact write rootfs-image $device_types -n release-2_${client_version} -u $image_name-$device_type.ext4 -o ${board_name}_release_2_${client_version}.mender
+        mender-artifact write rootfs-image $device_types -n release-2_${client_version} $file_flag $image_name-$device_type.ext4 -o ${board_name}_release_2_${client_version}.mender
         if is_hardware_board $board_name; then
             gzip -c $image_name-$device_type.sdimg > mender-${board_name}_${client_version}.sdimg.gz
             s3cmd --cf-invalidate -F put mender-${board_name}_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
