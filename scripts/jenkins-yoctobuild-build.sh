@@ -1069,7 +1069,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
             # Upload containers.
             case "$image" in
-                api-gateway|deployments|deviceadm|deviceauth|email-sender|gui|inventory|mender-conductor|mender-conductor-enterprise|mender-client-docker|useradm)
+                api-gateway|deployments|deviceadm|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor|mender-conductor-enterprise|useradm)
                     docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
                     docker push mendersoftware/$image:${version}
                     ;;
