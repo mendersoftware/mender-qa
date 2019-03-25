@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 LINARO_COMPILER=gcc-linaro-6.3.1-2017.05-x86_64_arm-linux-gnueabihf
 COMPRESSED_COMPILER=${LINARO_COMPILER}.tar.xz
 LINARO_BINARY_PATH=${LINARO_COMPILER}/bin
@@ -16,6 +18,8 @@ CONVERTED_RASPBIAN_IMAGE=mender_raspbian_converted.sdimg
 QEMUX86_64_BOARD_NAME=qemux86-64-ovmf-grub
 QEMUX86_64_RAW_DISK_IMAGE=
 CONVERTED_QEMUX86_64_IMAGE=mender_qemux86_64_converted.sdimg
+
+eval $(sed -n -e '/MENDER_CLIENT_VERSION=/p' $WORKSPACE/mender-convert/docker-build)
 
 export GOPATH="$WORKSPACE/go"
 
@@ -47,16 +51,33 @@ get_mender_artifact() {
     wget -nc -q https://d1b0l86ne08fsf.cloudfront.net/mender-artifact/2.3.0/mender-artifact
 }
 
+build_mender_client_deps() {
+    # Build liblzma from source
+    mkdir -p $WORKSPACE/liblzma
+    wget -q https://tukaani.org/xz/xz-5.2.4.tar.gz -P $WORKSPACE/liblzma
+    tar -C $WORKSPACE/liblzma -xzf $WORKSPACE/liblzma/xz-5.2.4.tar.gz
+    cd $WORKSPACE/liblzma/xz-5.2.4
+    ./configure --host=arm-linux-gnueabihf --prefix=$WORKSPACE/liblzma/install
+    make
+    make install
+    cd -
+    export LIBLZMA_INSTALL_PATH=$WORKSPACE/liblzma/install
+}
+
 build_mender_client() {
-    go get github.com/mendersoftware/mender
+    go get -d github.com/mendersoftware/mender
+    mkdir -p $GOPATH/bin
     cd $GOPATH/src/github.com/mendersoftware/mender
-    git checkout 1.5.0
+    git checkout $MENDER_CLIENT_VERSION
     env CGO_ENABLED=1 \
+        CGO_CFLAGS="-I${LIBLZMA_INSTALL_PATH}/include" \
+        CGO_LDFLAGS="-L${LIBLZMA_INSTALL_PATH}/lib" \
         CC=arm-linux-gnueabihf-gcc \
         GOOS=linux \
         GOARCH=arm make build
     arm-linux-gnueabihf-strip mender
     cp mender $GOPATH/bin/mender-arm
+    make clean
     make build
     strip mender
     cp mender $GOPATH/bin/mender-$host
@@ -158,8 +179,6 @@ EOF
          set +x
 done
 
-cd -
-
 }
 
 github_PR_status "pending" "Mender convert acceptance tests has started"
@@ -182,7 +201,7 @@ echo "deb http://security.ubuntu.com/ubuntu bionic-security main restricted univ
 
 sudo apt-get update
 sudo apt-get -qy --force-yes install e2fsprogs=1.44.1-1
-sudo apt-get -qy --force-yes install kpartx bison unzip mtools parted mtd-utils u-boot-tools pigz flex
+sudo apt-get -qy --force-yes install kpartx bison unzip mtools parted mtd-utils u-boot-tools pigz flex liblzma-dev
 sudo apt-get -qy --force-yes install python-pip
 sudo pip2 install pytest --upgrade
 sudo pip2 install pytest-xdist --upgrade
@@ -216,6 +235,7 @@ fi
 
 export PATH=$PATH:$(pwd)/gcc-linaro-6.3.1-2017.05-x86_64_arm-linux-gnueabihf/bin
 
+build_mender_client_deps
 build_mender_client
 if [ ! -e $GOPATH/bin/mender-$host ]; then
     echo "$GOPATH/bin/mender-$host: can not be found"
@@ -248,7 +268,7 @@ build_qemux86_64_vanilla_image || rc=$?
 cd $WORKSPACE/mender-convert
 
 ./mender-convert from-raw-disk-image --raw-disk-image $QEMUX86_64_RAW_DISK_IMAGE --mender-disk-image ${CONVERTED_QEMUX86_64_IMAGE} \
-    --device-type qemux86_64 --mender-client $GOPATH/bin/mender-$host --artifact-name release-1_1.5.0 \
+    --device-type qemux86_64 --mender-client $GOPATH/bin/mender-$host --artifact-name release-1_$MENDER_CLIENT_VERSION \
     --demo-host-ip 192.168.10.2 --bootloader-toolchain arm-linux-gnueabihf
 
 rc=$?
@@ -257,7 +277,7 @@ rc=$?
                 || { echo "Successful QEMU x86_64 conversion."; }
 
 ./mender-convert from-raw-disk-image --raw-disk-image $WORKSPACE/${DEBIAN_IMAGE} --mender-disk-image ${CONVERTED_DEBIAN_IMAGE} \
-    --device-type beaglebone --mender-client $GOPATH/bin/mender-arm --artifact-name release-1_1.5.0 \
+    --device-type beaglebone --mender-client $GOPATH/bin/mender-arm --artifact-name release-1_$MENDER_CLIENT_VERSION \
     --demo-host-ip 192.168.10.2 --bootloader-toolchain arm-linux-gnueabihf
 
 rc=$?
@@ -266,7 +286,7 @@ rc=$?
                 || { echo "Successful Debian for BBB conversion."; }
 
 ./mender-convert from-raw-disk-image --raw-disk-image $WORKSPACE/${RASPBIAN_IMAGE} --mender-disk-image ${CONVERTED_RASPBIAN_IMAGE} \
-    --device-type raspberrypi3 --mender-client $GOPATH/bin/mender-arm --artifact-name release-1_1.5.0 \
+    --device-type raspberrypi3 --mender-client $GOPATH/bin/mender-arm --artifact-name release-1_$MENDER_CLIENT_VERSION \
     --demo-host-ip 192.168.10.2 --bootloader-toolchain arm-linux-gnueabihf
 
 rc=$?
