@@ -243,8 +243,8 @@ prepare_build_config() {
         return 1
     fi
 
-    local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
-    local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
+    local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
+    local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
 
     # See comment in local.conf
     if is_poky_branch morty || is_poky_branch pyro; then
@@ -859,8 +859,8 @@ publish_artifacts() {
             return
         fi
 
-        local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender)
-        local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact)
+        local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
+        local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
 
         s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/mender-artifact s3://mender/mender-artifact/${mender_artifact_version}/
         s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact --acl-public
@@ -1066,10 +1066,10 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
         # Listing all docker image components.
         for image in $($WORKSPACE/integration/extra/release_tool.py --list docker 2>/dev/null \
                               || echo "api-gateway deployments deviceadm deviceauth gui inventory useradm" ); do (
-            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
+            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
             # Upload containers.
             case "$image" in
-                api-gateway|deployments|deviceadm|deviceauth|email-sender|gui|inventory|mender-conductor|mender-conductor-enterprise|mender-client-docker|useradm)
+                api-gateway|deployments|deviceadm|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor|mender-conductor-enterprise|useradm)
                     docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
                     docker push mendersoftware/$image:${version}
                     ;;
@@ -1085,7 +1085,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
         ); done
         # Listing all git components.
         for image in $($WORKSPACE/integration/extra/release_tool.py --list git 2>/dev/null || echo ); do (
-            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image)
+            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
             # Upload binaries.
             case "$image" in
                 deployments|deviceadm|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor*|useradm)
@@ -1115,7 +1115,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
     fi
     if is_building_board $board_to_publish; then
         container=mender-client-qemu
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container)
+        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container --in-integration-version HEAD)
         docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
         docker push mendersoftware/$container:${version}
     fi
