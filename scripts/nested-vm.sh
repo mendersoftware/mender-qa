@@ -159,25 +159,19 @@ sudo chown libvirt-qemu:libvirt-qemu $DISK $XML
 
 # Start the VM
 sudo virsh net-start default || true
-if sudo dmesg | grep -q "BIOS Google"
-then
-    # We're in Google Cloud, so follow the Google guide:
-    # https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances
-    sudo apt-get -y install uml-utilities qemu-kvm bridge-utils tmux
-    sudo modprobe dummy
-    sudo brctl delif virbr0 dummy0 || true
-    sudo brctl addif virbr0 dummy0
-    sudo tunctl -t tap0 || true
-    sudo ifconfig tap0 up
-    sudo brctl delif virbr0 tap0 || true
-    sudo brctl addif virbr0 tap0
-    MAC=`sed -e '/mac address/!d' -e "s/.*'\(.*\)'.*/\1/" $XML`
-    sudo pkill qemu-system-x86_64 || true
-    tmux new-session -d "sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -curses -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3"
-else
-    # do it like we did before
-    sudo virsh create $XML
-fi
+# Follow the Google guide:
+# https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances
+sudo apt-get -y install uml-utilities qemu-kvm bridge-utils tmux
+sudo modprobe dummy
+sudo brctl delif virbr0 dummy0 || true
+sudo brctl addif virbr0 dummy0
+sudo tunctl -t tap0 || true
+sudo ifconfig tap0 up
+sudo brctl delif virbr0 tap0 || true
+sudo brctl addif virbr0 tap0
+MAC=`sed -e '/mac address/!d' -e "s/.*'\(.*\)'.*/\1/" $XML`
+sudo pkill qemu-system-x86_64 || true
+tmux new-session -d "sudo qemu-system-x86_64 -enable-kvm -hda $DISK -m 789 -curses -netdev tap,ifname=tap0,script=no,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=$MAC,bus=pci.0,addr=0x3"
 
 # WAIT for host and find its IP
 IP=
