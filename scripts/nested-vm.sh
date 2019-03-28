@@ -73,7 +73,7 @@ if grep -q 'ID=ubuntu' /etc/os-release
 then # Ubuntu
     if grep -q VERSION.*16 /etc/os-release
     then
-        sudo apt -qy install libvirt-bin qemu-utils
+        sudo apt -qy install libvirt-bin qemu-utils qemu qemu-kvm
     else
         sudo apt -qy install libvirt-daemon-system libvirt-clients
     fi
@@ -101,6 +101,7 @@ fi
 # Mount the image and add some keys.
 sudo qemu-nbd -d /dev/nbd0 || true
 sudo qemu-nbd -c /dev/nbd0 $DISK
+sudo partprobe -s /dev/nbd0
 sudo mkdir -p /mnt/vm
 success=0
 for i in 1 2 3 4 5
@@ -164,7 +165,8 @@ fi
 sed -i -e "s,[^']*/$BASEDISK,$DISK," $XML
 
 chmod go+rx $HOME
-sudo chown libvirt-qemu:libvirt-qemu $DISK $XML
+libvirt_group="$(grep libvirt /etc/group | cut -d: -f1 | head -n1)"
+sudo chown libvirt-qemu:$libvirt_group $DISK $XML
 
 # Start the VM
 sudo virsh net-start default || true
