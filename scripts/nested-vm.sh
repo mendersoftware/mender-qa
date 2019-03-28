@@ -67,14 +67,23 @@ fi
 # Install KVM and other tools.
 sudo apt -qy update
 sudo apt -qy install rsync
-# Since Debian 9, single libvirt-bin was split into two
-# Note that we don't run this script on other platforms but Debian 8 and 9,
-# so we don't need to care about, say, Ubuntu VERSION=18.04
-if grep -q VERSION.*8 /etc/os-release
-then
-    sudo apt -qy install libvirt-bin
-else
-    sudo apt -qy install libvirt-daemon-system libvirt-clients
+# Since Debian 9 and Ubuntu 18, single libvirt-bin was split into two.
+# This script supports running on Debian 8 and 9, and Ubuntu 16 and 18
+if grep -q 'ID=ubuntu' /etc/os-release
+then # Ubuntu
+    if grep -q VERSION.*16 /etc/os-release
+    then
+        sudo apt -qy install libvirt-bin qemu-utils
+    else
+        sudo apt -qy install libvirt-daemon-system libvirt-clients
+    fi
+else # Debian
+    if grep -q VERSION.*8 /etc/os-release
+    then
+        sudo apt -qy install libvirt-bin
+    else
+        sudo apt -qy install libvirt-daemon-system libvirt-clients
+    fi
 fi
 
 # Enable nbd devices to have partitions.
