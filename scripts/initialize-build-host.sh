@@ -222,7 +222,10 @@ reset_nested_vm() {
 	if [ ! -z "$login" ]
 	then
 	    ip=`sed 's/.*@//' $HOME/proxy-target.txt`
-	    sudo arp -d $ip
+            if sudo arp | grep -q $ip
+            then
+                sudo arp -d $ip
+            fi
 	fi
 	$HOME/mender-qa/scripts/nested-vm.sh $HOME/*.qcow2
         login="`cat $HOME/proxy-target.txt`"
