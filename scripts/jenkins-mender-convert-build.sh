@@ -20,6 +20,7 @@ QEMUX86_64_RAW_DISK_IMAGE=
 CONVERTED_QEMUX86_64_IMAGE=mender_qemux86_64_converted.sdimg
 
 eval $(sed -n -e '/MENDER_CLIENT_VERSION=/p' $WORKSPACE/mender-convert/docker-build)
+eval $(sed -n -e '/MENDER_ARTIFACT_VERSION=/p' $WORKSPACE/mender-convert/Dockerfile | cut -d' ' -f2)
 
 export GOPATH="$WORKSPACE/go"
 
@@ -45,10 +46,6 @@ get_pytest_files() {
     wget -nc -q https://raw.githubusercontent.com/mendersoftware/meta-mender/master/tests/acceptance/common.py -P $WORKSPACE/mender-image-tests
     wget -nc -q https://raw.githubusercontent.com/mendersoftware/meta-mender/master/tests/acceptance/conftest.py -P $WORKSPACE/mender-image-tests
     wget -nc -q https://raw.githubusercontent.com/mendersoftware/meta-mender/master/tests/acceptance/fixtures.py -P $WORKSPACE/mender-image-tests
-}
-
-get_mender_artifact() {
-    wget -nc -q https://d1b0l86ne08fsf.cloudfront.net/mender-artifact/2.3.0/mender-artifact
 }
 
 build_mender_client_deps() {
@@ -85,9 +82,10 @@ build_mender_client() {
 }
 
 build_mender_artifact() {
-    go get github.com/mendersoftware/mender-artifact
+    go get -d github.com/mendersoftware/mender-artifact
     cd $GOPATH/src/github.com/mendersoftware/mender-artifact
-    go get ./...
+    git checkout $MENDER_ARTIFACT_VERSION
+    make install
     cd -
 }
 
