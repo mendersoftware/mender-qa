@@ -470,7 +470,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
 
                 if [ -x ./tests/build-docker ]; then
                     ./tests/build-docker -t mendersoftware/mender-client-docker:pr
-                    $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
+                    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-docker --version pr
                 fi
 
                 if grep -q install-modules-gen Makefile; then
@@ -838,7 +838,7 @@ build_and_test_client() {
                 docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
             fi
 
-            $WORKSPACE/integration/extra/release_tool.py --set-version-of mender --version pr
+            $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu --version pr
         fi
     )
 }
