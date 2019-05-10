@@ -777,7 +777,7 @@ build_and_test_client() {
 
             # run tests with xdist explicitly disabled
             local qemu_testing_status=0
-            py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
+            py.test -k test_upgrade_from_pre_2_0 -p no:xdist --verbose --junit-xml=results.xml $host_args \
                     --bitbake-image $image_name --board-type=$board_name $pytest_args \
                     $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
 
@@ -858,6 +858,11 @@ publish_artifacts() {
             # Currently we don't support publishing non-ext4 images.
             return
         fi
+
+        touch ~/debugging.txt
+        while [ -f ~/debugging.txt ]; do
+            sleep 10
+        done
 
         local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
         local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
