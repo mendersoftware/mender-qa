@@ -319,6 +319,7 @@ then
         BUILD_TAG \
         BUILD_URL \
         EXECUTOR_NUMBER \
+        EXPLICIT_RELEASE \
         HUDSON_COOKIE \
         HUDSON_HOME \
         HUDSON_SERVER_COOKIE \
