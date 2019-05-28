@@ -150,9 +150,6 @@ github_PR_status () {
 EOF
 )
 
-    GITHUB_BOT_USER=mender-test-bot
-    GITHUB_BOT_PASSWORD="niMhcVa4>Nb{ZLyb"
-
     git_commit=$(cd "$WORKSPACE/mender-convert" && git rev-parse HEAD)
     for decl in $(env); do
          key=${decl%%=*}
