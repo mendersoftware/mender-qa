@@ -864,8 +864,10 @@ publish_artifacts() {
         local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
 
         for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
-            s3cmd --cf-invalidate -F put $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/$bin s3://mender/mender-artifact/${mender_artifact_version}/
-            s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/$bin --acl-public
+            platform=${bin#mender-artifact-}
+            platform=${platform%.*}
+            s3cmd --cf-invalidate -F put $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/${bin} s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact
+            s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact --acl-public
         done
 
         cd $WORKSPACE/$board_name/
