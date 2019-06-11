@@ -428,7 +428,9 @@ export GOPATH="$WORKSPACE/go"
 (
     cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact
     make install
-    make build-natives-contained
+    if grep -q build-natives-contained Makefile; then
+        make build-natives-contained
+    fi
 )
 # Build fake client
 (
@@ -863,12 +865,19 @@ publish_artifacts() {
         local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
         local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
 
-        for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
-            platform=${bin#mender-artifact-}
-            platform=${platform%.*}
-            s3cmd --cf-invalidate -F put $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/${bin} s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact
-            s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact --acl-public
-        done
+        if grep -q build-natives-contained $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/Makefile; then
+            # New style platform-indexed mender-artifact upload.
+            for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
+                platform=${bin#mender-artifact-}
+                platform=${platform%.*}
+                s3cmd --cf-invalidate -F put $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/${bin} s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact
+                s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact --acl-public
+            done
+        else
+            # Old style Linux-only mender-artifact upload.
+            s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/mender-artifact s3://mender/mender-artifact/${mender_artifact_version}/
+            s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact --acl-public
+        fi
 
         cd $WORKSPACE/$board_name/
         s3cmd -F put $image_name-$device_type.ext4 s3://mender/temp_${client_version}/$image_name-$device_type.ext4
