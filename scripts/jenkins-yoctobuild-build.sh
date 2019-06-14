@@ -475,7 +475,11 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
         case "$build" in
             deployments|deviceadm|deviceauth|inventory|tenantadm|useradm)
                 cd go/src/github.com/mendersoftware/$build
-                CGO_ENABLED=0 go build
+                # Versions before 2.0.0 used "go build", later ones
+                # build everything inside multi-stage docker builds.
+                if ! grep "COPY --from=build" Dockerfile; then
+                    CGO_ENABLED=0 go build
+                fi
                 docker build -t mendersoftware/$build:pr .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
