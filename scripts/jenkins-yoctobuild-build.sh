@@ -168,6 +168,19 @@ EOF
     )
 }
 
+s3cmd_put() {
+    local local_path=$1
+    local remote_url=$2
+    shift 2
+    local cmd_options=$@
+    s3cmd $cmd_options put $local_path $remote_url
+}
+
+s3cmd_put_public() {
+    s3cmd_put $@
+    local remote_url=$2
+    s3cmd setacl $remote_url --acl-public
+}
 
 board_support_update() {
     local board=$1
@@ -786,7 +799,9 @@ build_and_test_client() {
 
             local html_report=$(find . -iname report.html  | head -n 1)
             local report_dir=$BUILD_NUMBER
-            s3cmd put $html_report s3://mender-testing-reports/acceptance-$board_name/$report_dir/
+            s3cmd_put \
+                $html_report \
+                s3://mender-testing-reports/acceptance-$board_name/$report_dir/
             local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/acceptance-$board_name/$report_dir/report.html
 
             if [ $qemu_testing_status -ne 0 ]; then
@@ -870,18 +885,24 @@ publish_artifacts() {
             for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
                 platform=${bin#mender-artifact-}
                 platform=${platform%.*}
-                s3cmd --cf-invalidate -F put $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/${bin} s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact
-                s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact --acl-public
+                s3cmd_put_public \
+                    $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/${bin} \
+                    s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact \
+                    --cf-invalidate -F
             done
         else
             # Old style Linux-only mender-artifact upload.
-            s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/mender-artifact s3://mender/mender-artifact/${mender_artifact_version}/
-            s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact --acl-public
+            s3cmd_put_public \
+                $WORKSPACE/go/bin/mender-artifact \
+                s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact \
+                --cf-invalidate -F
         fi
 
         cd $WORKSPACE/$board_name/
-        s3cmd -F put $image_name-$device_type.ext4 s3://mender/temp_${client_version}/$image_name-$device_type.ext4
-        s3cmd setacl s3://mender/temp_${client_version}/$image_name-$device_type.ext4 --acl-public
+        s3cmd_put_public \
+            $image_name-$device_type.ext4 \
+            s3://mender/temp_${client_version}/$image_name-$device_type.ext4 \
+            -F
 
         # Artifact may have more than one device type defined (beaglebone-yocto
         # and beaglebone, for example), and the only way we can find out is to
@@ -909,13 +930,19 @@ publish_artifacts() {
         mender-artifact write rootfs-image $device_types -n release-2_${client_version} $file_flag $image_name-$device_type.ext4 -o ${board_name}_release_2_${client_version}.mender
         if is_hardware_board $board_name; then
             gzip -c $image_name-$device_type.sdimg > mender-${board_name}_${client_version}.sdimg.gz
-            s3cmd --cf-invalidate -F put mender-${board_name}_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
-            s3cmd setacl s3://mender/${client_version}/$board_name/mender-${board_name}_${client_version}.sdimg.gz --acl-public
+            s3cmd_put_public \
+                mender-${board_name}_${client_version}.sdimg.gz \
+                s3://mender/${client_version}/$board_name/mender-${board_name}_${client_version}.sdimg.gz \
+                --cf-invalidate -F
         fi
-        s3cmd --cf-invalidate -F put ${board_name}_release_1_${client_version}.mender s3://mender/${client_version}/$board_name/
-        s3cmd --cf-invalidate -F put ${board_name}_release_2_${client_version}.mender s3://mender/${client_version}/$board_name/
-        s3cmd setacl s3://mender/${client_version}/$board_name/${board_name}_release_1_${client_version}.mender --acl-public
-        s3cmd setacl s3://mender/${client_version}/$board_name/${board_name}_release_2_${client_version}.mender --acl-public
+        s3cmd_put_public \
+            ${board_name}_release_1_${client_version}.mender \
+            s3://mender/${client_version}/$board_name/${board_name}_release_1_${client_version}.mender \
+            --cf-invalidate -F
+        s3cmd_put_public \
+            ${board_name}_release_2_${client_version}.mender \
+            s3://mender/${client_version}/$board_name/${board_name}_release_2_${client_version}.mender \
+            --cf-invalidate -F
     )
 }
 
@@ -923,8 +950,9 @@ upload_output() {
     (
         cd $WORKSPACE
         tar acvf output.tar.xz  --ignore-failed-read *-deploy
-        s3cmd put output.tar.xz s3://mender/temp/yoctobuilds/$BUILD_TAG/
-        s3cmd setacl s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz --acl-public
+        s3cmd_put_public \
+            output.tar.xz \
+            s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz
         echo "Download build output from: https://s3.amazonaws.com/mender/temp/yoctobuilds/${BUILD_TAG}/output.tar.xz"
     )
 }
@@ -970,7 +998,9 @@ run_integration_tests() {
         local html_report=$(find . -iname report.html  | head -n 1)
         local report_dir=$BUILD_NUMBER
 
-        s3cmd put $html_report s3://mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/
+        s3cmd_put \
+            $html_report \
+            s3://mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/
         local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/report.html
 
         if [ $testing_status -ne 0 ]; then
@@ -1107,8 +1137,10 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
                     :
                     ;;
                 mender-cli)
-                    s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/$image s3://mender/$image/$version/
-                    s3cmd setacl s3://mender/$image/$version/$image --acl-public
+                    s3cmd_put_public \
+                        $WORKSPACE/go/bin/$image \
+                        s3://mender/$image/$version/$image \
+                        --cf-invalidate -F
                     ;;
                 mender-artifact|mender)
                     # Handled in publish_artifacts().
