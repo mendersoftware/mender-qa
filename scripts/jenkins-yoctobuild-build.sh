@@ -2,19 +2,24 @@
 
 set -e -x -E
 
-$WORKSPACE/mender-qa/scripts/wait-until-build-host-ready.sh
+if [ -n "$JENKINS_URL" ]; then
+    $WORKSPACE/mender-qa/scripts/wait-until-build-host-ready.sh
+fi
 
 echo $WORKSPACE
 
-sudo apt-get -qy --force-yes install docker-ce || apt-get -qy --force-yes install docker-ce
-# make sure Docker uses the block storage to store docker containers.
-sudo bash -c 'cat << EOF > /etc/docker/daemon.json
+# Jenkins builds will install docker here. Gitlab runners have it already in the image
+if [ -n "$JENKINS_URL" ]; then
+    sudo apt-get -qy --force-yes install docker-ce || apt-get -qy --force-yes install docker-ce
+    # make sure Docker uses the block storage to store docker containers.
+    sudo bash -c 'cat << EOF > /etc/docker/daemon.json
 {
 "data-root": "/var/lib/docker/",
 "storage-driver": "overlay2"
 }
 EOF'
-sudo service docker restart
+    sudo service docker restart
+fi
 
 SSH_TUNNEL_IP=188.166.29.46
 RASPBERRYPI3_PORT=2210
@@ -411,11 +416,14 @@ docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 # if we abort a build, docker might still be up and running
 docker ps -q -a | xargs -r docker stop || true
 docker ps -q -a | xargs -r docker rm -f || true
-sudo chmod 777 /var/run/docker.sock
-
 docker system prune -f -a
-sudo systemctl restart docker
 sudo killall -s9 mender-stress-test-client || true
+
+# For Jenkins builds, manipulate also the socket permissions.
+if [ -n "$JENKINS_URL" ]; then
+    sudo chmod 777 /var/run/docker.sock
+    sudo systemctl restart docker
+fi
 
 # For some reason Jenkins is not able to do this properly itself after having
 # used a submodule.
