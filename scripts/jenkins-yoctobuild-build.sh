@@ -111,7 +111,18 @@ github_pull_request_status() {
         set +x
 
         TEST_TRACKER[$4]=$1
-        local request_body=$(cat <<EOF
+        if [ -z "$JENKINS_URL" ]; then
+            local request_body=$(cat <<EOF
+    {
+      "state": "$1",
+      "description": "$2",
+      "target_url": "$CI_JOB_URL",
+      "context": "GitLab_$4"
+    }
+EOF
+            )
+        else
+            local request_body=$(cat <<EOF
     {
       "state": "$1",
       "description": "$2",
@@ -119,7 +130,8 @@ github_pull_request_status() {
       "context": "$4"
     }
 EOF
-        )
+            )
+        fi
 
         # Split on newlines
         local IFS='
@@ -169,6 +181,7 @@ EOF
 }
 
 s3cmd_put() {
+    if [ -z "$JENKINS_URL" ]; then return; fi
     local local_path=$1
     local remote_url=$2
     shift 2
@@ -177,6 +190,7 @@ s3cmd_put() {
 }
 
 s3cmd_put_public() {
+    if [ -z "$JENKINS_URL" ]; then return; fi
     s3cmd_put $@
     local remote_url=$2
     s3cmd setacl $remote_url --acl-public
