@@ -353,6 +353,7 @@ build_custom_qemu() {
     # installing from source doesn't exhibit this behaviour
 
     if [ ! -f /var/tmp/qemu-built ]; then
+        rm -rf qemu
         git clone -b qemu-system-reset-race-fix \
             https://github.com/mendersoftware/qemu.git
         cd qemu
