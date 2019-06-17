@@ -810,8 +810,12 @@ build_and_test_client() {
         fi
 
         # Restore earlier backups of clean images.
-        for image in $WORKSPACE/$board_name/*.clean; do
-            cp $image $(sed -e 's/\.clean$//' <<<$image)
+        for clean_image in $WORKSPACE/$board_name/*.clean; do
+            image=$(sed -e 's/\.clean$//' <<<$clean_image)
+            cp $clean_image $image
+            # Restore Yocto BUILDDIR images as well, since the integration tests
+            # make references to it.
+            cp $clean_image $BUILDDIR/tmp/deploy/images/$machine_name/$(basename $image)
         done
 
         if [ "$UPLOAD_OUTPUT" = "true" ]
