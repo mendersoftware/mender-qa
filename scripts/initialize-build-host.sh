@@ -113,6 +113,14 @@ else
     SUBSHELL=sh
 fi
 
+if [ "$STOP_SLAVE" = "true" ]; then
+    touch $HOME/stop_slave
+else
+    if [ -f $HOME/stop_slave ]; then
+        rm $HOME/stop_slave
+    fi
+fi
+
 # In the "user-data" script, i.e. the one that runs on VM boot by
 # cloud-init process, there are a bunch of commands running even *after*
 # the 222 port has been opened. Wait for it to complete.
