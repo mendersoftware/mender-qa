@@ -147,36 +147,47 @@ EOF
                 # Not a pull request, skip.
                 continue
             fi
-            case "$key" in
-                META_MENDER_REV)
-                    local repo=meta-mender
-                    local location=$WORKSPACE/meta-mender
-                    ;;
-                *_REV)
-                    local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
-                    if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
-                        # If the release tool doesn't recognize the repository, don't use it.
-                        continue
-                    fi
-                    local location=
-                    if [ -d "$WORKSPACE/$repo" ]; then
-                        location="$WORKSPACE/$repo"
-                    elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
-                        location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
-                    else
-                        echo "github_pull_request_status: Unable to find repository location: $repo"
-                        return 1
-                    fi
-                    ;;
-                *)
-                    # Not a revision, go to next entry.
-                    continue
-                    ;;
-            esac
-            local git_commit=$(cd "$location" && git rev-parse HEAD)
-            local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
+            if echo $key | egrep -q "^DOCKER_ENV_"; then
+                # Skip GitLab/Docker duplicated environment vars, i.e. MENDER_REV has a DOCKER_ENV_MENDER_REV
+                continue
+            fi
 
             set -x
+            if [ -n "$(eval echo \$${key}_GIT_SHA)" ]; then
+                # GitLab script defines env variables with _GIT_SHA suffix for the PR commit under test
+                local git_commit="$(eval echo \$${key}_GIT_SHA)"
+            else
+                # Fallback to classic method of relying on locally cloned repos
+                case "$key" in
+                    META_MENDER_REV)
+                        local repo=meta-mender
+                        local location=$WORKSPACE/meta-mender
+                        ;;
+                    *_REV)
+                        local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
+                        if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
+                            # If the release tool doesn't recognize the repository, don't use it.
+                            continue
+                        fi
+                        local location=
+                        if [ -d "$WORKSPACE/$repo" ]; then
+                            location="$WORKSPACE/$repo"
+                        elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
+                            location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
+                        else
+                            echo "github_pull_request_status: Unable to find repository location: $repo"
+                            return 1
+                        fi
+                        ;;
+                    *)
+                        # Not a revision, go to next entry.
+                        continue
+                        ;;
+                esac
+                local git_commit=$(cd "$location" && git rev-parse HEAD)
+            fi
+            local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
+
             curl -iv --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
                  -d "$request_body" \
                  "$pr_status_endpoint"
