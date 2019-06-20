@@ -29,14 +29,6 @@ export PATH=$PATH:$WORKSPACE/go/bin
 
 declare -A TEST_TRACKER
 
-if [[ $STOP_SLAVE = "true" ]]; then
-	touch $HOME/stop_slave
-else
-	if [[ -f $HOME/stop_slave ]]; then
-        rm $HOME/stop_slave
-    fi
-fi
-
 # patch Fabric
 wget https://github.com/fabric/fabric/commit/b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
 sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
