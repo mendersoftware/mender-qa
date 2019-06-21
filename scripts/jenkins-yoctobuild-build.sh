@@ -2,19 +2,24 @@
 
 set -e -x -E
 
-$WORKSPACE/mender-qa/scripts/wait-until-build-host-ready.sh
+if [ -n "$JENKINS_URL" ]; then
+    $WORKSPACE/mender-qa/scripts/wait-until-build-host-ready.sh
+fi
 
 echo $WORKSPACE
 
-sudo apt-get -qy --force-yes install docker-ce || apt-get -qy --force-yes install docker-ce
-# make sure Docker uses the block storage to store docker containers.
-sudo bash -c 'cat << EOF > /etc/docker/daemon.json
+# Jenkins builds will install docker here. Gitlab runners have it already in the image
+if [ -n "$JENKINS_URL" ]; then
+    sudo apt-get -qy --force-yes install docker-ce || apt-get -qy --force-yes install docker-ce
+    # make sure Docker uses the block storage to store docker containers.
+    sudo bash -c 'cat << EOF > /etc/docker/daemon.json
 {
 "data-root": "/var/lib/docker/",
 "storage-driver": "overlay2"
 }
 EOF'
-sudo service docker restart
+    sudo service docker restart
+fi
 
 SSH_TUNNEL_IP=188.166.29.46
 RASPBERRYPI3_PORT=2210
@@ -103,7 +108,18 @@ github_pull_request_status() {
         set +x
 
         TEST_TRACKER[$4]=$1
-        local request_body=$(cat <<EOF
+        if [ -z "$JENKINS_URL" ]; then
+            local request_body=$(cat <<EOF
+    {
+      "state": "$1",
+      "description": "$2",
+      "target_url": "$CI_JOB_URL",
+      "context": "GitLab_$4"
+    }
+EOF
+            )
+        else
+            local request_body=$(cat <<EOF
     {
       "state": "$1",
       "description": "$2",
@@ -111,7 +127,8 @@ github_pull_request_status() {
       "context": "$4"
     }
 EOF
-        )
+            )
+        fi
 
         # Split on newlines
         local IFS='
@@ -122,36 +139,47 @@ EOF
                 # Not a pull request, skip.
                 continue
             fi
-            case "$key" in
-                META_MENDER_REV)
-                    local repo=meta-mender
-                    local location=$WORKSPACE/meta-mender
-                    ;;
-                *_REV)
-                    local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
-                    if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
-                        # If the release tool doesn't recognize the repository, don't use it.
-                        continue
-                    fi
-                    local location=
-                    if [ -d "$WORKSPACE/$repo" ]; then
-                        location="$WORKSPACE/$repo"
-                    elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
-                        location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
-                    else
-                        echo "github_pull_request_status: Unable to find repository location: $repo"
-                        return 1
-                    fi
-                    ;;
-                *)
-                    # Not a revision, go to next entry.
-                    continue
-                    ;;
-            esac
-            local git_commit=$(cd "$location" && git rev-parse HEAD)
-            local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
+            if echo $key | egrep -q "^DOCKER_ENV_"; then
+                # Skip GitLab/Docker duplicated environment vars, i.e. MENDER_REV has a DOCKER_ENV_MENDER_REV
+                continue
+            fi
 
             set -x
+            if [ -n "$(eval echo \$${key}_GIT_SHA)" ]; then
+                # GitLab script defines env variables with _GIT_SHA suffix for the PR commit under test
+                local git_commit="$(eval echo \$${key}_GIT_SHA)"
+            else
+                # Fallback to classic method of relying on locally cloned repos
+                case "$key" in
+                    META_MENDER_REV)
+                        local repo=meta-mender
+                        local location=$WORKSPACE/meta-mender
+                        ;;
+                    *_REV)
+                        local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
+                        if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
+                            # If the release tool doesn't recognize the repository, don't use it.
+                            continue
+                        fi
+                        local location=
+                        if [ -d "$WORKSPACE/$repo" ]; then
+                            location="$WORKSPACE/$repo"
+                        elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
+                            location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
+                        else
+                            echo "github_pull_request_status: Unable to find repository location: $repo"
+                            return 1
+                        fi
+                        ;;
+                    *)
+                        # Not a revision, go to next entry.
+                        continue
+                        ;;
+                esac
+                local git_commit=$(cd "$location" && git rev-parse HEAD)
+            fi
+            local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
+
             curl -iv --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
                  -d "$request_body" \
                  "$pr_status_endpoint"
@@ -160,6 +188,21 @@ EOF
     )
 }
 
+s3cmd_put() {
+    if [ -z "$JENKINS_URL" ]; then return; fi
+    local local_path=$1
+    local remote_url=$2
+    shift 2
+    local cmd_options=$@
+    s3cmd $cmd_options put $local_path $remote_url
+}
+
+s3cmd_put_public() {
+    if [ -z "$JENKINS_URL" ]; then return; fi
+    s3cmd_put $@
+    local remote_url=$2
+    s3cmd setacl $remote_url --acl-public
+}
 
 board_support_update() {
     local board=$1
@@ -313,6 +356,7 @@ build_custom_qemu() {
     # installing from source doesn't exhibit this behaviour
 
     if [ ! -f /var/tmp/qemu-built ]; then
+        rm -rf qemu
         git clone -b qemu-system-reset-race-fix \
             https://github.com/mendersoftware/qemu.git
         cd qemu
@@ -376,11 +420,14 @@ docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
 # if we abort a build, docker might still be up and running
 docker ps -q -a | xargs -r docker stop || true
 docker ps -q -a | xargs -r docker rm -f || true
-sudo chmod 777 /var/run/docker.sock
-
 docker system prune -f -a
-sudo systemctl restart docker
 sudo killall -s9 mender-stress-test-client || true
+
+# For Jenkins builds, manipulate also the socket permissions.
+if [ -n "$JENKINS_URL" ]; then
+    sudo chmod 777 /var/run/docker.sock
+    sudo systemctl restart docker
+fi
 
 # For some reason Jenkins is not able to do this properly itself after having
 # used a submodule.
@@ -440,7 +487,11 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
         case "$build" in
             deployments|deviceadm|deviceauth|inventory|tenantadm|useradm)
                 cd go/src/github.com/mendersoftware/$build
-                CGO_ENABLED=0 go build
+                # Versions before 2.0.0 used "go build", later ones
+                # build everything inside multi-stage docker builds.
+                if ! grep "COPY --from=build" Dockerfile; then
+                    CGO_ENABLED=0 go build
+                fi
                 docker build -t mendersoftware/$build:pr .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
@@ -778,7 +829,9 @@ build_and_test_client() {
 
             local html_report=$(find . -iname report.html  | head -n 1)
             local report_dir=$BUILD_NUMBER
-            s3cmd put $html_report s3://mender-testing-reports/acceptance-$board_name/$report_dir/
+            s3cmd_put \
+                $html_report \
+                s3://mender-testing-reports/acceptance-$board_name/$report_dir/
             local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/acceptance-$board_name/$report_dir/report.html
 
             if [ $qemu_testing_status -ne 0 ]; then
@@ -866,18 +919,24 @@ publish_artifacts() {
             for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
                 platform=${bin#mender-artifact-}
                 platform=${platform%.*}
-                s3cmd --cf-invalidate -F put $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/${bin} s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact
-                s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact --acl-public
+                s3cmd_put_public \
+                    $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/${bin} \
+                    s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact \
+                    --cf-invalidate -F
             done
         else
             # Old style Linux-only mender-artifact upload.
-            s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/mender-artifact s3://mender/mender-artifact/${mender_artifact_version}/
-            s3cmd setacl s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact --acl-public
+            s3cmd_put_public \
+                $WORKSPACE/go/bin/mender-artifact \
+                s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact \
+                --cf-invalidate -F
         fi
 
         cd $WORKSPACE/$board_name/
-        s3cmd -F put $image_name-$device_type.ext4 s3://mender/temp_${client_version}/$image_name-$device_type.ext4
-        s3cmd setacl s3://mender/temp_${client_version}/$image_name-$device_type.ext4 --acl-public
+        s3cmd_put_public \
+            $image_name-$device_type.ext4 \
+            s3://mender/temp_${client_version}/$image_name-$device_type.ext4 \
+            -F
 
         # Artifact may have more than one device type defined (beaglebone-yocto
         # and beaglebone, for example), and the only way we can find out is to
@@ -905,13 +964,19 @@ publish_artifacts() {
         mender-artifact write rootfs-image $device_types -n release-2_${client_version} $file_flag $image_name-$device_type.ext4 -o ${board_name}_release_2_${client_version}.mender
         if is_hardware_board $board_name; then
             gzip -c $image_name-$device_type.sdimg > mender-${board_name}_${client_version}.sdimg.gz
-            s3cmd --cf-invalidate -F put mender-${board_name}_${client_version}.sdimg.gz s3://mender/${client_version}/$board_name/
-            s3cmd setacl s3://mender/${client_version}/$board_name/mender-${board_name}_${client_version}.sdimg.gz --acl-public
+            s3cmd_put_public \
+                mender-${board_name}_${client_version}.sdimg.gz \
+                s3://mender/${client_version}/$board_name/mender-${board_name}_${client_version}.sdimg.gz \
+                --cf-invalidate -F
         fi
-        s3cmd --cf-invalidate -F put ${board_name}_release_1_${client_version}.mender s3://mender/${client_version}/$board_name/
-        s3cmd --cf-invalidate -F put ${board_name}_release_2_${client_version}.mender s3://mender/${client_version}/$board_name/
-        s3cmd setacl s3://mender/${client_version}/$board_name/${board_name}_release_1_${client_version}.mender --acl-public
-        s3cmd setacl s3://mender/${client_version}/$board_name/${board_name}_release_2_${client_version}.mender --acl-public
+        s3cmd_put_public \
+            ${board_name}_release_1_${client_version}.mender \
+            s3://mender/${client_version}/$board_name/${board_name}_release_1_${client_version}.mender \
+            --cf-invalidate -F
+        s3cmd_put_public \
+            ${board_name}_release_2_${client_version}.mender \
+            s3://mender/${client_version}/$board_name/${board_name}_release_2_${client_version}.mender \
+            --cf-invalidate -F
     )
 }
 
@@ -919,8 +984,9 @@ upload_output() {
     (
         cd $WORKSPACE
         tar acvf output.tar.xz  --ignore-failed-read *-deploy
-        s3cmd put output.tar.xz s3://mender/temp/yoctobuilds/$BUILD_TAG/
-        s3cmd setacl s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz --acl-public
+        s3cmd_put_public \
+            output.tar.xz \
+            s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz
         echo "Download build output from: https://s3.amazonaws.com/mender/temp/yoctobuilds/${BUILD_TAG}/output.tar.xz"
     )
 }
@@ -966,7 +1032,9 @@ run_integration_tests() {
         local html_report=$(find . -iname report.html  | head -n 1)
         local report_dir=$BUILD_NUMBER
 
-        s3cmd put $html_report s3://mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/
+        s3cmd_put \
+            $html_report \
+            s3://mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/
         local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/report.html
 
         if [ $testing_status -ne 0 ]; then
@@ -1103,8 +1171,10 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
                     :
                     ;;
                 mender-cli)
-                    s3cmd --cf-invalidate -F put $WORKSPACE/go/bin/$image s3://mender/$image/$version/
-                    s3cmd setacl s3://mender/$image/$version/$image --acl-public
+                    s3cmd_put_public \
+                        $WORKSPACE/go/bin/$image \
+                        s3://mender/$image/$version/$image \
+                        --cf-invalidate -F
                     ;;
                 mender-artifact|mender)
                     # Handled in publish_artifacts().
