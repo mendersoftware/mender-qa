@@ -42,10 +42,10 @@ get_raspbian() {
 }
 
 get_pytest_files() {
-    wget -nc -q https://raw.githubusercontent.com/mendersoftware/meta-mender/master/tests/acceptance/pytest.ini -P $WORKSPACE/mender-image-tests
-    wget -nc -q https://raw.githubusercontent.com/mendersoftware/meta-mender/master/tests/acceptance/common.py -P $WORKSPACE/mender-image-tests
-    wget -nc -q https://raw.githubusercontent.com/mendersoftware/meta-mender/master/tests/acceptance/conftest.py -P $WORKSPACE/mender-image-tests
-    wget -nc -q https://raw.githubusercontent.com/mendersoftware/meta-mender/master/tests/acceptance/fixtures.py -P $WORKSPACE/mender-image-tests
+    wget -nc -q https://raw.githubusercontent.com/kacf/meta-mender/MEN-2597/tests/acceptance/pytest.ini -P $WORKSPACE/mender-image-tests
+    wget -nc -q https://raw.githubusercontent.com/kacf/meta-mender/MEN-2597/tests/acceptance/common.py -P $WORKSPACE/mender-image-tests
+    wget -nc -q https://raw.githubusercontent.com/kacf/meta-mender/MEN-2597/tests/acceptance/conftest.py -P $WORKSPACE/mender-image-tests
+    wget -nc -q https://raw.githubusercontent.com/kacf/meta-mender/MEN-2597/tests/acceptance/fixtures.py -P $WORKSPACE/mender-image-tests
 }
 
 build_mender_client_deps() {
