@@ -68,7 +68,7 @@ pip3 install pyyaml --upgrade
 
 # sysstat monitoring suite
 # collect cpu, load avg, memory and io usage every 2 secs forever
-# use 'sadf' from sysstat to render the result file (~/sysstat.log) manually
+# use sar from sysstat to render the result file (~/sysstat.log) manually
 apt_get -qy --force-yes install sysstat
 sudo sed -i 's/false/true/g' /etc/default/sysstat
 sudo service sysstat start 
