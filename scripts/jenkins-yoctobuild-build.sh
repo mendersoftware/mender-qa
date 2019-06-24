@@ -752,6 +752,14 @@ build_and_test_client() {
         local bitbake_result=0
         bitbake $image_name || bitbake_result=$?
 
+        # Check if there is a R/O rootfs recipe available.
+        if [[ $bitbake_result -eq 0 ]] \
+               && [[ $image_name == core-image-full-cmdline ]] \
+               && [[ -f $WORKSPACE/meta-mender/meta-mender-demo/recipes-extended/images/mender-image-full-cmdline-rofs.bb ]]; then
+
+            bitbake mender-image-full-cmdline-rofs || bitbake_result=$?
+        fi
+
         if [[ $bitbake_result -eq 0 ]]; then
             github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build completed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
         else
@@ -882,6 +890,13 @@ build_and_test_client() {
                 # New style.
                 cd docker
                 ./build-docker $machine_name -t mendersoftware/mender-client-qemu:pr
+
+                # Check if there is a R/O rootfs recipe available.
+                if [[ -f $WORKSPACE/meta-mender/meta-mender-demo/recipes-extended/images/mender-image-full-cmdline-rofs.bb ]]; then
+                    ./build-docker -i mender-image-full-cmdline-rofs $machine_name -t mendersoftware/mender-client-qemu-rofs:pr
+                    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu-rofs --version pr
+                fi
+
             elif is_building_board vexpress-qemu; then
                 # Old style.
                 cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
@@ -1194,9 +1209,14 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
         board_to_publish=qemux86-64-uefi-grub
     fi
     if is_building_board $board_to_publish; then
-        container=mender-client-qemu
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container --in-integration-version HEAD)
-        docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
-        docker push mendersoftware/$container:${version}
+        for container in mender-client-qemu mender-client-qemu-rofs; do
+            if ! docker inspect mendersoftware/$container:pr >/dev/null; then
+                continue
+            fi
+
+            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container --in-integration-version HEAD)
+            docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
+            docker push mendersoftware/$container:${version}
+        done
     fi
 fi
