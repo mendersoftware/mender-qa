@@ -145,6 +145,7 @@ EOF
             fi
 
             set -x
+            local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
             if [ -n "$(eval echo \$${key}_GIT_SHA)" ]; then
                 # GitLab script defines env variables with _GIT_SHA suffix for the PR commit under test
                 local git_commit="$(eval echo \$${key}_GIT_SHA)"
@@ -152,11 +153,9 @@ EOF
                 # Fallback to classic method of relying on locally cloned repos
                 case "$key" in
                     META_MENDER_REV)
-                        local repo=meta-mender
                         local location=$WORKSPACE/meta-mender
                         ;;
                     *_REV)
-                        local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
                         if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
                             # If the release tool doesn't recognize the repository, don't use it.
                             continue

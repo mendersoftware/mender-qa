@@ -69,66 +69,66 @@ init_workspace:
     - cd ${WORKSPACE}
     - git init . && git remote add origin https://github.com/mendersoftware/poky || true
     - git fetch && git checkout -f origin/${POKY_REV}
-    - echo POKY_REV_GIT_SHA=$(git rev-parse HEAD) > ${CI_PROJECT_DIR}/build_revisions.env
+    - echo -e "POKY_REV=$POKY_REV\nPOKY_REV_GIT_SHA=$(git rev-parse HEAD)" > ${CI_PROJECT_DIR}/build_revisions.env
     - git clone https://github.com/mendersoftware/meta-mender || true
     - (cd meta-mender && git fetch -u -f origin ${META_MENDER_REV}:pr && git checkout pr)
-    - (cd meta-mender && echo META_MENDER_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd meta-mender && echo -e "META_MENDER_REV=$META_MENDER_REV\nMETA_MENDER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/mender go/src/github.com/mendersoftware/mender || true
     - (cd go/src/github.com/mendersoftware/mender && git fetch -u -f origin ${MENDER_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/mender && echo MENDER_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/mender && echo -e "MENDER_REV=$MENDER_REV\nMENDER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/integration || true
     - (cd integration && git fetch -u -f origin ${INTEGRATION_REV}:pr && git checkout pr)
-    - (cd integration && echo INTEGRATION_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd integration && echo -e "INTEGRATION_REV=$INTEGRATION_REV\nINTEGRATION_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/deployments go/src/github.com/mendersoftware/deployments || true
     - (cd go/src/github.com/mendersoftware/deployments && git fetch -u -f origin ${DEPLOYMENTS_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/deployments && echo DEPLOYMENTS_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/deployments && echo -e "DEPLOYMENTS_REV=$DEPLOYMENTS_REV\nDEPLOYMENTS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/deviceadm go/src/github.com/mendersoftware/deviceadm || true
     - (cd go/src/github.com/mendersoftware/deviceadm && git fetch -u -f origin ${DEVICEADM_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/deviceadm && echo DEVICEADM_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/deviceadm && echo -e "DEVICEADM_REV=$DEVICEADM_REV\nDEVICEADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/deviceauth go/src/github.com/mendersoftware/deviceauth || true
     - (cd go/src/github.com/mendersoftware/deviceauth && git fetch -u -f origin ${DEVICEAUTH_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/deviceauth && echo DEVICEAUTH_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/deviceauth && echo -e "DEVICEAUTH_REV=$DEVICEAUTH_REV\nDEVICEAUTH_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/gui || true
     - (cd gui && git fetch -u -f origin ${GUI_REV}:pr && git checkout pr)
-    - (cd gui && echo GUI_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd gui && echo -e "GUI_REV=$GUI_REV\nGUI_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/inventory go/src/github.com/mendersoftware/inventory || true
     - (cd go/src/github.com/mendersoftware/inventory && git fetch -u -f origin ${INVENTORY_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/inventory && echo INVENTORY_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/inventory && echo -e "INVENTORY_REV=$INVENTORY_REV\nINVENTORY_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/useradm go/src/github.com/mendersoftware/useradm || true
     - (cd go/src/github.com/mendersoftware/useradm && git fetch -u -f origin ${USERADM_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/useradm && echo USERADM_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/useradm && echo -e "USERADM_REV=$USERADM_REV\nUSERADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/mender-api-gateway-docker || true
     - (cd mender-api-gateway-docker && git fetch -u -f origin ${MENDER_API_GATEWAY_DOCKER_REV}:pr && git checkout pr)
-    - (cd mender-api-gateway-docker && echo MENDER_API_GATEWAY_DOCKER_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd mender-api-gateway-docker && echo -e "MENDER_API_GATEWAY_DOCKER_REV=$MENDER_API_GATEWAY_DOCKER_REV\nMENDER_API_GATEWAY_DOCKER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/mender-stress-test-client go/src/github.com/mendersoftware/mender-stress-test-client || true
     - (cd go/src/github.com/mendersoftware/mender-stress-test-client && git fetch -u -f origin ${MENDER_STRESS_TEST_CLIENT_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/mender-stress-test-client && echo MENDER_STRESS_TEST_CLIENT_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/mender-stress-test-client && echo -e "MENDER_STRESS_TEST_CLIENT_REV=$MENDER_STRESS_TEST_CLIENT_REV\nMENDER_STRESS_TEST_CLIENT_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/mender-artifact go/src/github.com/mendersoftware/mender-artifact || true
     - (cd go/src/github.com/mendersoftware/mender-artifact && git fetch -u -f origin ${MENDER_ARTIFACT_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/mender-artifact && echo MENDER_ARTIFACT_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/mender-artifact && echo -e "MENDER_ARTIFACT_REV=$MENDER_ARTIFACT_REV\nMENDER_ARTIFACT_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone git@github.com:mendersoftware/tenantadm go/src/github.com/mendersoftware/tenantadm || true
     - (cd go/src/github.com/mendersoftware/tenantadm && git fetch -u -f origin ${TENANTADM_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/tenantadm && echo TENANTADM_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/tenantadm && echo -e "TENANTADM_REV=$TENANTADM_REV\nTENANTADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mem/oe-meta-go.git || true
     - (cd oe-meta-go && git checkout -f master)
     - git clone git://git.openembedded.org/meta-openembedded.git || true
     - (cd meta-openembedded && git fetch -u -f origin ${META_OPENEMBEDDED_REV}:pr && git checkout pr)
-    - (cd meta-openembedded && echo META_OPENEMBEDDED_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd meta-openembedded && echo -e "META_OPENEMBEDDED_REV=$META_OPENEMBEDDED_REV\nMETA_OPENEMBEDDED_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone git://github.com/agherzan/meta-raspberrypi.git || true
     - (cd meta-raspberrypi && git fetch -u -f origin ${META_RASPBERRYPI_REV}:pr && git checkout pr)
-    - (cd meta-raspberrypi && echo META_RASPBERRYPI_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd meta-raspberrypi && echo -e "META_RASPBERRYPI_REV=$META_RASPBERRYPI_REV\nMETA_RASPBERRYPI_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone git://github.com/mendersoftware/mender-conductor.git go/src/github.com/mendersoftware/mender-conductor || true
     - (cd go/src/github.com/mendersoftware/mender-conductor && git fetch -u -f origin ${MENDER_CONDUCTOR_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/mender-conductor && echo MENDER_CONDUCTOR_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/mender-conductor && echo -e "MENDER_CONDUCTOR_REV=$MENDER_CONDUCTOR_REV\nMENDER_CONDUCTOR_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone git@github.com:mendersoftware/mender-conductor-enterprise.git go/src/github.com/mendersoftware/mender-conductor-enterprise || true
     - (cd go/src/github.com/mendersoftware/mender-conductor-enterprise && git fetch -u -f origin ${MENDER_CONDUCTOR_ENTERPRISE_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/mender-conductor-enterprise && echo MENDER_CONDUCTOR_ENTERPRISE_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/mender-conductor-enterprise && echo -e "MENDER_CONDUCTOR_ENTERPRISE_REV=$MENDER_CONDUCTOR_ENTERPRISE_REV\nMENDER_CONDUCTOR_ENTERPRISE_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/mender-cli.git go/src/github.com/mendersoftware/mender-cli || true
     - (cd go/src/github.com/mendersoftware/mender-cli && git fetch -u -f origin ${MENDER_CLI_REV}:pr && git checkout pr)
-    - (cd go/src/github.com/mendersoftware/mender-cli && echo MENDER_CLI_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/mender-cli && echo -e "MENDER_CLI_REV=$MENDER_CLI_REV\nMENDER_CLI_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/mender-image-tests || true
     - (cd mender-image-tests && git fetch -u -f origin ${MENDER_IMAGE_TESTS_REV}:pr && git checkout pr)
-    - (cd mender-image-tests && echo MENDER_IMAGE_TESTS_REV_GIT_SHA=$(git rev-parse HEAD) >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd mender-image-tests && echo -e "MENDER_IMAGE_TESTS_REV=$MENDER_IMAGE_TESTS_REV\nMENDER_IMAGE_TESTS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - cat ${CI_PROJECT_DIR}/build_revisions.env
     - tar -czf /tmp/workspace.tar.gz .
     - mv /tmp/workspace.tar.gz ${CI_PROJECT_DIR}/workspace.tar.gz
