@@ -134,6 +134,7 @@ EOF
         local IFS='
 '
         for decl in $(env); do
+            set +x
             local key=${decl%%=*}
             if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
                 # Not a pull request, skip.
@@ -182,7 +183,6 @@ EOF
             curl -iv --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
                  -d "$request_body" \
                  "$pr_status_endpoint"
-            set +x
         done
     )
 }
