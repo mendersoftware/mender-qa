@@ -151,6 +151,8 @@ init_workspace:
     - test -n "$ONLY_BUILD" && export TEST_QEMUX86_64_UEFI_GRUB=false
     - test -n "$ONLY_BUILD" && export TEST_VEXPRESS_QEMU=false
     - export RUN_INTEGRATION_TESTS=false
+    # Always force building the client, default to BUILD_QEMUX86_64_UEFI_GRUB
+    - test "$BUILD_QEMUX86_64_UEFI_GRUB" != "true" -a "$BUILD_VEXPRESS_QEMU" != true && export BUILD_QEMUX86_64_UEFI_GRUB=true
     # Prepare tzdata unatended configuration
     - ln -fs /usr/share/zoneinfo/Europe/Oslo /etc/localtime
     # basic tools
@@ -231,6 +233,7 @@ build_qemux86_64_uefi_grub:
   only:
     variables:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
+      - $BUILD_VEXPRESS_QEMU == ""
   after_script:
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_qemux86_64_uefi_grub.tar
     - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_qemux86_64_uefi_grub.tar
@@ -570,6 +573,7 @@ test_integration_qemux86_64_uefi_grub:
       - $RUN_INTEGRATION_TESTS == "true"
     variables:
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
+      - $TEST_VEXPRESS_QEMU == ""
 
 test_integration_vexpress_qemu:
   stage: test
