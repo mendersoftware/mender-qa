@@ -233,11 +233,13 @@ build_qemux86_64_uefi_grub:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
   after_script:
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_qemux86_64_uefi_grub.tar
+    - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_qemux86_64_uefi_grub.tar
     - cp ${CI_PROJECT_DIR}/../build-qemux86-64-uefi-grub/tmp/deploy/images/qemux86-64/core-image-full-cmdline-qemux86-64.ext4 .
   artifacts:
     expire_in: 2w
     paths:
       - mender-client-qemu_qemux86_64_uefi_grub.tar
+      - mender-client-qemu-rofs_qemux86_64_uefi_grub.tar
       - core-image-full-cmdline-qemux86-64.ext4
 
 build_vexpress_qemu:
@@ -253,11 +255,13 @@ build_vexpress_qemu:
       - $BUILD_VEXPRESS_QEMU == "true"
   after_script:
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_vexpress_qemu.tar
+    - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_vexpress_qemu.tar
     - cp ${CI_PROJECT_DIR}/../build-vexpress-qemu/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 .
   artifacts:
     expire_in: 2w
     paths:
       - mender-client-qemu_vexpress_qemu.tar
+      - mender-client-qemu-rofs_vexpress_qemu.tar
       - core-image-full-cmdline-vexpress-qemu.ext4
 
 build_servers:
@@ -524,6 +528,8 @@ test_raspberrypi3:
     - docker load -i mender-client-docker.tar
     - docker load -i mender-client-qemu_qemux86_64_uefi_grub.tar ||
       docker load -i mender-client-qemu_vexpress_qemu.tar
+    - docker load -i mender-client-qemu-rofs_qemux86_64_uefi_grub.tar ||
+      docker load -i mender-client-qemu-rofs_vexpress_qemu.tar
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
     # Set testing versions to PR
