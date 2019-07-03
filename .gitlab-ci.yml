@@ -151,6 +151,8 @@ init_workspace:
     - test -n "$ONLY_BUILD" && export TEST_QEMUX86_64_UEFI_GRUB=false
     - test -n "$ONLY_BUILD" && export TEST_VEXPRESS_QEMU=false
     - export RUN_INTEGRATION_TESTS=false
+    # Always force building the client, default to BUILD_QEMUX86_64_UEFI_GRUB
+    - test "$BUILD_QEMUX86_64_UEFI_GRUB" != "true" -a "$BUILD_VEXPRESS_QEMU" != true && export BUILD_QEMUX86_64_UEFI_GRUB=true
     # Prepare tzdata unatended configuration
     - ln -fs /usr/share/zoneinfo/Europe/Oslo /etc/localtime
     # basic tools
@@ -231,16 +233,15 @@ build_qemux86_64_uefi_grub:
   only:
     variables:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
+      - $BUILD_VEXPRESS_QEMU == ""
   after_script:
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_qemux86_64_uefi_grub.tar
     - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_qemux86_64_uefi_grub.tar
-    - cp ${CI_PROJECT_DIR}/../build-qemux86-64-uefi-grub/tmp/deploy/images/qemux86-64/core-image-full-cmdline-qemux86-64.ext4 .
   artifacts:
     expire_in: 2w
     paths:
       - mender-client-qemu_qemux86_64_uefi_grub.tar
       - mender-client-qemu-rofs_qemux86_64_uefi_grub.tar
-      - core-image-full-cmdline-qemux86-64.ext4
 
 build_vexpress_qemu:
   stage: build
@@ -256,13 +257,11 @@ build_vexpress_qemu:
   after_script:
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_vexpress_qemu.tar
     - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_vexpress_qemu.tar
-    - cp ${CI_PROJECT_DIR}/../build-vexpress-qemu/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.ext4 .
   artifacts:
     expire_in: 2w
     paths:
       - mender-client-qemu_vexpress_qemu.tar
       - mender-client-qemu-rofs_vexpress_qemu.tar
-      - core-image-full-cmdline-vexpress-qemu.ext4
 
 build_servers:
   stage: build
@@ -537,8 +536,6 @@ test_raspberrypi3:
       integration/extra/release_tool.py --set-version-of $repo --version pr;
       done
     # Other dependencies
-    - mv core-image-full-cmdline-qemux86-64.ext4 integration/tests ||
-      mv core-image-full-cmdline-vexpress-qemu.ext4 integration/tests
     - tar -xf host-tools.tar ./mender-artifact && mv mender-artifact /usr/local/bin/
     - tar -xf host-tools.tar ./mender-stress-test-client && mv mender-stress-test-client /usr/local/bin/
     - tar -xf host-tools.tar ./directory-artifact-gen && mv directory-artifact-gen /usr/local/bin/
@@ -576,6 +573,7 @@ test_integration_qemux86_64_uefi_grub:
       - $RUN_INTEGRATION_TESTS == "true"
     variables:
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
+      - $TEST_VEXPRESS_QEMU == ""
 
 test_integration_vexpress_qemu:
   stage: test
