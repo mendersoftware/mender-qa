@@ -893,7 +893,10 @@ build_and_test_client() {
                 # Check if there is a R/O rootfs recipe available.
                 if [[ -f $WORKSPACE/meta-mender/meta-mender-demo/recipes-extended/images/mender-image-full-cmdline-rofs.bb ]]; then
                     ./build-docker -i mender-image-full-cmdline-rofs $machine_name -t mendersoftware/mender-client-qemu-rofs:pr
-                    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu-rofs --version pr
+                    # It's ok if the next step fails, it just means we are
+                    # testing a version of integration that neither has a rofs
+                    # image, nor any tests for it.
+                    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu-rofs --version pr || true
                 fi
 
             elif is_building_board vexpress-qemu; then
