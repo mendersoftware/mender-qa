@@ -436,9 +436,6 @@ fi
 # Generic setup.
 # ---------------------------------------------------
 
-# required to enable multi-tenant tests
-cp $WORKSPACE/go/src/github.com/mendersoftware/tenantadm/docker-compose.mt.yml $WORKSPACE/integration/
-
 # Handle sub modules. This is a noop for branches that don't have them. It only
 # looks complicated because in Jenkins we want to build the repository it
 # cloned, not the upstream repository.
@@ -1093,7 +1090,7 @@ run_backend_integration_tests() {
 
         cd $WORKSPACE/integration/backend-tests && \
            PYTEST_ARGS="-k 'not Multitenant'" ./run && \
-           PYTEST_ARGS="-k Multitenant" ./run -f=../docker-compose.tenant.yml -f=../docker-compose.mt.yml -f=../docker-compose.storage.minio.yml || \
+           PYTEST_ARGS="-k Multitenant" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
            testing_status=$?
 
         if [ $testing_status -ne 0 ]; then
