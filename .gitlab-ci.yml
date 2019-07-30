@@ -145,6 +145,9 @@ init_workspace:
   tags:
     - mender-qa-slave
   before_script:
+    # Check correct dind setup
+    - docker version
+    # Export required yoctobuild script variables
     - export WORKSPACE=${CI_PROJECT_DIR}/..
     - export GOPATH="$WORKSPACE/go"
     # This template is used in both build and acc test stages
