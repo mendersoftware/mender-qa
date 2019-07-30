@@ -141,10 +141,13 @@ init_workspace:
 .template_build_test_acc: &build_and_test_acceptance
   image: teracy/ubuntu:16.04-dind-latest
   services:
-  - docker:dind
+  - docker:18-dind
   tags:
     - mender-qa-slave
   before_script:
+    # Check correct dind setup
+    - docker version
+    # Export required yoctobuild script variables
     - export WORKSPACE=${CI_PROJECT_DIR}/..
     - export GOPATH="$WORKSPACE/go"
     # This template is used in both build and acc test stages
@@ -496,7 +499,7 @@ test_raspberrypi3:
     - mender-qa-slave
   before_script:
     - /usr/local/bin/dockerd-entrypoint.sh &
-    - sleep 1
+    - sleep 10
     - docker version
     - apk --update --no-cache add bash curl git openssh device-mapper py-pip
       iptables gcc python2-dev libffi-dev libc-dev openssl-dev make python3
