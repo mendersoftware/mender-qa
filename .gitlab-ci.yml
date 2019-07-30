@@ -499,7 +499,7 @@ test_raspberrypi3:
     - mender-qa-slave
   before_script:
     - /usr/local/bin/dockerd-entrypoint.sh &
-    - sleep 1
+    - sleep 10
     - docker version
     - apk --update --no-cache add bash curl git openssh device-mapper py-pip
       iptables gcc python2-dev libffi-dev libc-dev openssl-dev make python3
