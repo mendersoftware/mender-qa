@@ -494,12 +494,13 @@ test_raspberrypi3:
       - $TEST_RASPBERRYPI3 == "true"
 
 .template_test_integ: &test_integration
-  image: docker:dind
+  image: docker:18-dind
   tags:
     - mender-qa-slave
   before_script:
     - /usr/local/bin/dockerd-entrypoint.sh &
     - sleep 10
+    - export DOCKER_HOST="unix:///var/run/docker.sock"
     - docker version
     - apk --update --no-cache add bash curl git openssh device-mapper py-pip
       iptables gcc python2-dev libffi-dev libc-dev openssl-dev make python3
