@@ -8,11 +8,13 @@ variables:
   MENDER_CONDUCTOR_REV: "master"
   MENDER_CONDUCTOR_ENTERPRISE_REV: "master"
   DEPLOYMENTS_REV: "master"
+  DEPLOYMENTS_ENTERPRISE_REV: "master"
   DEVICEADM_REV: "master"
   DEVICEAUTH_REV: "master"
   GUI_REV: "master"
   INVENTORY_REV: "master"
   USERADM_REV: "master"
+  USERADM_ENTERPRISE_REV: "master"
   MENDER_API_GATEWAY_DOCKER_REV: "master"
   MENDER_CLI_REV: "master"
   INTEGRATION_REV: "master"
@@ -82,6 +84,9 @@ init_workspace:
     - git clone https://github.com/mendersoftware/deployments go/src/github.com/mendersoftware/deployments || true
     - (cd go/src/github.com/mendersoftware/deployments && git fetch -u -f origin ${DEPLOYMENTS_REV}:pr && git checkout pr)
     - (cd go/src/github.com/mendersoftware/deployments && echo -e "DEPLOYMENTS_REV=$DEPLOYMENTS_REV\nDEPLOYMENTS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - git clone git@github.com:mendersoftware/deployments-enterprise go/src/github.com/mendersoftware/deployments-enterprise || true
+    - (cd go/src/github.com/mendersoftware/deployments-enterprise && git fetch -u -f origin ${DEPLOYMENTS_ENTERPRISE_REV}:pr && git checkout pr)
+    - (cd go/src/github.com/mendersoftware/deployments-enterprise && echo -e "DEPLOYMENTS_ENTERPRISE_REV=$DEPLOYMENTS_ENTERPRISE_REV\nDEPLOYMENTS_ENTERPRISE_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/deviceadm go/src/github.com/mendersoftware/deviceadm || true
     - (cd go/src/github.com/mendersoftware/deviceadm && git fetch -u -f origin ${DEVICEADM_REV}:pr && git checkout pr)
     - (cd go/src/github.com/mendersoftware/deviceadm && echo -e "DEVICEADM_REV=$DEVICEADM_REV\nDEVICEADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
@@ -97,6 +102,9 @@ init_workspace:
     - git clone https://github.com/mendersoftware/useradm go/src/github.com/mendersoftware/useradm || true
     - (cd go/src/github.com/mendersoftware/useradm && git fetch -u -f origin ${USERADM_REV}:pr && git checkout pr)
     - (cd go/src/github.com/mendersoftware/useradm && echo -e "USERADM_REV=$USERADM_REV\nUSERADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - git clone git@github.com:mendersoftware/useradm-enterprise go/src/github.com/mendersoftware/useradm-enterprise || true
+    - (cd go/src/github.com/mendersoftware/useradm-enterprise && git fetch -u -f origin ${USERADM_ENTERPRISE_REV}:pr && git checkout pr)
+    - (cd go/src/github.com/mendersoftware/useradm-enterprise && echo -e "USERADM_ENTERPRISE_REV=$USERADM_ENTERPRISE_REV\nUSERADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
     - git clone https://github.com/mendersoftware/mender-api-gateway-docker || true
     - (cd mender-api-gateway-docker && git fetch -u -f origin ${MENDER_API_GATEWAY_DOCKER_REV}:pr && git checkout pr)
     - (cd mender-api-gateway-docker && echo -e "MENDER_API_GATEWAY_DOCKER_REV=$MENDER_API_GATEWAY_DOCKER_REV\nMENDER_API_GATEWAY_DOCKER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
@@ -275,36 +283,30 @@ build_servers:
     JOB_BASE_NAME: mender_servers
     ONLY_BUILD: "true"
   after_script:
-    - docker save mendersoftware/deployments:pr -o deployments.tar
-    - docker save mendersoftware/deviceadm:pr -o deviceadm.tar
-    - docker save mendersoftware/deviceauth:pr -o deviceauth.tar
-    - docker save mendersoftware/gui:pr -o gui.tar
-    - docker save mendersoftware/inventory:pr -o inventory.tar
-    - docker save mendersoftware/api-gateway:pr -o api-gateway.tar
-    - docker save mendersoftware/mender-conductor:pr -o mender-conductor.tar
-    - docker save mendersoftware/mender-conductor-enterprise:pr -o mender-conductor-enterprise.tar
-    - docker save mendersoftware/tenantadm:pr -o tenantadm.tar
-    - docker save mendersoftware/useradm:pr -o useradm.tar
-    - docker save mendersoftware/email-sender:pr -o email-sender.tar
-    - docker save mendersoftware/mender-client-docker:pr -o mender-client-docker.tar
+    - for repo in `${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker -a`; do
+      if ! echo $repo | grep -q mender-client-qemu; then
+      docker save mendersoftware/${repo}:pr -o ${repo}.tar;
+      fi; done
     # Tarball with mender-cli, mender-artifact, mender-stress-test-client and Artifact generation scripts
     - tar -cf host-tools.tar -C ../go/bin/ .
 
   artifacts:
     expire_in: 2w
     paths:
+      - api-gateway.tar
       - deployments.tar
+      - deployments-enterprise.tar
       - deviceadm.tar
       - deviceauth.tar
+      - email-sender.tar
       - gui.tar
       - inventory.tar
-      - api-gateway.tar
+      - mender-client-docker.tar
       - mender-conductor.tar
       - mender-conductor-enterprise.tar
       - tenantadm.tar
       - useradm.tar
-      - email-sender.tar
-      - mender-client-docker.tar
+      - useradm-enterprise.tar
       - host-tools.tar
 
 test_qemux86_64_uefi_grub:
@@ -517,22 +519,13 @@ test_raspberrypi3:
     - pip install pytest-xdist --upgrade
     - pip install pytest-html --upgrade
     # Load all docker images
-    - docker load -i deployments.tar
-    - docker load -i deviceadm.tar
-    - docker load -i deviceauth.tar
-    - docker load -i gui.tar
-    - docker load -i inventory.tar
-    - docker load -i api-gateway.tar
-    - docker load -i mender-conductor.tar
-    - docker load -i mender-conductor-enterprise.tar
-    - docker load -i tenantadm.tar
-    - docker load -i useradm.tar
-    - docker load -i email-sender.tar
-    - docker load -i mender-client-docker.tar
-    - docker load -i mender-client-qemu_qemux86_64_uefi_grub.tar ||
-      docker load -i mender-client-qemu_vexpress_qemu.tar
-    - docker load -i mender-client-qemu-rofs_qemux86_64_uefi_grub.tar ||
-      docker load -i mender-client-qemu-rofs_vexpress_qemu.tar
+    - for repo in `integration/extra/release_tool.py -l docker -a`; do
+      if echo $repo | grep -q mender-client-qemu; then
+      docker load -i ${repo}_qemux86_64_uefi_grub.tar ||
+      docker load -i ${repo}_vexpress_qemu.tar;
+      else
+      docker load -i ${repo}.tar;
+      fi; done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
     # Set testing versions to PR
