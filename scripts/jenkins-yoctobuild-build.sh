@@ -481,7 +481,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                           || echo "deployments deviceadm deviceauth gui inventory mender-api-gateway-docker useradm" ); do (
 
         case "$build" in
-            deployments|deviceadm|deviceauth|inventory|tenantadm|useradm)
+            deployments*|deviceadm|deviceauth|inventory|tenantadm|useradm*)
                 cd go/src/github.com/mendersoftware/$build
                 # Versions before 2.0.0 used "go build", later ones
                 # build everything inside multi-stage docker builds.
@@ -1161,7 +1161,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
             # Upload containers.
             case "$image" in
-                api-gateway|deployments|deviceadm|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor|mender-conductor-enterprise|useradm)
+                api-gateway|deployments*|deviceadm|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor*|useradm*)
                     docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
                     docker push mendersoftware/$image:${version}
                     ;;
@@ -1180,7 +1180,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
             # Upload binaries.
             case "$image" in
-                deployments|deviceadm|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor*|useradm)
+                deployments*|deviceadm|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor*|useradm*)
                     # No binaries.
                     :
                     ;;
