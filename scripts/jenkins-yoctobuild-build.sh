@@ -1088,22 +1088,28 @@ run_backend_integration_tests() {
 
         local testing_status=0
 
-        cd $WORKSPACE/integration/backend-tests && \
-           PYTEST_ARGS="-k 'not Multitenant'" ./run && \
-           PYTEST_ARGS="-k Multitenant" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
-           testing_status=$?
+        if [ -f $WORKSPACE/integration/docker-compose.enterprise.yml ]; then
+            cd $WORKSPACE/integration/backend-tests && \
+                PYTEST_ARGS="-k 'not Multitenant'" ./run && \
+                PYTEST_ARGS="-k Multitenant" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
+                testing_status=$?
+        else
+            cd $WORKSPACE/integration/backend-tests && \
+                PYTEST_ARGS="-k 'not Multitenant'" ./run || \
+                testing_status=$?
+        fi
 
         if [ $testing_status -ne 0 ]; then
             github_pull_request_status \
                 "failure" \
                 "integration:${INTEGRATION_REV}" \
-                "" \
+                "$BUILD_URL" \
                 "backend_integration_${INTEGRATION_REV}"
         else
             github_pull_request_status \
                 "success" \
                 "integration:${INTEGRATION_REV}" \
-                "" \
+                "$BUILD_URL" \
                 "backend_integration_${INTEGRATION_REV}"
         fi
 
