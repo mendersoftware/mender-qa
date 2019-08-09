@@ -1097,13 +1097,13 @@ run_backend_integration_tests() {
             github_pull_request_status \
                 "failure" \
                 "integration:${INTEGRATION_REV}" \
-                "" \
+                "$BUILD_URL" \
                 "backend_integration_${INTEGRATION_REV}"
         else
             github_pull_request_status \
                 "success" \
                 "integration:${INTEGRATION_REV}" \
-                "" \
+                "$BUILD_URL" \
                 "backend_integration_${INTEGRATION_REV}"
         fi
 
