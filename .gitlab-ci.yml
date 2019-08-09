@@ -315,7 +315,7 @@ build_servers:
       - useradm-enterprise.tar
       - host-tools.tar
 
-test_qemux86_64_uefi_grub:
+test_accep_qemux86_64_uefi_grub:
   stage: test
   dependencies:
     - init_workspace
@@ -323,23 +323,23 @@ test_qemux86_64_uefi_grub:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
   after_script:
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_qemux86_64_uefi_grub.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_qemux86_64_uefi_grub.html
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub.xml
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_qemux86_64_uefi_grub.xml
-      - report_qemux86_64_uefi_grub.html
+      - results_accep_qemux86_64_uefi_grub.xml
+      - report_accep_qemux86_64_uefi_grub.html
     reports:
-      junit: results_qemux86_64_uefi_grub.xml
+      junit: results_accep_qemux86_64_uefi_grub.xml
   only:
     # The build for this configuration is done unconditionally in build_qemux86_64_uefi_grub job,
     # so run corresponding test job only if TEST_QEMUX86_64_UEFI_GRUB is set
     variables:
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
 
-test_vexpress_qemu:
+test_accep_vexpress_qemu:
   stage: test
   dependencies:
     - init_workspace
@@ -347,23 +347,23 @@ test_vexpress_qemu:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu
   after_script:
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_vexpress_qemu.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_vexpress_qemu.html
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu.xml
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_vexpress_qemu.xml
-      - report_vexpress_qemu.html
+      - results_accep_vexpress_qemu.xml
+      - report_accep_vexpress_qemu.html
     reports:
-      junit: results_vexpress_qemu.xml
+      junit: results_accep_vexpress_qemu.xml
   only:
     # The build for this configuration is done unconditionally in build_vexpress_qemu job,
     # so run corresponding test job only if TEST_VEXPRESS_QEMU is set
     variables:
       - $TEST_VEXPRESS_QEMU == "true"
 
-test_qemux86_64_bios_grub:
+test_accep_qemux86_64_bios_grub:
   stage: test
   dependencies:
     - init_workspace
@@ -371,22 +371,22 @@ test_qemux86_64_bios_grub:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
   after_script:
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_qemux86_64_bios_grub.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_qemux86_64_bios_grub.html
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub.xml
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_qemux86_64_bios_grub.xml
-      - report_qemux86_64_bios_grub.html
+      - results_accep_qemux86_64_bios_grub.xml
+      - report_accep_qemux86_64_bios_grub.html
     reports:
-      junit: results_qemux86_64_bios_grub.xml
+      junit: results_accep_qemux86_64_bios_grub.xml
   only:
     variables:
       - $BUILD_QEMUX86_64_BIOS_GRUB == "true"
       - $TEST_QEMUX86_64_BIOS_GRUB == "true"
 
-test_qemux86_64_bios_grub_gpt:
+test_accep_qemux86_64_bios_grub_gpt:
   stage: test
   dependencies:
     - init_workspace
@@ -394,22 +394,22 @@ test_qemux86_64_bios_grub_gpt:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
   after_script:
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_qemux86_64_bios_grub_gpt.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_qemux86_64_bios_grub_gpt.html
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub_gpt.xml
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub_gpt.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_qemux86_64_bios_grub_gpt.xml
-      - report_qemux86_64_bios_grub_gpt.html
+      - results_accep_qemux86_64_bios_grub_gpt.xml
+      - report_accep_qemux86_64_bios_grub_gpt.html
     reports:
-      junit: results_qemux86_64_bios_grub_gpt.xml
+      junit: results_accep_qemux86_64_bios_grub_gpt.xml
   only:
     variables:
       - $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
       - $TEST_QEMUX86_64_BIOS_GRUB_GPT == "true"
 
-test_vexpress_qemu_uboot_uefi_grub:
+test_accep_vexpress_qemu_uboot_uefi_grub:
   stage: test
   dependencies:
     - init_workspace
@@ -417,22 +417,22 @@ test_vexpress_qemu_uboot_uefi_grub:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
   after_script:
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_vexpress_qemu_uboot_uefi_grub.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_vexpress_qemu_uboot_uefi_grub.html
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_uboot_uefi_grub.xml
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_uboot_uefi_grub.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_vexpress_qemu_uboot_uefi_grub.xml
-      - report_vexpress_qemu_uboot_uefi_grub.html
+      - results_accep_vexpress_qemu_uboot_uefi_grub.xml
+      - report_accep_vexpress_qemu_uboot_uefi_grub.html
     reports:
-      junit: results_vexpress_qemu_uboot_uefi_grub.xml
+      junit: results_accep_vexpress_qemu_uboot_uefi_grub.xml
   only:
     variables:
       - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
       - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
 
-test_vexpress_qemu_flash:
+test_accep_vexpress_qemu_flash:
   stage: test
   dependencies:
     - init_workspace
@@ -440,22 +440,22 @@ test_vexpress_qemu_flash:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_flash
   after_script:
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_vexpress_qemu_flash.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_vexpress_qemu_flash.html
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_flash.xml
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_flash.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_vexpress_qemu_flash.xml
-      - report_vexpress_qemu_flash.html
+      - results_accep_vexpress_qemu_flash.xml
+      - report_accep_vexpress_qemu_flash.html
     reports:
-      junit: results_vexpress_qemu_flash.xml
+      junit: results_accep_vexpress_qemu_flash.xml
   only:
     variables:
       - $BUILD_VEXPRESS_QEMU_FLASH == "true"
       - $TEST_VEXPRESS_QEMU_FLASH == "true"
 
-test_beagleboneblack:
+test_accep_beagleboneblack:
   stage: test
   dependencies:
     - init_workspace
@@ -463,22 +463,22 @@ test_beagleboneblack:
   variables:
     JOB_BASE_NAME: mender_beagleboneblack
   after_script:
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_beagleboneblack.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_beagleboneblack.html
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_beagleboneblack.xml
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_beagleboneblack.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_beagleboneblack.xml
-      - report_beagleboneblack.html
+      - results_accep_beagleboneblack.xml
+      - report_accep_beagleboneblack.html
     reports:
-      junit: results_beagleboneblack.xml
+      junit: results_accep_beagleboneblack.xml
   only:
     variables:
       - $BUILD_BEAGLEBONEBLACK == "true"
       - $TEST_BEAGLEBONEBLACK == "true"
 
-test_raspberrypi3:
+test_accep_raspberrypi3:
   stage: test
   dependencies:
     - init_workspace
@@ -486,16 +486,16 @@ test_raspberrypi3:
   variables:
     JOB_BASE_NAME: mender_raspberrypi3
   after_script:
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_raspberrypi3.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_raspberrypi3.html
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_raspberrypi3.xml
+    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_raspberrypi3.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_raspberrypi3.xml
-      - report_raspberrypi3.html
+      - results_accep_raspberrypi3.xml
+      - report_accep_raspberrypi3.html
     reports:
-      junit: results_raspberrypi3.xml
+      junit: results_accep_raspberrypi3.xml
   only:
     variables:
       - $BUILD_RASPBERRYPI3 == "true"
@@ -548,7 +548,7 @@ test_raspberrypi3:
     - cd integration/tests
     - ./run.sh --no-download --machine-name $MACHINE_NAME
 
-test_integration_qemux86_64_uefi_grub:
+test_integ_qemux86_64_uefi_grub:
   stage: test
   <<: *test_integration
   dependencies:
@@ -558,16 +558,16 @@ test_integration_qemux86_64_uefi_grub:
   variables:
     MACHINE_NAME: qemux86-64
   after_script:
-    - cp ${CI_PROJECT_DIR}/integration/tests/results.xml results_qemux86_64_uefi_grub.xml
-    - cp ${CI_PROJECT_DIR}/integration/tests/report.html report_qemux86_64_uefi_grub.html
+    - cp ${CI_PROJECT_DIR}/integration/tests/results.xml results_integ_qemux86_64_uefi_grub.xml
+    - cp ${CI_PROJECT_DIR}/integration/tests/report.html report_integ_qemux86_64_uefi_grub.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_qemux86_64_uefi_grub.xml
-      - report_qemux86_64_uefi_grub.html
+      - results_integ_qemux86_64_uefi_grub.xml
+      - report_integ_qemux86_64_uefi_grub.html
     reports:
-      junit: results_qemux86_64_uefi_grub.xml
+      junit: results_integ_qemux86_64_uefi_grub.xml
   only:
     # The variables expressions will work after GitLab release 12.0,
     # see https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/27925
@@ -578,7 +578,7 @@ test_integration_qemux86_64_uefi_grub:
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
       - $TEST_VEXPRESS_QEMU == ""
 
-test_integration_vexpress_qemu:
+test_integ_vexpress_qemu:
   stage: test
   <<: *test_integration
   dependencies:
@@ -588,16 +588,16 @@ test_integration_vexpress_qemu:
   variables:
     MACHINE_NAME: vexpress-qemu
   after_script:
-    - cp ${CI_PROJECT_DIR}/integration/tests/results.xml results_vexpress_qemu.xml
-    - cp ${CI_PROJECT_DIR}/integration/tests/report.html report_vexpress_qemu.html
+    - cp ${CI_PROJECT_DIR}/integration/tests/results.xml results_integ_vexpress_qemu.xml
+    - cp ${CI_PROJECT_DIR}/integration/tests/report.html report_integ_vexpress_qemu.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_vexpress_qemu.xml
-      - report_vexpress_qemu.html
+      - results_integ_vexpress_qemu.xml
+      - report_integ_vexpress_qemu.html
     reports:
-      junit: results_vexpress_qemu.xml
+      junit: results_integ_vexpress_qemu.xml
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
