@@ -1090,8 +1090,8 @@ run_backend_integration_tests() {
 
         if [ -f $WORKSPACE/integration/docker-compose.enterprise.yml ]; then
             cd $WORKSPACE/integration/backend-tests && \
-                PYTEST_ARGS="-k 'not Multitenant'" ./run && \
-                PYTEST_ARGS="-k Multitenant" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
+                PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run && \
+                PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
                 testing_status=$?
         else
             cd $WORKSPACE/integration/backend-tests && \
