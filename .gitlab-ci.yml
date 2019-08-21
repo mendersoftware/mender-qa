@@ -580,6 +580,52 @@ test_accep_raspberrypi3:
       - $BUILD_RASPBERRYPI3 == "true"
       - $TEST_RASPBERRYPI3 == "true"
 
+test_backend_integration:
+  stage: test
+  image: docker:18-dind
+  tags:
+    - mender-qa-slave
+  dependencies:
+    - build_servers
+  before_script:
+    - /usr/local/bin/dockerd-entrypoint.sh &
+    - sleep 10
+    - export DOCKER_HOST="unix:///var/run/docker.sock"
+    - docker version
+    - apk --update --no-cache add bash git py-pip gcc make python2-dev
+      libc-dev libffi-dev openssl-dev python3
+    - pip install docker-compose==1.24.0
+    - pip3 install pyyaml
+    - rm -rf /var/cache/apk/*
+    # Clone integration repo and checkout specified revision
+    - git clone https://github.com/mendersoftware/integration || true
+    - (cd integration &&
+      git fetch -u -f origin ${INTEGRATION_REV}:pr &&
+      git checkout pr ||
+      git checkout -f -b pr ${INTEGRATION_REV})
+    # Load all docker images except client
+    - for repo in `integration/extra/release_tool.py -l docker -a`; do
+      if ! echo $repo | grep -q mender-client-qemu; then
+      docker load -i ${repo}.tar;
+      fi; done
+    # Login for private repos
+    - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    # Set testing versions to PR
+    - for repo in `integration/extra/release_tool.py -l docker -a`; do
+      integration/extra/release_tool.py --set-version-of $repo --version pr;
+      done
+  script:
+    - cd integration/backend-tests/
+    - if [ -f ../docker-compose.enterprise.yml ]; then
+      PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run &&
+      PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml;
+      else
+      PYTEST_ARGS="-k 'not Multitenant'" ./run;
+      fi
+  only:
+    variables:
+      - $RUN_INTEGRATION_TESTS == "true"
+
 .template_test_integ: &test_integration
   image: docker:18-dind
   tags:
@@ -598,8 +644,12 @@ test_accep_raspberrypi3:
     - pip install docker-compose==1.24.0
     - pip3 install pyyaml
     - rm -rf /var/cache/apk/*
+    # Clone integration repo and checkout specified revision
     - git clone https://github.com/mendersoftware/integration || true
-    - (cd integration && git fetch -u -f origin ${INTEGRATION_REV}:pr && git checkout pr)
+    - (cd integration &&
+      git fetch -u -f origin ${INTEGRATION_REV}:pr &&
+      git checkout pr ||
+      git checkout -f -b pr ${INTEGRATION_REV})
     - pip install pycrypto && pip install -r integration/tests/requirements.txt
     - pip install pytest-xdist --upgrade
     - pip install pytest-html --upgrade
