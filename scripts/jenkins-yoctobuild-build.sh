@@ -651,6 +651,8 @@ add_to_build_list() {
 # Selects a configuration from the list to build. Client builds override
 # server-only builds, but the function otherwise tries to detect whether two
 # configurations conflict.
+INTEGRATION_TEST_SUITE=$($WORKSPACE/integration/extra/release_tool.py --select-test-suite || echo "all")
+
 build_and_test() {
     local machine_to_build=
     local board_to_build=
@@ -1027,6 +1029,17 @@ run_integration_tests() {
         if [ -n "$SPECIFIC_INTEGRATION_TEST" ]; then
             extra_job_string="_$SPECIFIC_INTEGRATION_TEST"
             extra_job_info="specific test:$SPECIFIC_INTEGRATION_TEST"
+        else
+            # only do automatic test suite selection if the user wasn't specific
+            # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
+            case $INTEGRATION_TEST_SUITE in
+                "enterprise")
+                    export SPECIFIC_INTEGRATION_TEST="Enterprise"
+                    ;;
+                "open")
+                    export SPECIFIC_INTEGRATION_TEST="'not Enterprise'"
+                    ;;
+            esac
         fi
 
         github_pull_request_status \
@@ -1088,15 +1101,31 @@ run_backend_integration_tests() {
 
         local testing_status=0
 
+
         if [ -f $WORKSPACE/integration/docker-compose.enterprise.yml ]; then
             cd $WORKSPACE/integration/backend-tests && \
-                PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run && \
-                PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
-                testing_status=$?
+
+                case $INTEGRATION_TEST_SUITE in
+                    "enterprise")
+                        PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
+                        testing_status=$?
+                        ;;
+                    "open")
+                        PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run || \
+                        testing_status=$?
+                        ;;
+                    *)
+                        PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run && \
+                        PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
+                        testing_status=$?
+                        ;;
+                esac
         else
+            # for older releases, ignore test suite selection and just run open tests
             cd $WORKSPACE/integration/backend-tests && \
                 PYTEST_ARGS="-k 'not Multitenant'" ./run || \
                 testing_status=$?
+
         fi
 
         if [ $testing_status -ne 0 ]; then
