@@ -259,7 +259,7 @@ init_workspace:
       libxml2-dev libxslt-dev libffi-dev nodejs libyaml-dev sysbench texinfo pkg-config
       zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev
       libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler
-      qemu-system-x86 bc kpartx liblzma-dev cpio sudo
+      qemu-system-x86 bc kpartx liblzma-dev cpio sudo awscli
     # Prepare mender user
     - useradd -m -u 1010 mender || true
     - mkdir -p /home/mender/.ssh
