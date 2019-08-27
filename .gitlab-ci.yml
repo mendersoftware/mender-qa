@@ -367,6 +367,9 @@ build_servers:
   variables:
     JOB_BASE_NAME: mender_servers
     ONLY_BUILD: "true"
+  only:
+    variables:
+      - $RUN_INTEGRATION_TESTS == "true"
   after_script:
     - for repo in `${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
