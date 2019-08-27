@@ -636,10 +636,16 @@ test_backend_integration:
       integration/extra/release_tool.py --set-version-of $repo --version pr;
       done
   script:
+    - export INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
     - cd integration/backend-tests/
+    # for older releases, ignore test suite selection and just run open tests
     - if [ -f ../docker-compose.enterprise.yml ]; then
-      PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run &&
-      PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml;
+      case $INTEGRATION_TEST_SUITE in
+      "enterprise") PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml ;;
+      "open") PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run ;;
+      *) PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run &&
+      PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml ;;
+      esac
       else
       PYTEST_ARGS="-k 'not Multitenant'" ./run;
       fi
@@ -698,6 +704,14 @@ test_backend_integration:
     - tar -xf host-tools.tar ./mender-stress-test-client && mv mender-stress-test-client /usr/local/bin/
     - tar -xf host-tools.tar ./directory-artifact-gen && mv directory-artifact-gen /usr/local/bin/
   script:
+    - export INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
+    # only do automatic test suite selection if the user wasn't specific
+    # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
+    - if [ -z "$SPECIFIC_INTEGRATION_TEST" ]; then
+      case $INTEGRATION_TEST_SUITE in
+      "enterprise") export SPECIFIC_INTEGRATION_TEST="Enterprise";;
+      "open") export SPECIFIC_INTEGRATION_TEST="'not Enterprise'";;
+      esac fi
     - source ${CI_PROJECT_DIR}/build_revisions.env
     - cd integration/tests
     - ./run.sh --no-download --machine-name $MACHINE_NAME
