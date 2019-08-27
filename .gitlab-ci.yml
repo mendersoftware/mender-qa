@@ -604,6 +604,7 @@ test_backend_integration:
   tags:
     - mender-qa-slave
   dependencies:
+    - init_workspace
     - build_servers
   before_script:
     - /usr/local/bin/dockerd-entrypoint.sh &
@@ -615,12 +616,14 @@ test_backend_integration:
     - pip install docker-compose==1.24.0
     - pip3 install pyyaml
     - rm -rf /var/cache/apk/*
-    # Clone integration repo and checkout specified revision
-    - git clone https://github.com/mendersoftware/integration || true
-    - (cd integration &&
-      git fetch -u -f origin ${INTEGRATION_REV}:pr &&
-      git checkout pr ||
-      git checkout -f -b pr ${INTEGRATION_REV})
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env *.tar /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env /tmp/*.tar .
     # Load all docker images except client
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
@@ -664,12 +667,15 @@ test_backend_integration:
     - pip install docker-compose==1.24.0
     - pip3 install pyyaml
     - rm -rf /var/cache/apk/*
-    # Clone integration repo and checkout specified revision
-    - git clone https://github.com/mendersoftware/integration || true
-    - (cd integration &&
-      git fetch -u -f origin ${INTEGRATION_REV}:pr &&
-      git checkout pr ||
-      git checkout -f -b pr ${INTEGRATION_REV})
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env *.tar /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env /tmp/*.tar .
+    # Install test dependencies
     - pip install pycrypto && pip install -r integration/tests/requirements.txt
     - pip install pytest-xdist --upgrade
     - pip install pytest-html --upgrade
@@ -707,8 +713,8 @@ test_integ_qemux86_64_uefi_grub:
     MACHINE_NAME: qemux86-64
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
-    - cp ${CI_PROJECT_DIR}/integration/tests/results.xml results_integ_qemux86_64_uefi_grub.xml
-    - cp ${CI_PROJECT_DIR}/integration/tests/report.html report_integ_qemux86_64_uefi_grub.html
+    - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_integ_qemux86_64_uefi_grub.xml
+    - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_integ_qemux86_64_uefi_grub.html
   artifacts:
     expire_in: 2w
     when: always
@@ -738,8 +744,8 @@ test_integ_vexpress_qemu:
     MACHINE_NAME: vexpress-qemu
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
-    - cp ${CI_PROJECT_DIR}/integration/tests/results.xml results_integ_vexpress_qemu.xml
-    - cp ${CI_PROJECT_DIR}/integration/tests/report.html report_integ_vexpress_qemu.html
+    - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_integ_vexpress_qemu.xml
+    - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_integ_vexpress_qemu.html
   artifacts:
     expire_in: 2w
     when: always
