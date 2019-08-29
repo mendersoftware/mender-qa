@@ -8,6 +8,12 @@ fi
 
 echo $WORKSPACE
 
+if [ -n "$CI_JOB_NAME" ]; then
+    # Disable updating pull requests status for Gitlab. In Gitlab we do it
+    # directly in the .gitlab-ci.yml file instead.
+    export DISABLE_GITHUB_PULL_REQUEST_STATUS=true
+fi
+
 # Jenkins builds will install docker here. Gitlab runners have it already in the image
 if [ -n "$JENKINS_URL" ]; then
     sudo apt-get -qy --force-yes install docker-ce || apt-get -qy --force-yes install docker-ce
@@ -37,18 +43,6 @@ declare -A TEST_TRACKER
 # patch Fabric
 wget https://github.com/fabric/fabric/commit/b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
 sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
-
-function testFinished {
-    for i in "${!TEST_TRACKER[@]}"
-    do
-        if [[ "${TEST_TRACKER[$i]}" == "pending" ]]; then
-            github_pull_request_status "failure" "Unknown failure, check log" $BUILD_URL $i
-            return
-        fi
-    done
-}
-
-trap testFinished SIGHUP SIGINT SIGTERM SIGKILL EXIT ERR
 
 is_poky_branch() {
     if egrep -q "^ *DISTRO_CODENAME *= *\"$1\" *\$" $WORKSPACE/meta-poky/conf/distro/poky.conf; then
@@ -99,92 +93,6 @@ modify_ext4() {
     echo -n "artifact_name=$2" > /tmp/artifactfile
     debugfs -w -R "rm /etc/mender/artifact_info" $1
     printf "cd %s\nwrite %s %s\n" /etc/mender /tmp/artifactfile artifact_info | debugfs -w $1
-}
-
-github_pull_request_status() {
-    (
-        # Disable command echoing in here, it's quite verbose and not very
-        # helpful, since these aren't strictly build steps.
-        set +x
-
-        TEST_TRACKER[$4]=$1
-        if [ -z "$JENKINS_URL" ]; then
-            local request_body=$(cat <<EOF
-    {
-      "state": "$1",
-      "description": "$2",
-      "target_url": "$CI_JOB_URL",
-      "context": "GitLab_$4"
-    }
-EOF
-            )
-        else
-            local request_body=$(cat <<EOF
-    {
-      "state": "$1",
-      "description": "$2",
-      "target_url": "$3",
-      "context": "$4"
-    }
-EOF
-            )
-        fi
-
-        # Split on newlines
-        local IFS='
-'
-        for decl in $(env); do
-            set +x
-            local key=${decl%%=*}
-            if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
-                # Not a pull request, skip.
-                continue
-            fi
-            if echo $key | egrep -q "^DOCKER_ENV_"; then
-                # Skip GitLab/Docker duplicated environment vars, i.e. MENDER_REV has a DOCKER_ENV_MENDER_REV
-                continue
-            fi
-
-            set -x
-            local repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
-            if [ -n "$(eval echo \$${key}_GIT_SHA)" ]; then
-                # GitLab script defines env variables with _GIT_SHA suffix for the PR commit under test
-                local git_commit="$(eval echo \$${key}_GIT_SHA)"
-            else
-                # Fallback to classic method of relying on locally cloned repos
-                case "$key" in
-                    META_MENDER_REV)
-                        local location=$WORKSPACE/meta-mender
-                        ;;
-                    *_REV)
-                        if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
-                            # If the release tool doesn't recognize the repository, don't use it.
-                            continue
-                        fi
-                        local location=
-                        if [ -d "$WORKSPACE/$repo" ]; then
-                            location="$WORKSPACE/$repo"
-                        elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
-                            location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
-                        else
-                            echo "github_pull_request_status: Unable to find repository location: $repo"
-                            return 1
-                        fi
-                        ;;
-                    *)
-                        # Not a revision, go to next entry.
-                        continue
-                        ;;
-                esac
-                local git_commit=$(cd "$location" && git rev-parse HEAD)
-            fi
-            local pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
-
-            curl -iv --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
-                 -d "$request_body" \
-                 "$pr_status_endpoint"
-        done
-    )
 }
 
 s3cmd_put() {
@@ -754,7 +662,7 @@ build_and_test_client() {
             exit 1
         fi
 
-        github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build started" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
+        "$(dirname "$0")"/github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build started" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
         source oe-init-build-env build-$board_name
         cd ../
 
@@ -774,9 +682,9 @@ build_and_test_client() {
         fi
 
         if [[ $bitbake_result -eq 0 ]]; then
-            github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build completed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
+            "$(dirname "$0")"/github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build completed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
         else
-            github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build failed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
+            "$(dirname "$0")"/github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build failed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
             exit $bitbake_result
         fi
 
@@ -801,7 +709,7 @@ build_and_test_client() {
                 echo "WARNING: install pytest-html for html results report"
             fi
 
-            github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests started in Jenkins" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
+            "$(dirname "$0")"/github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests started in Jenkins" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
 
             bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
             if [ -d "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci ]; then
@@ -859,13 +767,13 @@ build_and_test_client() {
                 if is_hardware_board "$board_name"; then
                     board_support_update "$board_name" "failed"
                 fi
-                github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests failed" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
+                "$(dirname "$0")"/github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests failed" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
                 exit $qemu_testing_status
             else
                 if is_hardware_board "$board_name"; then
                     board_support_update "$board_name" "passed"
                 fi
-                github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests passed!" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
+                "$(dirname "$0")"/github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests passed!" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
             fi
 
             if [ $qemu_testing_status -ne 0 ]; then
@@ -1057,7 +965,7 @@ run_integration_tests() {
             esac
         fi
 
-        github_pull_request_status \
+        "$(dirname "$0")"/github_pull_request_status \
             "pending" \
             "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info have started in Jenkins" \
             "$BUILD_URL" \
@@ -1080,13 +988,13 @@ run_integration_tests() {
         local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/report.html
 
         if [ $testing_status -ne 0 ]; then
-            github_pull_request_status \
+            "$(dirname "$0")"/github_pull_request_status \
                 "failure" \
                 "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info failed" \
                 $report_url \
                 "${board_name:+${board_name}_}integration_${INTEGRATION_REV}$extra_job_string"
         else
-            github_pull_request_status \
+            "$(dirname "$0")"/github_pull_request_status \
                 "success" \
                 "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info passed!" \
                 $report_url \
@@ -1108,7 +1016,7 @@ run_backend_integration_tests() {
             return
         fi
 
-        github_pull_request_status \
+        "$(dirname "$0")"/github_pull_request_status \
             "pending" \
             "integration:${INTEGRATION_REV} have started in Jenkins" \
             "$BUILD_URL" \
@@ -1144,13 +1052,13 @@ run_backend_integration_tests() {
         fi
 
         if [ $testing_status -ne 0 ]; then
-            github_pull_request_status \
+            "$(dirname "$0")"/github_pull_request_status \
                 "failure" \
                 "integration:${INTEGRATION_REV}" \
                 "$BUILD_URL" \
                 "backend_integration_${INTEGRATION_REV}"
         else
-            github_pull_request_status \
+            "$(dirname "$0")"/github_pull_request_status \
                 "success" \
                 "integration:${INTEGRATION_REV}" \
                 "$BUILD_URL" \

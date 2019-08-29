@@ -61,14 +61,23 @@ init_workspace:
   tags:
     - mender-qa-slave
   script:
+    # Default value, will later be overwritten if successful
+    - echo "failure" > /JOB_RESULT.txt
+
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - apk --update --no-cache add git openssh bash
+    - apk --update --no-cache add git openssh bash python3 curl
+    - pip3 install --upgrade pyyaml
+
     # Prepare SSH keys
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "${CI_JOB_NAME} started" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
+
     # Clean WORKSPACE and clone all repos
     - find ${WORKSPACE}
       -mindepth 1
@@ -80,6 +89,15 @@ init_workspace:
     - git fetch && git checkout -f origin/${POKY_REV}
     - echo -e "# $(git log -n1 --oneline)\nexport POKY_REV=$POKY_REV\nexport POKY_REV_GIT_SHA=$(git rev-parse HEAD)" > ${CI_PROJECT_DIR}/build_revisions.env
 
+    # Add MENDER_QA_REV, which is special, since it is this repository.
+    - if echo "$CI_BUILD_REF_NAME" | egrep '^pr_[0-9]+$'; then
+        export MENDER_QA_REV="pull/$(echo "$CI_BUILD_REF_NAME" | egrep -o '[0-9]+')/head";
+      else
+        export MENDER_QA_REV="$CI_BUILD_REF_NAME";
+      fi
+    - (cd mender-qa && echo -e "# $(git log -n1 --oneline)\nexport MENDER_QA_REV=$MENDER_QA_REV\nexport MENDER_QA_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+
+    # Add other repositories.
     - git clone https://github.com/mendersoftware/meta-mender
     - (cd meta-mender &&
       git fetch -u -f origin ${META_MENDER_REV}:pr &&
@@ -227,8 +245,14 @@ init_workspace:
     - cat ${CI_PROJECT_DIR}/build_revisions.env
     - tar -czf /tmp/workspace.tar.gz .
     - mv /tmp/workspace.tar.gz ${CI_PROJECT_DIR}/workspace.tar.gz
+
+    # Always keep this at the end of the script stage
+    - echo "success" > /JOB_RESULT.txt
+
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_INIT ${CI_PROJECT_DIR}/WAIT_IN_STAGE_INIT
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
+
   artifacts:
     expire_in: 2w
     paths:
@@ -242,6 +266,8 @@ init_workspace:
   tags:
     - mender-qa-slave
   before_script:
+    # Default value, will later be overwritten if successful
+    - echo "failure" > /JOB_RESULT.txt
     # Check correct dind setup
     - docker version
     # Export required yoctobuild script variables
@@ -264,6 +290,8 @@ init_workspace:
       zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev
       libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler
       qemu-system-x86 bc kpartx liblzma-dev cpio sudo awscli
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "${CI_JOB_NAME} started" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
     # Prepare mender user
     - useradd -m -u 1010 mender || true
     - mkdir -p /home/mender/.ssh
@@ -322,6 +350,9 @@ init_workspace:
     - export HOME="/home/mender"
     - sudo -E -u mender ${WORKSPACE}/mender-qa/scripts/jenkins-yoctobuild-build.sh
 
+    # Always keep this at the end of the script stage
+    - echo "success" > /JOB_RESULT.txt
+
 build_client:
   stage: build
   dependencies:
@@ -338,6 +369,8 @@ build_client:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu.tar
     - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs.tar
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     paths:
@@ -363,6 +396,8 @@ build_servers:
       fi; done
     # Tarball with mender-cli, mender-artifact, mender-stress-test-client and Artifact generation scripts
     - tar -cf host-tools.tar -C ../go/bin/ .
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
 
   artifacts:
     expire_in: 2w
@@ -394,6 +429,8 @@ test_accep_qemux86_64_uefi_grub:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always
@@ -419,6 +456,8 @@ test_accep_vexpress_qemu:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always
@@ -443,6 +482,8 @@ test_accep_qemux86_64_bios_grub:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always
@@ -467,6 +508,8 @@ test_accep_qemux86_64_bios_grub_gpt:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub_gpt.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub_gpt.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always
@@ -491,6 +534,8 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_uboot_uefi_grub.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_uboot_uefi_grub.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always
@@ -515,6 +560,8 @@ test_accep_vexpress_qemu_flash:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_flash.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_flash.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always
@@ -539,6 +586,8 @@ test_accep_beagleboneblack:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_beagleboneblack.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_beagleboneblack.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always
@@ -563,6 +612,8 @@ test_accep_raspberrypi3:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_raspberrypi3.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_raspberrypi3.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always
@@ -585,12 +636,15 @@ test_backend_integration:
     - init_workspace
     - build_servers
   before_script:
+    # Default value, will later be overwritten if successful
+    - echo "failure" > /JOB_RESULT.txt
+
     - /usr/local/bin/dockerd-entrypoint.sh &
     - sleep 10
     - export DOCKER_HOST="unix:///var/run/docker.sock"
     - docker version
     - apk --update --no-cache add bash git py-pip gcc make python2-dev
-      libc-dev libffi-dev openssl-dev python3
+      libc-dev libffi-dev openssl-dev python3 curl
     - pip install docker-compose==1.24.0
     - pip3 install pyyaml
     - rm -rf /var/cache/apk/*
@@ -602,6 +656,10 @@ test_backend_integration:
     - cd ${WORKSPACE}
     - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/build_revisions.env /tmp/*.tar .
+
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "${CI_JOB_NAME} started" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
+
     # Load all docker images except client
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
@@ -627,8 +685,14 @@ test_backend_integration:
       else
       PYTEST_ARGS="-k 'not Multitenant'" ./run;
       fi
+
+    # Always keep this at the end of the script stage
+    - echo "success" > /JOB_RESULT.txt
+
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
@@ -643,6 +707,9 @@ test_full_integration:
     - build_servers
     - build_client
   before_script:
+    # Default value, will later be overwritten if successful
+    - echo "failure" > /JOB_RESULT.txt
+
     - /usr/local/bin/dockerd-entrypoint.sh &
     - sleep 10
     - export DOCKER_HOST="unix:///var/run/docker.sock"
@@ -664,6 +731,10 @@ test_full_integration:
     - cd ${WORKSPACE}
     - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/build_revisions.env /tmp/*.tar .
+
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "${CI_JOB_NAME} started" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
+
     # Install test dependencies
     - pip install pycrypto && pip install -r integration/tests/requirements.txt
     - pip install pytest-xdist --upgrade
@@ -694,10 +765,16 @@ test_full_integration:
     - source ${CI_PROJECT_DIR}/build_revisions.env
     - cd integration/tests
     - ./run.sh --no-download --machine-name qemux86-64
+
+    # Always keep this at the end of the script stage
+    - echo "success" > /JOB_RESULT.txt
+
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_full_integration.xml
     - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_full_integration.html
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
     expire_in: 2w
     when: always

@@ -1,0 +1,79 @@
+#!/bin/bash
+
+if [ "$DISABLE_GITHUB_PULL_REQUEST_STATUS" != "" ]; then
+    exit 0
+fi
+
+request_body=$(cat <<EOF
+{
+  "state": "$1",
+  "description": "$2",
+  "target_url": "$3",
+  "context": "$4"
+}
+EOF
+)
+
+# Special case for mender-qa running in Gitlab: It builds a specific branch, not
+# by setting the MENDER_QA_REV variables, but by simply checking out that
+# branch. It is recorded in the "CI_*" variables though.
+if [ "$CI_PROJECT_NAME" = "mender-qa" ]; then
+    if echo "$CI_BUILD_REF_NAME" | egrep '^pr_[0-9]+$'; then
+        export MENDER_QA_REV="pull/$(echo "$CI_BUILD_REF_NAME" | egrep -o '[0-9]+')/head"
+    else
+        export MENDER_QA_REV="$CI_BUILD_REF_NAME"
+    fi
+fi
+
+# Split on newlines
+IFS='
+'
+for key in $(compgen -A export); do
+    if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
+        # Not a pull request, skip.
+        continue
+    fi
+    if echo $key | egrep -q "^DOCKER_ENV_"; then
+        # Skip GitLab/Docker duplicated environment vars, i.e. MENDER_REV has a DOCKER_ENV_MENDER_REV
+        continue
+    fi
+
+    repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
+    if [ -n "$(eval echo \$${key}_GIT_SHA)" ]; then
+        # GitLab script defines env variables with _GIT_SHA suffix for the PR commit under test
+        git_commit="$(eval echo \$${key}_GIT_SHA)"
+    else
+        # Fallback to classic method of relying on locally cloned repos
+        case "$key" in
+            META_MENDER_REV)
+                location=$WORKSPACE/meta-mender
+                ;;
+            *_REV)
+                if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
+                    # If the release tool doesn't recognize the repository, don't use it.
+                    continue
+                fi
+                location=
+                if [ -d "$WORKSPACE/$repo" ]; then
+                    location="$WORKSPACE/$repo"
+                elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
+                    location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
+                else
+                    echo "github_pull_request_status: Unable to find repository location: $repo"
+                    return 1
+                fi
+                ;;
+            *)
+                # Not a revision, go to next entry.
+                continue
+                ;;
+        esac
+        git_commit=$(cd "$location" && git rev-parse HEAD)
+    fi
+    pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
+
+    curl -iv --user "$GITHUB_BOT_USER:$GITHUB_BOT_PASSWORD" \
+         -d "$request_body" \
+         "$pr_status_endpoint"
+done
+
