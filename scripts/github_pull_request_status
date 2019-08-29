@@ -45,6 +45,9 @@ for key in $(compgen -A export); do
     else
         # Fallback to classic method of relying on locally cloned repos
         case "$key" in
+            MENDER_QA_REV)
+                location=$WORKSPACE/mender-qa
+                ;;
             META_MENDER_REV)
                 location=$WORKSPACE/meta-mender
                 ;;
