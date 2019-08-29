@@ -280,6 +280,11 @@ prepare_build_config() {
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
     local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
 
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+LICENSE_FLAGS_WHITELIST = "commercial_mender-binary-delta"
+FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "${WORKSPACE}/mender-binary-delta:"
+EOF
+
     # See comment in local.conf
     if is_poky_branch morty || is_poky_branch pyro; then
         # Pyro and morty need old style full Go paths.
@@ -553,6 +558,16 @@ fi
 # Done with server build.
 # -----------------------
 
+# -----------------------
+# Get mender-binary-delta
+# -----------------------
+
+if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
+    RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta | sort | head -n1)
+    mkdir -p $WORKSPACE/mender-binary-delta
+    s3cmd get --recursive s3://$(sed -e 's,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
+fi
+
 # Check whether the given board name is a hardware board or not.
 # Takes one argument: Board name
 is_hardware_board() {
@@ -824,7 +839,7 @@ build_and_test_client() {
 
             local pytest_args=
             if ! ( is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko || is_poky_branch sumo ); then
-                pytest_args="--no-pull"
+                pytest_args="--no-pull --commercial-tests"
             fi
 
             # run tests with xdist explicitly disabled
