@@ -1052,7 +1052,7 @@ run_integration_tests() {
                     export SPECIFIC_INTEGRATION_TEST="Enterprise"
                     ;;
                 "open")
-                    export SPECIFIC_INTEGRATION_TEST="'not Enterprise'"
+                    export SPECIFIC_INTEGRATION_TEST="not Enterprise"
                     ;;
             esac
         fi

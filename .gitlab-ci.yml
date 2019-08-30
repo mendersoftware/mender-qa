@@ -710,7 +710,7 @@ test_backend_integration:
     - if [ -z "$SPECIFIC_INTEGRATION_TEST" ]; then
       case $INTEGRATION_TEST_SUITE in
       "enterprise") export SPECIFIC_INTEGRATION_TEST="Enterprise";;
-      "open") export SPECIFIC_INTEGRATION_TEST="'not Enterprise'";;
+      "open") export SPECIFIC_INTEGRATION_TEST="not Enterprise";;
       esac fi
     - source ${CI_PROJECT_DIR}/build_revisions.env
     - cd integration/tests
