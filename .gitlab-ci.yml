@@ -322,7 +322,7 @@ init_workspace:
     - export HOME="/home/mender"
     - sudo -E -u mender ${WORKSPACE}/mender-qa/scripts/jenkins-yoctobuild-build.sh
 
-build_qemux86_64_uefi_grub:
+build_client:
   stage: build
   dependencies:
     - init_workspace
@@ -333,37 +333,16 @@ build_qemux86_64_uefi_grub:
   only:
     variables:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
-      - $BUILD_VEXPRESS_QEMU == ""
+      - $RUN_INTEGRATION_TESTS == "true"
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
-    - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_qemux86_64_uefi_grub.tar
-    - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_qemux86_64_uefi_grub.tar
+    - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu.tar
+    - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs.tar
   artifacts:
     expire_in: 2w
     paths:
-      - mender-client-qemu_qemux86_64_uefi_grub.tar
-      - mender-client-qemu-rofs_qemux86_64_uefi_grub.tar
-
-build_vexpress_qemu:
-  stage: build
-  dependencies:
-    - init_workspace
-  <<: *build_and_test_acceptance
-  variables:
-    JOB_BASE_NAME: mender_vexpress_qemu
-    ONLY_BUILD: "true"
-  only:
-    variables:
-      - $BUILD_VEXPRESS_QEMU == "true"
-  after_script:
-    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
-    - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_vexpress_qemu.tar
-    - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_vexpress_qemu.tar
-  artifacts:
-    expire_in: 2w
-    paths:
-      - mender-client-qemu_vexpress_qemu.tar
-      - mender-client-qemu-rofs_vexpress_qemu.tar
+      - mender-client-qemu.tar
+      - mender-client-qemu-rofs.tar
 
 build_servers:
   stage: build
@@ -424,7 +403,7 @@ test_accep_qemux86_64_uefi_grub:
     reports:
       junit: results_accep_qemux86_64_uefi_grub.xml
   only:
-    # The build for this configuration is done unconditionally in build_qemux86_64_uefi_grub job,
+    # The build for this configuration is done unconditionally in build_client job,
     # so run corresponding test job only if TEST_QEMUX86_64_UEFI_GRUB is set
     variables:
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
@@ -449,9 +428,8 @@ test_accep_vexpress_qemu:
     reports:
       junit: results_accep_vexpress_qemu.xml
   only:
-    # The build for this configuration is done unconditionally in build_vexpress_qemu job,
-    # so run corresponding test job only if TEST_VEXPRESS_QEMU is set
     variables:
+      - $BUILD_VEXPRESS_QEMU == "true"
       - $TEST_VEXPRESS_QEMU == "true"
 
 test_accep_qemux86_64_bios_grub:
@@ -655,10 +633,15 @@ test_backend_integration:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
 
-.template_test_integ: &test_integration
+test_full_integration:
+  stage: test
   image: docker:18-dind
   tags:
     - mender-qa-slave
+  dependencies:
+    - init_workspace
+    - build_servers
+    - build_client
   before_script:
     - /usr/local/bin/dockerd-entrypoint.sh &
     - sleep 10
@@ -687,12 +670,8 @@ test_backend_integration:
     - pip install pytest-html --upgrade
     # Load all docker images
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
-      if echo $repo | grep -q mender-client-qemu; then
-      docker load -i ${repo}_qemux86_64_uefi_grub.tar ||
-      docker load -i ${repo}_vexpress_qemu.tar;
-      else
       docker load -i ${repo}.tar;
-      fi; done
+      done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
     # Set testing versions to PR
@@ -714,62 +693,19 @@ test_backend_integration:
       esac fi
     - source ${CI_PROJECT_DIR}/build_revisions.env
     - cd integration/tests
-    - ./run.sh --no-download --machine-name $MACHINE_NAME
-
-test_integ_qemux86_64_uefi_grub:
-  stage: test
-  <<: *test_integration
-  dependencies:
-    - init_workspace
-    - build_servers
-    - build_qemux86_64_uefi_grub
-  variables:
-    MACHINE_NAME: qemux86-64
+    - ./run.sh --no-download --machine-name qemux86-64
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
-    - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_integ_qemux86_64_uefi_grub.xml
-    - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_integ_qemux86_64_uefi_grub.html
+    - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_full_integration.xml
+    - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_full_integration.html
   artifacts:
     expire_in: 2w
     when: always
     paths:
-      - results_integ_qemux86_64_uefi_grub.xml
-      - report_integ_qemux86_64_uefi_grub.html
+      - results_full_integration.xml
+      - report_full_integration.html
     reports:
-      junit: results_integ_qemux86_64_uefi_grub.xml
-  only:
-    # The variables expressions will work after GitLab release 12.0,
-    # see https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/27925
-    # Meanwhile split them into two different conditions as a workaround
-    variables:
-      - $RUN_INTEGRATION_TESTS == "true"
-    variables:
-      - $TEST_QEMUX86_64_UEFI_GRUB == "true"
-      - $TEST_VEXPRESS_QEMU == ""
-
-test_integ_vexpress_qemu:
-  stage: test
-  <<: *test_integration
-  dependencies:
-    - init_workspace
-    - build_servers
-    - build_vexpress_qemu
-  variables:
-    MACHINE_NAME: vexpress-qemu
-  after_script:
-    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
-    - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_integ_vexpress_qemu.xml
-    - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_integ_vexpress_qemu.html
-  artifacts:
-    expire_in: 2w
-    when: always
-    paths:
-      - results_integ_vexpress_qemu.xml
-      - report_integ_vexpress_qemu.html
-    reports:
-      junit: results_integ_vexpress_qemu.xml
+      junit: results_full_integration.xml
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
-    variables:
-      - $TEST_VEXPRESS_QEMU == "true"
