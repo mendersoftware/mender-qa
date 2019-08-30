@@ -45,7 +45,9 @@ variables:
   TESTS_IN_PARALLEL: "4"
   XDIST_PARALLEL_ARG: "4" #TODO: Unify these two parameters
   PUBLISH_ARTIFACTS: ""
-  STOP_SLAVE: ""
+  WAIT_IN_STAGE_INIT: ""
+  WAIT_IN_STAGE_BUILD: ""
+  WAIT_IN_STAGE_TEST: ""
   CLEAN_BUILD_CACHE: ""
 
 stages:
@@ -60,7 +62,7 @@ init_workspace:
     - mender-qa-slave
   script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - apk --update --no-cache add git openssh
+    - apk --update --no-cache add git openssh bash
     # Prepare SSH keys
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
@@ -225,6 +227,8 @@ init_workspace:
     - cat ${CI_PROJECT_DIR}/build_revisions.env
     - tar -czf /tmp/workspace.tar.gz .
     - mv /tmp/workspace.tar.gz ${CI_PROJECT_DIR}/workspace.tar.gz
+  after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_INIT ${CI_PROJECT_DIR}/WAIT_IN_STAGE_INIT
   artifacts:
     expire_in: 2w
     paths:
@@ -255,7 +259,7 @@ init_workspace:
     - apt-get update -q
     - apt-get install -qqy
       git wget gnupg2 pass autoconf automake build-essential diffstat gawk chrpath
-      libsdl1.2-dev e2tools nfs-client s3cmd psmisc screen libssl-dev python-dev
+      libsdl1.2-dev e2tools nfs-client s3cmd psmisc screen libssl-dev python-dev bash
       libxml2-dev libxslt-dev libffi-dev nodejs libyaml-dev sysbench texinfo pkg-config
       zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev
       libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler
@@ -331,6 +335,7 @@ build_qemux86_64_uefi_grub:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
       - $BUILD_VEXPRESS_QEMU == ""
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_qemux86_64_uefi_grub.tar
     - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_qemux86_64_uefi_grub.tar
   artifacts:
@@ -351,6 +356,7 @@ build_vexpress_qemu:
     variables:
       - $BUILD_VEXPRESS_QEMU == "true"
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu_vexpress_qemu.tar
     - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs_vexpress_qemu.tar
   artifacts:
@@ -371,6 +377,7 @@ build_servers:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
     - for repo in `${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
       docker save mendersoftware/${repo}:pr -o ${repo}.tar;
@@ -405,6 +412,7 @@ test_accep_qemux86_64_uefi_grub:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html
   artifacts:
@@ -429,6 +437,7 @@ test_accep_vexpress_qemu:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu.html
   artifacts:
@@ -453,6 +462,7 @@ test_accep_qemux86_64_bios_grub:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub.html
   artifacts:
@@ -476,6 +486,7 @@ test_accep_qemux86_64_bios_grub_gpt:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub_gpt.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub_gpt.html
   artifacts:
@@ -499,6 +510,7 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_uboot_uefi_grub.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_uboot_uefi_grub.html
   artifacts:
@@ -522,6 +534,7 @@ test_accep_vexpress_qemu_flash:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_flash
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_flash.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_flash.html
   artifacts:
@@ -545,6 +558,7 @@ test_accep_beagleboneblack:
   variables:
     JOB_BASE_NAME: mender_beagleboneblack
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_beagleboneblack.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_beagleboneblack.html
   artifacts:
@@ -568,6 +582,7 @@ test_accep_raspberrypi3:
   variables:
     JOB_BASE_NAME: mender_raspberrypi3
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_raspberrypi3.xml
     - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_raspberrypi3.html
   artifacts:
@@ -625,6 +640,8 @@ test_backend_integration:
       else
       PYTEST_ARGS="-k 'not Multitenant'" ./run;
       fi
+  after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
@@ -689,6 +706,7 @@ test_integ_qemux86_64_uefi_grub:
   variables:
     MACHINE_NAME: qemux86-64
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/integration/tests/results.xml results_integ_qemux86_64_uefi_grub.xml
     - cp ${CI_PROJECT_DIR}/integration/tests/report.html report_integ_qemux86_64_uefi_grub.html
   artifacts:
@@ -719,6 +737,7 @@ test_integ_vexpress_qemu:
   variables:
     MACHINE_NAME: vexpress-qemu
   after_script:
+    - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - cp ${CI_PROJECT_DIR}/integration/tests/results.xml results_integ_vexpress_qemu.xml
     - cp ${CI_PROJECT_DIR}/integration/tests/report.html report_integ_vexpress_qemu.html
   artifacts:
