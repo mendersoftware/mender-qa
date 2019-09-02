@@ -431,8 +431,10 @@ test_accep_qemux86_64_uefi_grub:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html
+    - if [ "$TEST_QEMUX86_64_UEFI_GRUB" = "true" ]; then
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub.xml;
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html;
+      fi
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
@@ -459,8 +461,10 @@ test_accep_vexpress_qemu:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu.html
+    - if [ "$TEST_VEXPRESS_QEMU" = "true" ]; then
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu.xml;
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu.html;
+      fi
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
@@ -486,8 +490,10 @@ test_accep_qemux86_64_bios_grub:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub.html
+    - if [ "$TEST_QEMUX86_64_BIOS_GRUB" = "true" ]; then
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub.xml;
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub.html;
+      fi
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
@@ -513,8 +519,10 @@ test_accep_qemux86_64_bios_grub_gpt:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub_gpt.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub_gpt.html
+    - if [ "$TEST_QEMUX86_64_BIOS_GRUB_GPT" = "true" ]; then
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub_gpt.xml;
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub_gpt.html;
+      fi
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
@@ -540,8 +548,10 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_uboot_uefi_grub.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_uboot_uefi_grub.html
+    - if [ "$TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB" = "true" ]; then
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_uboot_uefi_grub.xml;
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_uboot_uefi_grub.html;
+      fi
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
@@ -567,8 +577,10 @@ test_accep_vexpress_qemu_flash:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_flash.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_flash.html
+    - if [ "$TEST_VEXPRESS_QEMU_FLASH" = "true" ]; then
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_flash.xml;
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_flash.html;
+      fi
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
@@ -594,8 +606,10 @@ test_accep_beagleboneblack:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_beagleboneblack.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_beagleboneblack.html
+    - if [ "$TEST_BEAGLEBONEBLACK" = "true" ]; then
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_beagleboneblack.xml;
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_beagleboneblack.html;
+      fi
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
@@ -621,8 +635,10 @@ test_accep_raspberrypi3:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_TEST ${CI_PROJECT_DIR}/WAIT_IN_STAGE_TEST
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_raspberrypi3.xml
-    - cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_raspberrypi3.html
+    - if [ "$TEST_RASPBERRYPI3" = "true" ]; then
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_raspberrypi3.xml;
+        cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_raspberrypi3.html;
+      fi
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "${CI_JOB_NAME} finished" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
   artifacts:
