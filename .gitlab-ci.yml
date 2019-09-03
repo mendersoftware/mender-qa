@@ -336,13 +336,29 @@ build_client:
       - $RUN_INTEGRATION_TESTS == "true"
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu.tar
-    - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs.tar
+
+    # Use existence of rofs support to determine whether to make a docker image
+    # for it. Along with rofs support, `extract_fs` support was also added to
+    # the Docker image, which is what we need to get the ext4 image. So fall
+    # back to saving the ext4 image if there is no rofs support. Rofs support
+    # was first added in warrior Yocto branch.
+    - if [ -f $WORKSPACE/meta-mender/meta-mender-demo/recipes-extended/images/mender-image-full-cmdline-rofs.bb ]; then
+        docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs.tar;
+      else
+        cp $WORKSPACE/build-qemux86-64-uefi-grub/tmp/deploy/images/qemux86-64/core-image-full-cmdline-qemux86-64.ext4 ${CI_PROJECT_DIR};
+      fi
   artifacts:
     expire_in: 2w
     paths:
       - mender-client-qemu.tar
+
+      # Only used for warrior Yocto branch and newer.
       - mender-client-qemu-rofs.tar
+
+      # Only used for thud Yocto branch and older.
+      - core-image-full-cmdline-qemux86-64.ext4
 
 build_servers:
   stage: build
@@ -668,9 +684,11 @@ test_full_integration:
     - pip install pycrypto && pip install -r integration/tests/requirements.txt
     - pip install pytest-xdist --upgrade
     - pip install pytest-html --upgrade
-    # Load all docker images
+    # Load all docker images. "mender-client-qemu-rofs" is allowed to fail,
+    # since it did not exist on older Yocto branches. Consider removing the
+    # exception after thud support has ended.
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
-      docker load -i ${repo}.tar;
+        docker load -i ${repo}.tar || [ "$repo" = mender-client-qemu-rofs ];
       done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
@@ -683,6 +701,10 @@ test_full_integration:
     - tar -xf host-tools.tar ./mender-stress-test-client && mv mender-stress-test-client /usr/local/bin/
     - tar -xf host-tools.tar ./directory-artifact-gen && mv directory-artifact-gen /usr/local/bin/
   script:
+    - if [ -f ${CI_PROJECT_DIR}/core-image-full-cmdline-qemux86-64.ext4 ]; then
+        mv ${CI_PROJECT_DIR}/core-image-full-cmdline-qemux86-64.ext4 $WORKSPACE/integration/tests;
+      fi
+
     - export INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
     # only do automatic test suite selection if the user wasn't specific
     # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
