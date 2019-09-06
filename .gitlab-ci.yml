@@ -263,7 +263,7 @@ init_workspace:
       libxml2-dev libxslt-dev libffi-dev nodejs libyaml-dev sysbench texinfo pkg-config
       zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev
       libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler
-      qemu-system-x86 bc kpartx liblzma-dev cpio sudo awscli
+      qemu-system-x86 bc kpartx liblzma-dev cpio sudo awscli nfs-common
     # Prepare mender user
     - useradd -m -u 1010 mender || true
     - mkdir -p /home/mender/.ssh
@@ -311,6 +311,9 @@ init_workspace:
     - sed -i 's/false/true/g' /etc/default/sysstat
     - service sysstat start
     - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
+    # Setup nfs mount for bitbake shared state cache
+    - mkdir -p /mnt/sstate-cache
+    - mount.nfs4 10.162.0.2:/export/sstate-cache /mnt/sstate-cache
   script:
     - mv workspace.tar.gz /tmp
     - rm -rf ${WORKSPACE}
