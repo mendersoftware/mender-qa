@@ -1,0 +1,8 @@
+[Unit]
+Description=Check for update on KVM image.
+
+[Service]
+Type=oneshot
+User=gitlab-runner
+ExecStart=/bin/bash /etc/gitlab-runner/update-image.sh
+Group=systemd-journal
