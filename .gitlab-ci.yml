@@ -340,6 +340,18 @@ init_workspace:
     - sed -i 's/false/true/g' /etc/default/sysstat
     - service sysstat start
     - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
+    # Install gcsfuse and mount shared Bitbake sstate-cache
+    - echo "deb http://packages.cloud.google.com/apt gcsfuse-`lsb_release -c -s` main" | tee /etc/apt/sources.list.d/gcsfuse.list
+    - curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    - apt-get update
+    - apt-get install -qqy gcsfuse
+    - groupadd -f fuse
+    - usermod -a -G fuse mender
+    - mkdir -p /mnt/sstate-cache
+    - chown mender:mender /mnt/sstate-cache
+    - echo "user_allow_other" >> /etc/fuse.conf
+    # Mout GCS bucket as sstate-cache
+    - gcsfuse --uid 1010 --gid 1010 --limit-ops-per-sec 10000 -o allow_other sstate-cache /mnt/sstate-cache
   script:
     - mv workspace.tar.gz /tmp
     - rm -rf ${WORKSPACE}
