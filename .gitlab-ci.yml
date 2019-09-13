@@ -291,8 +291,6 @@ init_workspace:
       zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev
       libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler
       qemu-system-x86 bc kpartx liblzma-dev cpio sudo awscli
-    # Post job status
-    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "${CI_JOB_NAME} started" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
     # Prepare mender user
     - useradd -m -u 1010 mender || true
     - mkdir -p /home/mender/.ssh
@@ -325,6 +323,9 @@ init_workspace:
     # Python 3 pip
     - apt-get install -qqy python3-pip
     - pip3 install --upgrade pyyaml
+    # Post job status
+    - source ${CI_PROJECT_DIR}/build_revisions.env
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "${CI_JOB_NAME} started" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
     # Locales
     - apt-get install locales
     - locale-gen --purge en_US.UTF-8
