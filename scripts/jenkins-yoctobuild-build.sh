@@ -753,7 +753,10 @@ build_and_test_client() {
 
             local pytest_args=
             if ! ( is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko || is_poky_branch sumo ); then
-                pytest_args="--no-pull --commercial-tests"
+                pytest_args="--no-pull"
+            fi
+            if ! ( is_poky_branch morty || is_poky_branch pyro ); then
+                pytest_args="$pytest_args --commercial-tests"
             fi
 
             # run tests with xdist explicitly disabled
