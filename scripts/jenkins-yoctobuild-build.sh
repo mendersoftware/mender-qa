@@ -226,8 +226,14 @@ EOF
 MENDER_ARTIFACT_NAME = "mender-image-$client_version"
 EOF
 
-    local mender_on_exact_tag=$(test "$MENDER_REV" != "master" && cd $WORKSPACE/go/src/github.com/mendersoftware/mender && git describe --tags --exact-match HEAD 2>/dev/null) || mender_on_exact_tag=
-    local mender_artifact_on_exact_tag=$(test "$MENDER_ARTIFACT_REV" != "master" && cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && git describe --tags --exact-match HEAD 2>/dev/null) || mender_artifact_on_exact_tag=
+    local mender_on_exact_tag=$(test "$MENDER_REV" != "master" && \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender && \
+        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_REV"$ ) || \
+        mender_on_exact_tag=
+    local mender_artifact_on_exact_tag=$(test "$MENDER_ARTIFACT_REV" != "master" && \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && \
+        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_ARTIFACT_REV"$ ) || \
+        mender_artifact_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
@@ -747,7 +753,10 @@ build_and_test_client() {
 
             local pytest_args=
             if ! ( is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko || is_poky_branch sumo ); then
-                pytest_args="--no-pull --commercial-tests"
+                pytest_args="--no-pull"
+            fi
+            if ! ( is_poky_branch morty || is_poky_branch pyro ); then
+                pytest_args="$pytest_args --commercial-tests"
             fi
 
             # run tests with xdist explicitly disabled
