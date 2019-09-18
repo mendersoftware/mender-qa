@@ -1,0 +1,9 @@
+[Unit]
+Description=Run /etc/gitlab-runnere/update-image.sh once a day
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=1d
+
+[Install]
+WantedBy=timers.target
