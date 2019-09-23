@@ -75,9 +75,6 @@ init_workspace:
     - chmod 700 ~/.ssh
     - ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-    # Post job status
-    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "${CI_JOB_NAME} started" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
-
     # Clean WORKSPACE and clone all repos
     - find ${WORKSPACE}
       -mindepth 1
@@ -97,6 +94,17 @@ init_workspace:
       fi
     - (cd mender-qa && echo -e "# $(git log -n1 --oneline)\nexport MENDER_QA_REV=$MENDER_QA_REV\nexport MENDER_QA_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
+    # Add integration first, as github_pull_request_status depends on release_tool.
+    - git clone https://github.com/mendersoftware/integration
+    - (cd integration &&
+      git fetch -u -f origin ${INTEGRATION_REV}:pr &&
+      git checkout pr ||
+      git checkout -f -b pr ${INTEGRATION_REV})
+    - (cd integration && echo -e "# $(git log -n1 --oneline)\nexport INTEGRATION_REV=$INTEGRATION_REV\nexport INTEGRATION_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "${CI_JOB_NAME} started" "${CI_JOB_URL}" "Gitlab_${CI_JOB_NAME}"
+
     # Add other repositories.
     - git clone https://github.com/mendersoftware/meta-mender
     - (cd meta-mender &&
@@ -111,13 +119,6 @@ init_workspace:
       git checkout pr ||
       git checkout -f -b pr ${MENDER_REV})
     - (cd go/src/github.com/mendersoftware/mender && echo -e "# $(git log -n1 --oneline)\nexport MENDER_REV=$MENDER_REV\nexport MENDER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
-
-    - git clone https://github.com/mendersoftware/integration
-    - (cd integration &&
-      git fetch -u -f origin ${INTEGRATION_REV}:pr &&
-      git checkout pr ||
-      git checkout -f -b pr ${INTEGRATION_REV})
-    - (cd integration && echo -e "# $(git log -n1 --oneline)\nexport INTEGRATION_REV=$INTEGRATION_REV\nexport INTEGRATION_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - git clone https://github.com/mendersoftware/deployments go/src/github.com/mendersoftware/deployments
     - (cd go/src/github.com/mendersoftware/deployments &&
