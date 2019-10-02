@@ -462,6 +462,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
             mender-conductor-enterprise)
                 cd go/src/github.com/mendersoftware/$build
                 docker build --build-arg REVISION=pr -t mendersoftware/mender-conductor-enterprise:pr ./server
+                docker build -t mendersoftware/org-welcome-email-preparer:pr ./workers/prepare_org_welcome_email
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
         esac
@@ -1128,7 +1129,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
             # Upload containers.
             case "$image" in
-                api-gateway|deployments*|deviceadm|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor*|useradm*)
+                api-gateway|deployments*|deviceadm|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor*|org-welcome-email-preparer|tenantadm*|useradm*)
                     docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
                     docker push mendersoftware/$image:${version}
                     ;;
@@ -1147,7 +1148,7 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
             # Upload binaries.
             case "$image" in
-                deployments*|deviceadm|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor*|useradm*)
+                deployments*|deviceadm|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor*|tenantadm*|useradm*)
                     # No binaries.
                     :
                     ;;
