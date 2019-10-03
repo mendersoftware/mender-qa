@@ -19,7 +19,10 @@ set -x -e
 # Add jenkins user and copy credentials.
 useradd -m -u 1010 jenkins || true
 mkdir -p /home/jenkins/.ssh
-cp /root/.ssh/authorized_keys /home/jenkins/.ssh || true
+# copy /root/.ssh/authorized_keys to /home/jenkins/.ssh, removing everything
+# before 'ssh-rsa'. Some platforms have forcecommand='echo "root access disabled"'
+# there.
+sed 's/.*ssh-rsa/ssh-rsa/' /root/.ssh/authorized_keys >/home/jenkins/.ssh || true
 
 # Enable sudo access for jenkins.
 echo "jenkins ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
