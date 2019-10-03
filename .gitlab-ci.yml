@@ -719,7 +719,7 @@ test_backend_integration:
       case $INTEGRATION_TEST_SUITE in
       "enterprise") PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml ;;
       "open") PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;;
-      *) PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run &&
+      *) PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;
       PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml ;;
       esac
       else
