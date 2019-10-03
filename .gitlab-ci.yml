@@ -390,15 +390,15 @@ build_client:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - docker save mendersoftware/mender-client-qemu:pr -o mender-client-qemu.tar
-    - docker save mendersoftware/mender-client-qemu-rofs:pr -o mender-client-qemu-rofs.tar
+    - mkdir -p stage-artifacts
+    - docker save mendersoftware/mender-client-qemu:pr -o stage-artifacts/mender-client-qemu.tar
+    - docker save mendersoftware/mender-client-qemu-rofs:pr -o stage-artifacts/mender-client-qemu-rofs.tar
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
   artifacts:
     expire_in: 2w
     paths:
-      - mender-client-qemu.tar
-      - mender-client-qemu-rofs.tar
+      - stage-artifacts/
 
 build_servers:
   stage: build
@@ -414,33 +414,20 @@ build_servers:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_BUILD ${CI_PROJECT_DIR}/WAIT_IN_STAGE_BUILD
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
     - for repo in `${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
-      docker save mendersoftware/${repo}:pr -o ${repo}.tar;
+      docker save mendersoftware/${repo}:pr -o stage-artifacts/${repo}.tar;
       fi; done
     # Tarball with mender-cli, mender-artifact, mender-stress-test-client and Artifact generation scripts
-    - tar -cf host-tools.tar -C ../go/bin/ .
+    - tar -cf stage-artifacts/host-tools.tar -C ../go/bin/ .
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
   artifacts:
     expire_in: 2w
     paths:
-      - api-gateway.tar
-      - deployments.tar
-      - deployments-enterprise.tar
-      - deviceadm.tar
-      - deviceauth.tar
-      - email-sender.tar
-      - gui.tar
-      - inventory.tar
-      - mender-client-docker.tar
-      - mender-conductor.tar
-      - mender-conductor-enterprise.tar
-      - tenantadm.tar
-      - useradm.tar
-      - useradm-enterprise.tar
-      - host-tools.tar
+      - stage-artifacts/
 
 test_accep_qemux86_64_uefi_grub:
   stage: test
@@ -698,12 +685,12 @@ test_backend_integration:
     - rm -rf /var/cache/apk/*
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env *.tar /tmp
+    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
     - tar -xf /tmp/workspace.tar.gz
-    - mv /tmp/build_revisions.env /tmp/*.tar .
+    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
@@ -711,7 +698,7 @@ test_backend_integration:
     # Load all docker images except client
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
-      docker load -i ${repo}.tar;
+      docker load -i stage-artifacts/${repo}.tar;
       fi; done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
@@ -789,12 +776,12 @@ test_full_integration:
     - rm -rf /var/cache/apk/*
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env *.tar /tmp
+    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
     - tar -xf /tmp/workspace.tar.gz
-    - mv /tmp/build_revisions.env /tmp/*.tar .
+    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
@@ -805,7 +792,7 @@ test_full_integration:
     - pip install pytest-html --upgrade
     # Load all docker images
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
-      docker load -i ${repo}.tar;
+      docker load -i stage-artifacts/${repo}.tar;
       done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
@@ -814,9 +801,9 @@ test_full_integration:
       integration/extra/release_tool.py --set-version-of $repo --version pr;
       done
     # Other dependencies
-    - tar -xf host-tools.tar ./mender-artifact && mv mender-artifact /usr/local/bin/
-    - tar -xf host-tools.tar ./mender-stress-test-client && mv mender-stress-test-client /usr/local/bin/
-    - tar -xf host-tools.tar ./directory-artifact-gen && mv directory-artifact-gen /usr/local/bin/
+    - tar -xf stage-artifacts/host-tools.tar ./mender-artifact && mv mender-artifact /usr/local/bin/
+    - tar -xf stage-artifacts/host-tools.tar ./mender-stress-test-client && mv mender-stress-test-client /usr/local/bin/
+    - tar -xf stage-artifacts/host-tools.tar ./directory-artifact-gen && mv directory-artifact-gen /usr/local/bin/
   script:
     - export INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
     # only do automatic test suite selection if the user wasn't specific
