@@ -949,6 +949,11 @@ upload_output() {
 #                 name can have several boards)
 # ------------------------------------------------------------------------------
 run_integration_tests() {
+
+    # Install Python dependency pymongo.
+    # This is a Jenkins specific hack to not mofidy jenkins-yoctobuild-init-script.sh and rebuild the image
+    sudo pip2 install pymongo==3.6.1
+
     (
         local machine_name="$1"
         local board_name="$2"
