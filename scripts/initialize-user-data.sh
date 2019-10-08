@@ -19,7 +19,10 @@ set -x -e
 # Add jenkins user and copy credentials.
 useradd -m -u 1010 jenkins || true
 mkdir -p /home/jenkins/.ssh
-cp /root/.ssh/authorized_keys /home/jenkins/.ssh || true
+# copy /root/.ssh/authorized_keys to /home/jenkins/.ssh, removing everything
+# before 'ssh-rsa'. Some platforms have forcecommand='echo "root access disabled"'
+# there.
+sed 's/.*ssh-rsa/ssh-rsa/' /root/.ssh/authorized_keys >/home/jenkins/.ssh || true
 
 # Enable sudo access for jenkins.
 echo "jenkins ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
@@ -55,7 +58,11 @@ hostname localhost
 # Ensure reverse hostname resolution is correct and 127.0.0.1 is always 'localhost'.
 # There's no nice shell command to test it but this one:
 # python -c 'import socket;print socket.gethostbyaddr("127.0.0.1")'
-sed -i -e '1s/^/127.0.0.1 localhost localhost.localdomian\n/' /etc/hosts
+if test -f /etc/hosts; then
+    sed -i -e '1s/^/127.0.0.1 localhost localhost.localdomain\n/' /etc/hosts
+else
+    echo '127.0.0.1 localhost localhost.localdomain' >/etc/hosts
+fi
 
 # Open SSH port on 222.
 iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
