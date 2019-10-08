@@ -58,7 +58,11 @@ hostname localhost
 # Ensure reverse hostname resolution is correct and 127.0.0.1 is always 'localhost'.
 # There's no nice shell command to test it but this one:
 # python -c 'import socket;print socket.gethostbyaddr("127.0.0.1")'
-sed -i -e '1s/^/127.0.0.1 localhost localhost.localdomian\n/' /etc/hosts
+if test -f /etc/hosts; then
+    sed -i -e '1s/^/127.0.0.1 localhost localhost.localdomain\n/' /etc/hosts
+else
+    echo '127.0.0.1 localhost localhost.localdomain' >/etc/hosts
+fi
 
 # Open SSH port on 222.
 iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
