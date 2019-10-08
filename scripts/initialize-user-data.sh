@@ -22,7 +22,7 @@ mkdir -p /home/jenkins/.ssh
 # copy /root/.ssh/authorized_keys to /home/jenkins/.ssh, removing everything
 # before 'ssh-rsa'. Some platforms have forcecommand='echo "root access disabled"'
 # there.
-sed 's/.*ssh-rsa/ssh-rsa/' /root/.ssh/authorized_keys >/home/jenkins/.ssh || true
+sed 's/.*ssh-rsa/ssh-rsa/' /root/.ssh/authorized_keys >/home/jenkins/.ssh/authorized_keys || true
 
 # Enable sudo access for jenkins.
 echo "jenkins ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
