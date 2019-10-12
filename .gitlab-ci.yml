@@ -54,6 +54,18 @@ stages:
   - init
   - build
   - test
+  - deploy
+
+status_page:
+  stage: deploy
+  script:
+    - sed -i -e "s/@@TRAVIS_COM_TOKEN@@/$TRAVIS_COM_TOKEN/g" public/index.html
+  only:
+    changes:
+      - public/*
+  artifacts:
+    paths:
+      - public
 
 init_workspace:
   stage: init
