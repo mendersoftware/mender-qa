@@ -65,8 +65,16 @@ else
 fi
 
 # Open SSH port on 222.
-iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
-iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
+if type iptables; then
+    iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
+    iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
+else
+    # for RHEL8: change port number in sshd_config and allow it in SELinux policy
+    yum -e 0 -d 0 -y install policycoreutils-python-utils
+    semanage port -a -t ssh_port_t -p tcp 222
+    sed -i '/Port 22/a Port 222' /etc/ssh/sshd_config
+    systemctl restart sshd
+fi
 
 apt_get() {
     # Work around apt-get not waiting for a lock if it's taken. We want to wait
