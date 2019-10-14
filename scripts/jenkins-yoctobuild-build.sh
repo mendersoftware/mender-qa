@@ -1123,8 +1123,6 @@ cd $WORKSPACE/integration
 git checkout -f -- .
 
 if [ "$PUBLISH_ARTIFACTS" = true ]; then
-    docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
-
     if grep mender_servers <<<"$JOB_BASE_NAME"; then
         # Use release tool to query for available repositories, and fall back to
         # flat list for branches where we don't have that option.
