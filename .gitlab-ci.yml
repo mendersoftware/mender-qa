@@ -702,6 +702,7 @@ test_backend_integration:
       fi; done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
       integration/extra/release_tool.py --set-version-of $repo --version pr;
@@ -796,6 +797,7 @@ test_full_integration:
       done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
       integration/extra/release_tool.py --set-version-of $repo --version pr;
