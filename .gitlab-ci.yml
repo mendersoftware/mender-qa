@@ -417,7 +417,8 @@ build_servers:
     - mkdir -p stage-artifacts
     - for repo in `${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
-      docker save mendersoftware/${repo}:pr -o stage-artifacts/${repo}.tar;
+      docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker $repo docker_url);
+      docker save $docker_url:pr -o stage-artifacts/${repo}.tar;
       fi; done
     # Tarball with mender-cli, mender-artifact, mender-stress-test-client and Artifact generation scripts
     - tar -cf stage-artifacts/host-tools.tar -C ../go/bin/ .
