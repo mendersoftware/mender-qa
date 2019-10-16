@@ -417,7 +417,8 @@ build_servers:
     - mkdir -p stage-artifacts
     - for repo in `${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
-      docker save mendersoftware/${repo}:pr -o stage-artifacts/${repo}.tar;
+      docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker $repo docker_url);
+      docker save $docker_url:pr -o stage-artifacts/${repo}.tar;
       fi; done
     # Tarball with mender-cli, mender-artifact, mender-stress-test-client and Artifact generation scripts
     - tar -cf stage-artifacts/host-tools.tar -C ../go/bin/ .
@@ -702,6 +703,7 @@ test_backend_integration:
       fi; done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
       integration/extra/release_tool.py --set-version-of $repo --version pr;
@@ -796,6 +798,7 @@ test_full_integration:
       done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
       integration/extra/release_tool.py --set-version-of $repo --version pr;

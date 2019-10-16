@@ -334,6 +334,7 @@ fi
 
 # private docker containers, require login:
 docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
 
 # if we abort a build, docker might still be up and running
 docker ps -q -a | xargs -r docker stop || true
@@ -394,21 +395,22 @@ export GOPATH="$WORKSPACE/go"
 )
 
 if grep mender_servers <<<"$JOB_BASE_NAME"; then
-    # Use release tool to query for available repositories, and fall back to
-    # flat list for branches where we don't have that option.
-    for build in $($WORKSPACE/integration/extra/release_tool.py --list -a 2>/dev/null \
-                          || echo "deployments deviceadm deviceauth gui inventory mender-api-gateway-docker useradm" ); do (
+    # Use release tool to query for available docker names.
+    for docker in $($WORKSPACE/integration/extra/release_tool.py --list docker -a ); do (
 
-        case "$build" in
-            deployments*|deviceadm|deviceauth|inventory|tenantadm|useradm*)
-                cd go/src/github.com/mendersoftware/$build
+        git=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker git)
+        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
+
+        case "$docker" in
+            deployments|deployments-enterprise|deviceauth|inventory|tenantadm|useradm|useradm-enterprise)
+                cd go/src/github.com/mendersoftware/$git
                 # Versions before 2.0.0 used "go build", later ones
                 # build everything inside multi-stage docker builds.
                 if ! grep "COPY --from=build" Dockerfile; then
                     CGO_ENABLED=0 go build
                 fi
-                docker build -t mendersoftware/$build:pr .
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
+                docker build -t $docker_url:pr .
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
             gui)
@@ -418,52 +420,65 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 if ! grep "COPY --from=build" Dockerfile; then
                     gulp build
                 fi
-                docker build -t mendersoftware/gui:pr .
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
+                docker build -t $docker_url:pr .
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
-            mender)
+            mender-client-docker)
                 # We build the docker-client here, as well as some support
                 # tools, but the Yocto based image is too expensive to build
                 # here, since this section is run by pure server builds as
                 # well. See the build_and_test_client function for that.
-                cd go/src/github.com/mendersoftware/$build
+                cd go/src/github.com/mendersoftware/mender
 
-                if [ -x ./tests/build-docker ]; then
-                    ./tests/build-docker -t mendersoftware/mender-client-docker:pr
-                    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-docker --version pr
-                fi
+                ./tests/build-docker -t $docker_url:pr
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
 
-                if grep -q install-modules-gen Makefile; then
-                    make prefix=$WORKSPACE/go bindir=/bin install-modules-gen
-                fi
+                make prefix=$WORKSPACE/go bindir=/bin install-modules-gen
                 ;;
 
-            mender-api-gateway-docker)
-                cd $build
-                docker build -t mendersoftware/api-gateway:pr .
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
+            mender-client-qemu*)
+                # Built in build_and_test_client.
+                :
                 ;;
 
+            api-gateway)
+                cd $git
+                docker build -t $docker_url:pr .
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                ;;
+
+            mender-conductor|mender-conductor-enterprise)
+                cd go/src/github.com/mendersoftware/$git
+                docker build --build-arg REVISION=pr -t $docker_url:pr ./server
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                ;;
+
+            email-sender)
+                cd go/src/github.com/mendersoftware/$git
+                docker build -t $docker_url:pr ./workers/send_email
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                ;;
+
+            org-welcome-email-preparer)
+                cd go/src/github.com/mendersoftware/$git
+                docker build --build-arg REVISION=pr -t $docker_url:pr ./workers/prepare_org_welcome_email
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                ;;
+
+            *)
+                echo "Don't know how to build docker image $docker"
+                exit 1
+                ;;
+        esac
+    ); done
+
+    # Builds that don't use Docker
+    for git in $($WORKSPACE/integration/extra/release_tool.py --list git -a ); do (
+        case "$git" in
             mender-cli)
-                cd $WORKSPACE/go/src/github.com/mendersoftware/$build
+                cd $WORKSPACE/go/src/github.com/mendersoftware/$git
                 make install
-                ;;
-
-            mender-conductor)
-                cd go/src/github.com/mendersoftware/$build
-                docker build -t mendersoftware/mender-conductor:pr ./server
-                if [ -f ./workers/send_email/Dockerfile ]; then
-                    docker build -t mendersoftware/email-sender:pr ./workers/send_email
-                fi
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
-                ;;
-
-            mender-conductor-enterprise)
-                cd go/src/github.com/mendersoftware/$build
-                docker build --build-arg REVISION=pr -t mendersoftware/mender-conductor-enterprise:pr ./server
-                docker build -t mendersoftware/org-welcome-email-preparer:pr ./workers/prepare_org_welcome_email
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $build --version pr
                 ;;
         esac
     ); done
@@ -1123,20 +1138,16 @@ cd $WORKSPACE/integration
 git checkout -f -- .
 
 if [ "$PUBLISH_ARTIFACTS" = true ]; then
-    docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
-
     if grep mender_servers <<<"$JOB_BASE_NAME"; then
-        # Use release tool to query for available repositories, and fall back to
-        # flat list for branches where we don't have that option.
-        # Listing all docker image components.
-        for image in $($WORKSPACE/integration/extra/release_tool.py --list docker 2>/dev/null \
-                              || echo "api-gateway deployments deviceadm deviceauth gui inventory useradm" ); do (
+        # Use release tool to query for available docker images.
+        for image in $($WORKSPACE/integration/extra/release_tool.py --list docker ); do (
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
+            docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
             # Upload containers.
             case "$image" in
-                api-gateway|deployments*|deviceadm|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor*|org-welcome-email-preparer|tenantadm*|useradm*)
-                    docker tag mendersoftware/$image:pr mendersoftware/$image:${version}
-                    docker push mendersoftware/$image:${version}
+                api-gateway|deployments|deployments-enterprise|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor|mender-conductor-enterprise|org-welcome-email-preparer|tenantadm|useradm|useradm-enterprise)
+                    docker tag $docker_url:pr $docker_url:${version}
+                    docker push $docker_url:${version}
                     ;;
                 mender-client-qemu|mender-client-qemu-rofs)
                     # Handled below.
@@ -1149,11 +1160,11 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
             esac
         ); done
         # Listing all git components.
-        for image in $($WORKSPACE/integration/extra/release_tool.py --list git 2>/dev/null || echo ); do (
+        for image in $($WORKSPACE/integration/extra/release_tool.py --list git ); do (
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
             # Upload binaries.
             case "$image" in
-                deployments*|deviceadm|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor*|tenantadm*|useradm*)
+                deployments|deployments-enterprise|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor|mender-conductor-enterprise|tenantadm|useradm|useradm-enterprise)
                     # No binaries.
                     :
                     ;;
