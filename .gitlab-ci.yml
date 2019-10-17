@@ -50,6 +50,8 @@ variables:
   WAIT_IN_STAGE_TEST: ""
   CLEAN_BUILD_CACHE: ""
 
+  DEBIAN_FRONTEND: noninteractive
+
 stages:
   - init
   - build
