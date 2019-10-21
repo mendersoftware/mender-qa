@@ -283,8 +283,6 @@ init_workspace:
     - export RUN_INTEGRATION_TESTS=false
     # Always force building the client, default to BUILD_QEMUX86_64_UEFI_GRUB
     - test "$BUILD_QEMUX86_64_UEFI_GRUB" != "true" -a "$BUILD_VEXPRESS_QEMU" != true && export BUILD_QEMUX86_64_UEFI_GRUB=true
-    # Prepare tzdata unatended configuration
-    - ln -fs /usr/share/zoneinfo/Europe/Oslo /etc/localtime
     # basic tools
     - apt-get update -q
     - apt-get install -qqy
