@@ -44,7 +44,7 @@ variables:
   SPECIFIC_INTEGRATION_TEST: ""
   TESTS_IN_PARALLEL: "4"
   XDIST_PARALLEL_ARG: "4" #TODO: Unify these two parameters
-  PUBLISH_ARTIFACTS: ""
+  PUBLISH_ARTIFACTS: "false"
   WAIT_IN_STAGE_INIT: ""
   WAIT_IN_STAGE_BUILD: ""
   WAIT_IN_STAGE_TEST: ""
@@ -281,6 +281,7 @@ init_workspace:
     # for build stage, force default configuration QEMUX86_64_UEFI_GRUB
     - test -n "$ONLY_BUILD" && export BUILD_QEMUX86_64_UEFI_GRUB=true
     - test -n "$ONLY_BUILD" && export TEST_QEMUX86_64_UEFI_GRUB=false
+    - test -n "$ONLY_BUILD" && export PUBLISH_ARTIFACTS=false
     - export RUN_INTEGRATION_TESTS=false
     # basic tools
     - apt-get update -q
