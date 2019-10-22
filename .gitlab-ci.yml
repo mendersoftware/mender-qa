@@ -44,7 +44,7 @@ variables:
   SPECIFIC_INTEGRATION_TEST: ""
   TESTS_IN_PARALLEL: "4"
   XDIST_PARALLEL_ARG: "4" #TODO: Unify these two parameters
-  PUBLISH_ARTIFACTS: ""
+  PUBLISH_ARTIFACTS: "false"
   WAIT_IN_STAGE_INIT: ""
   WAIT_IN_STAGE_BUILD: ""
   WAIT_IN_STAGE_TEST: ""
@@ -277,14 +277,12 @@ init_workspace:
     # Export required yoctobuild script variables
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - export GOPATH="$WORKSPACE/go"
-    # This template is used in both build and acc test stages
+    # This template is used in both build and acc test stages,
+    # for build stage, force default configuration QEMUX86_64_UEFI_GRUB
+    - test -n "$ONLY_BUILD" && export BUILD_QEMUX86_64_UEFI_GRUB=true
     - test -n "$ONLY_BUILD" && export TEST_QEMUX86_64_UEFI_GRUB=false
-    - test -n "$ONLY_BUILD" && export TEST_VEXPRESS_QEMU=false
+    - test -n "$ONLY_BUILD" && export PUBLISH_ARTIFACTS=false
     - export RUN_INTEGRATION_TESTS=false
-    # Always force building the client, default to BUILD_QEMUX86_64_UEFI_GRUB
-    - test "$BUILD_QEMUX86_64_UEFI_GRUB" != "true" -a "$BUILD_VEXPRESS_QEMU" != true && export BUILD_QEMUX86_64_UEFI_GRUB=true
-    # Prepare tzdata unatended configuration
-    - ln -fs /usr/share/zoneinfo/Europe/Oslo /etc/localtime
     # basic tools
     - apt-get update -q
     - apt-get install -qqy

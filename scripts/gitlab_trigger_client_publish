@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -e
+
+mender_version=$1
+
+if [ -z "$mender_version" ]; then
+  echo "Usage: $0 mender-version"
+  exit 1
+fi
+
+if [ -z "$MENDER_QA_TRIGGER_TOKEN" ]; then
+  echo "MENDER_QA_TRIGGER_TOKEN not found in environment"
+  exit 1
+fi
+
+if [ ! -d $WORKSPACE/integration ]; then
+  echo "integration repo not found, expected at \$WORKSPACE/integration"
+  exit 1
+fi
+
+
+# For each integration version including mender version $mender_version:
+# * construct a curl formatted string concatenating each repo and revision like:
+#   '-F variables[repoA_REV]=X.X.x -F variables[repoB_REV]=X.X.x ...'
+# * trigger a Mender QA pipeline to build/test/publish client
+
+integration_versions=$($WORKSPACE/integration/extra/release_tool.py \
+                       --integration-versions-including mender \
+                       --version $mender_version)
+
+for integ_version in $integration_versions; do
+
+  variables_revs=""
+
+  all_repos=$($WORKSPACE/integration/extra/release_tool.py --list git)
+
+  for repo in $all_repos; do
+    repo_version=$($WORKSPACE/integration/extra/release_tool.py \
+                   --version-of $repo \
+                   --in-integration-version $integ_version |
+                   cut -d/ -f2);
+    variables_revs="$variables_revs $(echo -n -F variables[; \
+                    echo -n $repo | tr '[a-z-]' '[A-Z_]'; \
+                    echo _REV]=${repo_version})";
+  done
+
+  curl -f -X POST \
+    -F token=$MENDER_QA_TRIGGER_TOKEN \
+    -F ref=master \
+    -F variables[PUBLISH_ARTIFACTS]=true \
+    -F variables[BUILD_QEMUX86_64_UEFI_GRUB]=true \
+    -F variables[TEST_QEMUX86_64_UEFI_GRUB]=true \
+    -F variables[BUILD_QEMUX86_64_BIOS_GRUB]=false \
+    -F variables[TEST_QEMUX86_64_BIOS_GRUB]=false \
+    -F variables[BUILD_QEMUX86_64_BIOS_GRUB_GPT]=false \
+    -F variables[TEST_QEMUX86_64_BIOS_GRUB_GPT]=false \
+    -F variables[BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB]=false \
+    -F variables[TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB]=false \
+    -F variables[BUILD_VEXPRESS_QEMU]=false \
+    -F variables[TEST_VEXPRESS_QEMU]=false \
+    -F variables[BUILD_VEXPRESS_QEMU_FLASH]=false \
+    -F variables[TEST_VEXPRESS_QEMU_FLASH]=false \
+    -F variables[BUILD_BEAGLEBONEBLACK]=false \
+    -F variables[TEST_BEAGLEBONEBLACK]=false \
+    -F variables[BUILD_RASPBERRYPI3]=false \
+    -F variables[TEST_RASPBERRYPI3]=false \
+    -F variables[RUN_INTEGRATION_TESTS]=false \
+    $variables_revs \
+    https://gitlab.com/api/v4/projects/12501706/trigger/pipeline
+
+done
