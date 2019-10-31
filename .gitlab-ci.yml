@@ -264,7 +264,7 @@ init_workspace:
       - build_revisions.env
 
 .template_build_test_acc: &build_and_test_acceptance
-  image: teracy/ubuntu:16.04-dind-latest
+  image: teracy/ubuntu:18.04-dind-18.09.9
   services:
   - docker:18-dind
   tags:
