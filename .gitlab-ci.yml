@@ -264,7 +264,7 @@ init_workspace:
       - build_revisions.env
 
 .template_build_test_acc: &build_and_test_acceptance
-  image: teracy/ubuntu:16.04-dind-latest
+  image: teracy/ubuntu:18.04-dind-18.09.9
   services:
   - docker:18-dind
   tags:
@@ -291,7 +291,7 @@ init_workspace:
       libxml2-dev libxslt-dev libffi-dev nodejs libyaml-dev sysbench texinfo pkg-config
       zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev
       libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler
-      qemu-system-x86 bc kpartx liblzma-dev cpio sudo awscli gdisk
+      qemu-system-x86 qemu-system-arm bc kpartx liblzma-dev cpio sudo awscli gdisk
     # Prepare mender user
     - useradd -m -u 1010 mender || true
     - mkdir -p /home/mender/.ssh
@@ -769,10 +769,7 @@ test_full_integration:
     - docker version
     - apk --update --no-cache add bash curl git openssh device-mapper py-pip
       iptables gcc python2-dev libffi-dev libc-dev openssl-dev make python3
-      python3-dev e2fsprogs-extra openssl jq
-    # mender-artifact and other GO tools not build for muslc will throw "not found" error
-    # see https://stackoverflow.com/questions/34729748/installed-go-binary-not-found-in-path-on-alpine-linux-docker
-    - mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+      python3-dev e2fsprogs-extra openssl jq libc6-compat
     - pip install docker-compose==1.24.0
     - pip3 install pyyaml
     - rm -rf /var/cache/apk/*

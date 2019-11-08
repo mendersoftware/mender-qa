@@ -268,39 +268,6 @@ EOF
     fi
 }
 
-build_custom_qemu() {
-    # using released versions of qemu, we end up with this error:
-    #   https://bugs.launchpad.net/qemu/+bug/1481272
-    # installing from source doesn't exhibit this behaviour
-
-    if [ ! -f /var/tmp/qemu-built ]; then
-        rm -rf qemu
-        git clone -b qemu-system-reset-race-fix \
-            https://github.com/mendersoftware/qemu.git
-        cd qemu
-        git submodule update --init dtc
-
-        ./configure --target-list=arm-softmmu \
-                    --disable-werror \
-                    --prefix=/usr \
-                    --localstatedir=/var \
-                        --sysconfdir=/etc \
-                            --libexecdir=/usr/lib/qemu \
-                        --disable-glusterfs \
-                        --disable-debug-info \
-                        --disable-bsd-user \
-                        --disable-werror \
-                        --disable-sdl \
-                        --disable-xen \
-                    --disable-attr \
-                    --disable-gtk \
-
-        sudo make install -j$(grep -c ^processor /proc/cpuinfo) V=1
-        cd -
-        touch /var/tmp/qemu-built
-    fi
-}
-
 # ---------------------------------------------------
 # Preliminary checks.
 # ---------------------------------------------------
@@ -369,10 +336,6 @@ git config submodule.tests/acceptance/image-tests.url $WORKSPACE/mender-image-te
 git submodule update || git submodule foreach git reset --hard
 git submodule foreach "git fetch origin HEAD && git checkout FETCH_HEAD"
 cd $WORKSPACE
-
-if is_testing_board vexpress-qemu || is_testing_board vexpress-qemu-flash || is_testing_board vexpress-qemu-uboot-uefi-grub; then
-    build_custom_qemu
-fi
 
 # ---------------------------------------------------
 # Build server repositories.
