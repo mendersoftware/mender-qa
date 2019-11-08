@@ -827,7 +827,6 @@ test_full_integration:
       done
     # Other dependencies
     - tar -xf stage-artifacts/host-tools.tar ./mender-artifact && mv mender-artifact /usr/local/bin/
-    - tar -xf stage-artifacts/host-tools.tar ./mender-stress-test-client && mv mender-stress-test-client /usr/local/bin/
     - tar -xf stage-artifacts/host-tools.tar ./directory-artifact-gen && mv directory-artifact-gen /usr/local/bin/
   script:
     # Traps only work if executed in a sub shell.
