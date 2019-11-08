@@ -442,6 +442,9 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
             mender-cli)
                 cd $WORKSPACE/go/src/github.com/mendersoftware/$git
                 make install
+                if grep -q build-multiplatform Makefile; then
+                    make build-multiplatform
+                fi
                 ;;
         esac
     ); done
@@ -1126,10 +1129,23 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
                     :
                     ;;
                 mender-cli)
-                    s3cmd_put_public \
-                        $WORKSPACE/go/bin/$image \
-                        s3://mender/$image/$version/$image \
-                        --cf-invalidate -F
+                    if grep -q build-multiplatform $WORKSPACE/go/src/github.com/mendersoftware/mender-cli/Makefile; then
+                        # New style platform-indexed mender-cli upload.
+                        for bin in mender-cli.linux.amd64 mender-cli.darwin.amd64; do
+                            platform=${bin#mender-cli.}
+                            platform=${platform%.amd64}
+                            s3cmd_put_public \
+                                $WORKSPACE/go/src/github.com/mendersoftware/mender-cli/${bin} \
+                                s3://mender/mender-cli/${version}/${platform}/mender-cli \
+                                --cf-invalidate -F
+                        done
+                    else
+                        # Old style Linux-only mender-cli upload.
+                        s3cmd_put_public \
+                            $WORKSPACE/go/bin/$image \
+                            s3://mender/$image/$version/$image \
+                            --cf-invalidate -F
+                    fi
                     ;;
                 mender-artifact|mender)
                     # Handled in publish_artifacts().
