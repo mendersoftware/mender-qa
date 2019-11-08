@@ -887,8 +887,6 @@ publish_artifacts() {
 
         modify_ext4 $image_name-$device_type.ext4 release-1_${client_version}
         mender-artifact write rootfs-image $device_types -n release-1_${client_version} $file_flag $image_name-$device_type.ext4 -o ${board_name}_release_1_${client_version}.mender
-        modify_ext4 $image_name-$device_type.ext4 release-2_${client_version}
-        mender-artifact write rootfs-image $device_types -n release-2_${client_version} $file_flag $image_name-$device_type.ext4 -o ${board_name}_release_2_${client_version}.mender
         if is_hardware_board $board_name; then
             gzip -c $image_name-$device_type.sdimg > mender-${board_name}_${client_version}.sdimg.gz
             s3cmd_put_public \
@@ -899,10 +897,6 @@ publish_artifacts() {
         s3cmd_put_public \
             ${board_name}_release_1_${client_version}.mender \
             s3://mender/${client_version}/$board_name/${board_name}_release_1_${client_version}.mender \
-            --cf-invalidate -F
-        s3cmd_put_public \
-            ${board_name}_release_2_${client_version}.mender \
-            s3://mender/${client_version}/$board_name/${board_name}_release_2_${client_version}.mender \
             --cf-invalidate -F
     )
 }
