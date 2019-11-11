@@ -52,6 +52,12 @@ variables:
 
   DEBIAN_FRONTEND: noninteractive
 
+# Check signoffs in commits
+include:
+    - project: 'Northern.tech/Mender/mendertesting'
+      ref: master
+      file: '.gitlab-ci-check-commits-signoffs.yml'
+
 stages:
   - init
   - build
