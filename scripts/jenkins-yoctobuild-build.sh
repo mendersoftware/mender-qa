@@ -398,8 +398,19 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
     # Use release tool to query for available docker names.
     for docker in $($WORKSPACE/integration/extra/release_tool.py --list docker -a ); do (
 
-        git=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker git)
-        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
+        if $WORKSPACE/integration/extra/release_tool.py --help | grep -e '--map-name FROM-TYPE SERVICE TO-TYPE'; then
+            git=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker git)
+            docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
+        else
+            case "$docker" in
+                mender-client-docker) git="mender";;
+                api-gateway) git="mender-api-gateway-docker";;
+                email-sender) git="mender-conductor";;
+                org-welcome-email-preparer) git="mender-conductor-enterprise";;
+                *) git="${docker}";;
+            esac
+            docker_url="mendersoftware/${docker}"
+        fi
 
         case "$docker" in
             deployments|deployments-enterprise|deviceauth|inventory|tenantadm|useradm|useradm-enterprise)
@@ -466,6 +477,10 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
+            deviceadm)
+                # Abandonded microservice, do nothing
+                :
+                ;;
             *)
                 echo "Don't know how to build docker image $docker"
                 exit 1
@@ -1142,7 +1157,11 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
         # Use release tool to query for available docker images.
         for image in $($WORKSPACE/integration/extra/release_tool.py --list docker ); do (
             version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
-            docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
+            if $WORKSPACE/integration/extra/release_tool.py --help | grep -e '--map-name FROM-TYPE SERVICE TO-TYPE'; then
+                docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
+            else
+                docker_url="mendersoftware/${repo}"
+            fi
             # Upload containers.
             case "$image" in
                 api-gateway|deployments|deployments-enterprise|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor|mender-conductor-enterprise|org-welcome-email-preparer|tenantadm|useradm|useradm-enterprise)
@@ -1151,6 +1170,10 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
                     ;;
                 mender-client-qemu|mender-client-qemu-rofs)
                     # Handled below.
+                    :
+                    ;;
+                deviceadm)
+                    # Abandonded microservice, do nothing
                     :
                     ;;
                 *)
@@ -1176,6 +1199,10 @@ if [ "$PUBLISH_ARTIFACTS" = true ]; then
                     ;;
                 mender-artifact|mender)
                     # Handled in publish_artifacts().
+                    :
+                    ;;
+                deviceadm)
+                    # Abandonded microservice, do nothing
                     :
                     ;;
                 *)
