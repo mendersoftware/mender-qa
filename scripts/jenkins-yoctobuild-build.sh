@@ -690,9 +690,15 @@ build_and_test_client() {
         # run tests on qemu
         if is_testing_board $board_name; then
             export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
+            local python3_supported=false
+            local pip_cmd=pip2
+            if [ -f $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt ]; then
+                python3_supported=true
+                pip_cmd=pip3
+            fi
 
             local html_report_args="--html=report.html --self-contained-html"
-            if ! pip list|grep -e pytest-html >/dev/null 2>&1; then
+            if ! $pip_cmd list|grep -e pytest-html >/dev/null 2>&1; then
                 html_report_args=""
                 echo "WARNING: install pytest-html for html results report"
             fi
@@ -705,7 +711,11 @@ build_and_test_client() {
             fi
 
             # install test dependencies
-            sudo pip2 install -r $WORKSPACE/meta-mender/tests/acceptance/requirements.txt
+            if $python3_supported; then
+                sudo $pip_cmd install -r $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt
+            else
+                sudo $pip_cmd install -r $WORKSPACE/meta-mender/tests/acceptance/requirements.txt
+            fi
 
             if is_hardware_board $board_name; then
                 prepare_board_for_testing $machine_name $board_name
@@ -743,9 +753,15 @@ build_and_test_client() {
 
             # run tests with xdist explicitly disabled
             local qemu_testing_status=0
-            py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
+            if $python3_supported; then
+                python3 -m pytest -p no:xdist --verbose --junit-xml=results.xml $host_args \
+                        --bitbake-image $image_name --board-type=$board_name $pytest_args \
+                        $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
+            else
+                py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
                     --bitbake-image $image_name --board-type=$board_name $pytest_args \
                     $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
+            fi
 
             local html_report=$(find . -iname report.html  | head -n 1)
             local report_dir=$BUILD_NUMBER
