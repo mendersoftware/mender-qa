@@ -697,12 +697,6 @@ build_and_test_client() {
                 pip_cmd=pip3
             fi
 
-            local html_report_args="--html=report.html --self-contained-html"
-            if ! $pip_cmd list|grep -e pytest-html >/dev/null 2>&1; then
-                html_report_args=""
-                echo "WARNING: install pytest-html for html results report"
-            fi
-
             "$(dirname "$0")"/github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests started in Jenkins" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
 
             bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
@@ -729,9 +723,15 @@ build_and_test_client() {
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
 
-            local acceptance_test_to_run=""
+            # check if can generate HTML report
+            local html_report_args="--html=report.html --self-contained-html"
+            if ! $pip_cmd list|grep -e pytest-html >/dev/null 2>&1; then
+                html_report_args=""
+                echo "WARNING: install pytest-html for html results report"
+            fi
 
             # make it possible to run specific test
+            local acceptance_test_to_run=""
             if [ -n "$ACCEPTANCE_TEST" ]; then
                 acceptance_test_to_run=" -k $ACCEPTANCE_TEST"
             fi
