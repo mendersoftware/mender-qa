@@ -50,6 +50,9 @@ variables:
   WAIT_IN_STAGE_TEST: ""
   CLEAN_BUILD_CACHE: ""
 
+  # Internal address for nfs sstate cache server (northamerica-northeast1-b)
+  SSTATE_CACHE_INTRNL_ADDR: 10.162.0.2
+
   DEBIAN_FRONTEND: noninteractive
 
 # Check signoffs in commits
@@ -357,18 +360,6 @@ init_workspace:
     - sed -i 's/false/true/g' /etc/default/sysstat
     - service sysstat start
     - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
-    # Install gcsfuse and mount shared Bitbake sstate-cache
-    - echo "deb http://packages.cloud.google.com/apt gcsfuse-`lsb_release -c -s` main" | tee /etc/apt/sources.list.d/gcsfuse.list
-    - curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-    - apt-get update
-    - apt-get install -qqy gcsfuse
-    - groupadd -f fuse
-    - usermod -a -G fuse mender
-    - mkdir -p /mnt/sstate-cache
-    - chown mender:mender /mnt/sstate-cache
-    - echo "user_allow_other" >> /etc/fuse.conf
-    # Mout GCS bucket as sstate-cache
-    - gcsfuse --uid 1010 --gid 1010 --limit-ops-per-sec 10000 -o allow_other sstate-cache /mnt/sstate-cache
     # Setup KVM
     - usermod -a -G kvm mender
     - apt-get install -qqy kmod libvirt-bin qemu-utils qemu-kvm
@@ -376,6 +367,9 @@ init_workspace:
     # Enable nesting VMs
     - modprobe -r kvm_intel
     - modprobe kvm_intel nested=Y
+    - apt-get install nfs-common
+    - mkdir -p /mnt/sstate-cache
+    - mount.nfs4 ${SSTATE_CACHE_INTRNL_ADDR}:/sstate-cache /mnt/sstate-cache
   script:
     # Traps only work if executed in a sub shell.
     - "("
