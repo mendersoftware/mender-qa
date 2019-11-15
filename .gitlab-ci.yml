@@ -286,7 +286,7 @@ init_workspace:
   services:
   - docker:18-dind
   tags:
-    - mender-qa-slave
+    - mender-qa-slave-highcpu
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -720,7 +720,7 @@ test_backend_integration:
   stage: test
   image: docker:18-dind
   tags:
-    - mender-qa-slave
+    - mender-qa-slave-highcpu
   dependencies:
     - init_workspace
     - build_servers
@@ -826,7 +826,7 @@ test_full_integration:
   stage: test
   image: docker:18-dind
   tags:
-    - mender-qa-slave
+    - mender-qa-slave-highmem
   dependencies:
     - init_workspace
     - build_servers
