@@ -42,8 +42,8 @@ variables:
   TEST_RASPBERRYPI3: "false"
   RUN_INTEGRATION_TESTS: "true"
   SPECIFIC_INTEGRATION_TEST: ""
-  TESTS_IN_PARALLEL: "4"
-  XDIST_PARALLEL_ARG: "4" #TODO: Unify these two parameters
+  TESTS_IN_PARALLEL: "2"
+  XDIST_PARALLEL_ARG: "2" #TODO: Unify these two parameters
   PUBLISH_ARTIFACTS: "false"
   WAIT_IN_STAGE_INIT: ""
   WAIT_IN_STAGE_BUILD: ""
