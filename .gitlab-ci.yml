@@ -736,7 +736,6 @@ test_backend_integration:
       libc-dev libffi-dev openssl-dev python3 curl
     - pip install docker-compose==1.24.0
     - pip3 install pyyaml
-    - rm -rf /var/cache/apk/*
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -835,12 +834,12 @@ test_full_integration:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
 
+    # Start up docker
     - /usr/local/bin/dockerd-entrypoint.sh &
     - sleep 10
     - export DOCKER_HOST="unix:///var/run/docker.sock"
     - docker version
 
-    - rm -rf /var/cache/apk/*
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -872,6 +871,7 @@ test_full_integration:
     # Other dependencies
     - tar -xf stage-artifacts/host-tools.tar ./mender-artifact && mv mender-artifact /usr/local/bin/
     - tar -xf stage-artifacts/host-tools.tar ./directory-artifact-gen && mv directory-artifact-gen /usr/local/bin/
+
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
