@@ -468,6 +468,8 @@ test_accep_qemux86_64_uefi_grub:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/qemux86-64-uefi-grub/qemux86-64-uefi-grub_release_1_*.mender stage-artifacts/
     - if [ "$TEST_QEMUX86_64_UEFI_GRUB" = "true" ]; then
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub.xml;
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html;
@@ -480,6 +482,7 @@ test_accep_qemux86_64_uefi_grub:
     expire_in: 2w
     when: always
     paths:
+      - stage-artifacts/
       - results_accep_qemux86_64_uefi_grub.xml
       - report_accep_qemux86_64_uefi_grub.html
       - sysstat.log
@@ -487,9 +490,10 @@ test_accep_qemux86_64_uefi_grub:
     reports:
       junit: results_accep_qemux86_64_uefi_grub.xml
   only:
-    # The build for this configuration is done unconditionally in build_client job,
-    # so run corresponding test job only if TEST_QEMUX86_64_UEFI_GRUB is set
+    # Even though the build for this configuration is done unconditionally in build_client job,
+    # we will still trigger this one for BUILD_QEMUX86_64_UEFI_GRUB to be able to collect artifacts
     variables:
+      - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
 
 test_accep_vexpress_qemu:
@@ -501,6 +505,8 @@ test_accep_vexpress_qemu:
     JOB_BASE_NAME: mender_vexpress_qemu
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/vexpress-qemu/vexpress-qemu_release_1_*.mender stage-artifacts/
     - if [ "$TEST_VEXPRESS_QEMU" = "true" ]; then
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu.xml;
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu.html;
@@ -513,6 +519,7 @@ test_accep_vexpress_qemu:
     expire_in: 2w
     when: always
     paths:
+      - stage-artifacts/
       - results_accep_vexpress_qemu.xml
       - report_accep_vexpress_qemu.html
       - sysstat.log
@@ -533,6 +540,8 @@ test_accep_qemux86_64_bios_grub:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/qemux86-64-bios-grub/qemux86-64-bios-grub_release_1_*.mender stage-artifacts/
     - if [ "$TEST_QEMUX86_64_BIOS_GRUB" = "true" ]; then
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub.xml;
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub.html;
@@ -545,6 +554,7 @@ test_accep_qemux86_64_bios_grub:
     expire_in: 2w
     when: always
     paths:
+      - stage-artifacts/
       - results_accep_qemux86_64_bios_grub.xml
       - report_accep_qemux86_64_bios_grub.html
       - sysstat.log
@@ -565,6 +575,8 @@ test_accep_qemux86_64_bios_grub_gpt:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/qemux86-64-bios-grub-gpt/qemux86-64-bios-grub-gpt_release_1_*.mender stage-artifacts/
     - if [ "$TEST_QEMUX86_64_BIOS_GRUB_GPT" = "true" ]; then
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub_gpt.xml;
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub_gpt.html;
@@ -577,6 +589,7 @@ test_accep_qemux86_64_bios_grub_gpt:
     expire_in: 2w
     when: always
     paths:
+      - stage-artifacts/
       - results_accep_qemux86_64_bios_grub_gpt.xml
       - report_accep_qemux86_64_bios_grub_gpt.html
       - sysstat.log
@@ -597,6 +610,8 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/vexpress-qemu-uboot-uefi-grub/vexpress-qemu-uboot-uefi-grub_release_1_*.mender stage-artifacts/
     - if [ "$TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB" = "true" ]; then
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_uboot_uefi_grub.xml;
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_uboot_uefi_grub.html;
@@ -609,6 +624,7 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
     expire_in: 2w
     when: always
     paths:
+      - stage-artifacts/
       - results_accep_vexpress_qemu_uboot_uefi_grub.xml
       - report_accep_vexpress_qemu_uboot_uefi_grub.html
       - sysstat.log
@@ -620,6 +636,9 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
       - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
       - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
 
+# Note that vexpress-qemu-flash yoctobuild does not generate a ext4 image so
+# the build script does not generate the Mender Artifact neither.
+# Therefore this job has no deliverables to be passed to the release stage.
 test_accep_vexpress_qemu_flash:
   stage: test
   dependencies:
@@ -661,6 +680,9 @@ test_accep_beagleboneblack:
     JOB_BASE_NAME: mender_beagleboneblack
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/beagleboneblack/beagleboneblack_release_1_*.mender stage-artifacts/
+    - cp $WORKSPACE/beagleboneblack/mender-beagleboneblack_*.sdimg.gz stage-artifacts/
     - if [ "$TEST_BEAGLEBONEBLACK" = "true" ]; then
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_beagleboneblack.xml;
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_beagleboneblack.html;
@@ -673,6 +695,7 @@ test_accep_beagleboneblack:
     expire_in: 2w
     when: always
     paths:
+      - stage-artifacts/
       - results_accep_beagleboneblack.xml
       - report_accep_beagleboneblack.html
       - sysstat.log
@@ -693,6 +716,9 @@ test_accep_raspberrypi3:
     JOB_BASE_NAME: mender_raspberrypi3
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/raspberrypi3/raspberrypi3_release_1_*.mender stage-artifacts/
+    - cp $WORKSPACE/raspberrypi3/mender-raspberrypi3_*.sdimg.gz stage-artifacts/
     - if [ "$TEST_RASPBERRYPI3" = "true" ]; then
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/results.xml results_accep_raspberrypi3.xml;
         cp ${CI_PROJECT_DIR}/../meta-mender/tests/acceptance/report.html report_accep_raspberrypi3.html;
@@ -705,6 +731,7 @@ test_accep_raspberrypi3:
     expire_in: 2w
     when: always
     paths:
+      - stage-artifacts/
       - results_accep_raspberrypi3.xml
       - report_accep_raspberrypi3.html
       - sysstat.log
