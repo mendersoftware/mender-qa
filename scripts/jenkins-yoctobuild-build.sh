@@ -95,6 +95,35 @@ modify_ext4() {
     printf "cd %s\nwrite %s %s\n" /etc/mender /tmp/artifactfile artifact_info | debugfs -w $1
 }
 
+modify_artifact() {
+    local old_artifact=$1
+    local new_fs_image=$2
+    local new_artifact_name=$3
+    local new_artifact_file=$4
+
+    # Artifact may have more than one device type defined (beaglebone-yocto
+    # and beaglebone, for example), and the only way we can find out is to
+    # inspect the artifact that Yocto built, since the job info itself does
+    # not provide this info.
+    device_types="$(mender-artifact read $old_artifact | sed -rne "/^ *Compatible devices:/ {
+        s/^[^[]*\\[//;
+        s/][^]]*$//;
+        s/ +/ -t /g;
+        s/^/-t /;
+        p;
+    }")"
+
+    if mender-artifact write rootfs-image --help | grep -e '-u FILE'; then
+        # Pre-3.0.0
+        file_flag=-u
+    else
+        # Post-3.0.0
+        file_flag=-f
+    fi
+
+    mender-artifact write rootfs-image $device_types -n $new_artifact_name $file_flag $new_fs_image -o $new_artifact_file
+}
+
 s3cmd_put() {
     if [ -z "$JENKINS_URL" ]; then return; fi
     local local_path=$1
@@ -808,8 +837,22 @@ build_and_test_client() {
             upload_output
         fi
 
-        if [ "$PUBLISH_ARTIFACTS" = true ]; then
-            publish_artifacts $machine_name $board_name $image_name $device_type
+        # Currently we don't support publishing non-ext4 images.
+        if [ -e "$WORKSPACE/$board_name/$image_name-$device_type.ext4" ]; then
+
+            # Prepare deliveries: modified fs, release_1 artifact, and compressed sdimg for hw boards
+            local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
+            cp $WORKSPACE/$board_name/$image_name-$device_type.ext4 $WORKSPACE/$board_name/$image_name-$device_type-release_1.ext4
+            modify_ext4 $WORKSPACE/$board_name/$image_name-$device_type-release_1.ext4 release-1_${client_version}
+            modify_artifact $WORKSPACE/$board_name/$image_name-$device_type.mender $WORKSPACE/$board_name/$image_name-$device_type.ext4 release-1_${client_version} $WORKSPACE/$board_name/${board_name}_release_1_${client_version}.mender
+            if is_hardware_board $board_name; then
+                gzip -c $WORKSPACE/$board_name/$image_name-$device_type.sdimg > $WORKSPACE/$board_name/mender-${board_name}_${client_version}.sdimg.gz
+            fi
+
+            # Actual publishing
+            if [ "$PUBLISH_ARTIFACTS" = true ]; then
+                publish_artifacts $machine_name $board_name $image_name $device_type
+            fi
         fi
 
         if is_building_dockerized_board; then
@@ -852,11 +895,6 @@ publish_artifacts() {
     # This makes the whole function run in a subshell. So no need for path
     # cleanups.
     (
-        if [ ! -e "$WORKSPACE/$board_name/$image_name-$device_type.ext4" ]; then
-            # Currently we don't support publishing non-ext4 images.
-            return
-        fi
-
         local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
         local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
 
@@ -884,30 +922,7 @@ publish_artifacts() {
             s3://mender/temp_${client_version}/$image_name-$device_type.ext4 \
             -F
 
-        # Artifact may have more than one device type defined (beaglebone-yocto
-        # and beaglebone, for example), and the only way we can find out is to
-        # inspect the artifact that Yocto built, since the job info itself does
-        # not provide this info.
-        device_types="$(mender-artifact read $image_name-$device_type.mender | sed -rne "/^ *Compatible devices:/ {
-            s/^[^[]*\\[//;
-            s/][^]]*$//;
-            s/ +/ -t /g;
-            s/^/-t /;
-            p;
-        }")"
-
-        if mender-artifact write rootfs-image --help | grep -e '-u FILE'; then
-            # Pre-3.0.0
-            file_flag=-u
-        else
-            # Post-3.0.0
-            file_flag=-f
-        fi
-
-        modify_ext4 $image_name-$device_type.ext4 release-1_${client_version}
-        mender-artifact write rootfs-image $device_types -n release-1_${client_version} $file_flag $image_name-$device_type.ext4 -o ${board_name}_release_1_${client_version}.mender
         if is_hardware_board $board_name; then
-            gzip -c $image_name-$device_type.sdimg > mender-${board_name}_${client_version}.sdimg.gz
             s3cmd_put_public \
                 mender-${board_name}_${client_version}.sdimg.gz \
                 s3://mender/${client_version}/$board_name/mender-${board_name}_${client_version}.sdimg.gz \
