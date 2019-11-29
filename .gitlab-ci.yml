@@ -435,9 +435,6 @@ build_servers:
   variables:
     JOB_BASE_NAME: mender_servers
     ONLY_BUILD: "true"
-  only:
-    variables:
-      - $RUN_INTEGRATION_TESTS == "true"
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mkdir -p stage-artifacts
