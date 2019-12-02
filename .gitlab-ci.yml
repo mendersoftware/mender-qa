@@ -951,7 +951,7 @@ test_full_integration:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
 
-release_docker:
+release_docker_images:
   when: manual
   stage: release
   image: teracy/ubuntu:18.04-dind-18.09.9
@@ -990,7 +990,7 @@ release_docker:
         docker push $docker_url:${version};
       done
 
-release_s3:
+release_board_artifacts:
   when: manual
   stage: release
   image: debian:buster
@@ -1033,4 +1033,127 @@ release_s3:
           aws s3api put-object-acl --acl public-read --bucket mender
             --key ${client_version}/${board_name}/mender-${board_name}_${client_version}.sdimg.gz;
         fi;
+      done
+
+build_mender-cli:
+  stage: build
+  image: golang:1.11.4
+  tags:
+    - mender-qa-slave
+  dependencies:
+    - init_workspace
+  before_script:
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env .
+    # Export GOPATH
+    - export GOPATH="$WORKSPACE/go"
+    # cd into component path
+    - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-cli
+  script:
+    - if grep -q build-multiplatform Makefile; then
+        make build-multiplatform;
+      else
+        make build;
+      fi
+    - cp mender-cli* $CI_PROJECT_DIR/
+  artifacts:
+    paths:
+      - mender-cli*
+
+build_mender-artifact:
+  stage: build
+  image: docker
+  services:
+    - docker:dind
+  tags:
+    - mender-qa-slave
+  dependencies:
+    - init_workspace
+  before_script:
+    # Check correct dind setup
+    - docker version
+    # Install dependencies
+    - apk add --no-cache make
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env .
+    # cd into component path
+    - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-artifact
+  stage: build
+  script:
+    - make build-natives-contained
+    - cp mender-artifact-* $CI_PROJECT_DIR/
+  artifacts:
+    expire_in: 2w
+    paths:
+      - mender-artifact-*
+  tags:
+    - docker
+
+release_binary_tools:
+  when: manual
+  stage: release
+  image: debian:buster
+  dependencies:
+    - init_workspace
+    - build_mender-cli
+    - build_mender-artifact
+  before_script:
+    # Install dependencies
+    - apt update && apt install -yyq awscli git python3 python3-pip
+    - pip3 install --upgrade pyyaml
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env /tmp
+    - mv mender-cli* mender-artifact-* /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env .
+    - mv /tmp/mender-cli* /tmp/mender-artifact-* .
+  script:
+    # mender-cli
+    - mender_cli_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-cli --in-integration-version HEAD)
+    - echo "=== mender-cli $mender_cli_version ==="
+    # We can simplify once mender-cli 1.2.0 is not supported
+    - if grep -q build-multiplatform $WORKSPACE/go/src/github.com/mendersoftware/mender-cli/Makefile; then
+        echo "Publishing ${mender_cli_version} version for linux to S3";
+        aws s3 cp mender-cli.linux.amd64
+          s3://mender/mender-cli/${mender_cli_version}/linux/mender-cli;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key mender-cli/${mender_cli_version}/linux/mender-cli;
+        echo "Publishing ${mender_cli_version} version for darwin to S3";
+        aws s3 cp mender-cli.darwin.amd64
+          s3://mender/mender-cli/${mender_cli_version}/darwin/mender-cli;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key mender-cli/${mender_cli_version}/darwin/mender-cli;
+      else
+        aws s3 cp mender-cli
+          s3://mender/mender-cli/${mender_cli_version}/mender-cli;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key mender-cli/${mender_cli_version}/mender-cli;
+      fi
+    # mender-artifact
+    - mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
+    - echo "=== mender-artifact $mender_artifact_version ==="
+    - for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
+        platform=${bin#mender-artifact-};
+        platform=${platform%.*};
+        echo "Publishing ${mender_artifact_version} version for ${platform} to S3";
+        aws s3 cp ${bin}
+          s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key mender-artifact/${mender_artifact_version}/${platform}/mender-artifact;
       done
