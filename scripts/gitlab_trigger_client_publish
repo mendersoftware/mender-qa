@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 mender_version=$1
 
@@ -45,7 +45,7 @@ for integ_version in $integration_versions; do
                     echo _REV]=${repo_version})";
   done
 
-  curl -f -X POST \
+  curl -v -f -X POST \
     -F token=$MENDER_QA_TRIGGER_TOKEN \
     -F ref=master \
     -F variables[PUBLISH_ARTIFACTS]=true \
