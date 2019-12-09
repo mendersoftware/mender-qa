@@ -1091,7 +1091,6 @@ build_mender-artifact:
     - mv /tmp/build_revisions.env .
     # cd into component path
     - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-artifact
-  stage: build
   script:
     - make build-natives-contained
     - cp mender-artifact-* $CI_PROJECT_DIR/
