@@ -954,6 +954,9 @@ test_full_integration:
 
 release_docker_images:
   when: manual
+  only:
+    variables:
+      - $PUBLISH_ARTIFACTS == "true"
   stage: release
   image: teracy/ubuntu:18.04-dind-18.09.9
   services:
@@ -993,6 +996,9 @@ release_docker_images:
 
 release_board_artifacts:
   when: manual
+  only:
+    variables:
+      - $PUBLISH_ARTIFACTS == "true"
   stage: release
   image: debian:buster
   tags:
@@ -1135,6 +1141,9 @@ build_mender-artifact:
 
 release_binary_tools:
   when: manual
+  only:
+    variables:
+      - $PUBLISH_ARTIFACTS == "true"
   stage: release
   image: debian:buster
   dependencies:
