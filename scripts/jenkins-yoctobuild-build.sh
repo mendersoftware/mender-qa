@@ -2,30 +2,7 @@
 
 set -e -x -E
 
-if [ -n "$JENKINS_URL" ]; then
-    $WORKSPACE/mender-qa/scripts/wait-until-build-host-ready.sh
-fi
-
 echo $WORKSPACE
-
-if [ -n "$CI_JOB_NAME" ]; then
-    # Disable updating pull requests status for Gitlab. In Gitlab we do it
-    # directly in the .gitlab-ci.yml file instead.
-    export DISABLE_GITHUB_PULL_REQUEST_STATUS=true
-fi
-
-# Jenkins builds will install docker here. Gitlab runners have it already in the image
-if [ -n "$JENKINS_URL" ]; then
-    sudo apt-get -qy --force-yes install docker-ce || apt-get -qy --force-yes install docker-ce
-    # make sure Docker uses the block storage to store docker containers.
-    sudo bash -c 'cat << EOF > /etc/docker/daemon.json
-{
-"data-root": "/var/lib/docker/",
-"storage-driver": "overlay2"
-}
-EOF'
-    sudo service docker restart
-fi
 
 SSH_TUNNEL_IP=188.166.29.46
 RASPBERRYPI3_PORT=2210
@@ -124,22 +101,6 @@ modify_artifact() {
     mender-artifact write rootfs-image $device_types -n $new_artifact_name $file_flag $new_fs_image -o $new_artifact_file
 }
 
-s3cmd_put() {
-    if [ -z "$JENKINS_URL" ]; then return; fi
-    local local_path=$1
-    local remote_url=$2
-    shift 2
-    local cmd_options=$@
-    s3cmd $cmd_options put $local_path $remote_url
-}
-
-s3cmd_put_public() {
-    if [ -z "$JENKINS_URL" ]; then return; fi
-    s3cmd_put $@
-    local remote_url=$2
-    s3cmd setacl $remote_url --acl-public
-}
-
 board_support_update() {
     local board=$1
     local status=$2
@@ -179,11 +140,6 @@ copy_build_conf() {
     while [ -n "$2" ]; do
         local src="$1"
         local tmpfile="$(mktemp)"
-
-        if grep /home/jenkins "$src"; then
-            echo "Please do not specify /home/jenkins directly in any build-conf files. Use @WORKSPACE@."
-            return 1
-        fi
 
         sed -e "s%@WORKSPACE@%$WORKSPACE%g" "$src" > "$tmpfile"
 
@@ -287,18 +243,10 @@ EOF
 # Verify that version references are up to date.
 $WORKSPACE/integration/extra/release_tool.py --verify-integration-references
 
-# Make sure that a stop_slave does not linger from a previous build.
-if [[ $STOP_SLAVE = "true" ]]; then
-    touch $HOME/stop_slave
-else
-    if [[ -f $HOME/stop_slave ]]; then
-        rm $HOME/stop_slave
-    fi
-fi
-
+# Verify mender-qa directory exists
 if [ ! -d mender-qa ]
 then
-    echo "JENKINS SCRIPT: mender-qa directory is not present"
+    echo "mender-qa directory is not present"
     exit 1
 fi
 
@@ -320,16 +268,6 @@ docker ps -q -a | xargs -r docker stop || true
 docker ps -q -a | xargs -r docker rm -f || true
 docker system prune -f -a
 sudo killall -s9 mender-stress-test-client || true
-
-# For Jenkins builds, manipulate also the socket permissions.
-if [ -n "$JENKINS_URL" ]; then
-    sudo chmod 777 /var/run/docker.sock
-    sudo systemctl restart docker
-fi
-
-# For some reason Jenkins is not able to do this properly itself after having
-# used a submodule.
-( cd $WORKSPACE/meta-mender && git clean -dxff )
 
 # ---------------------------------------------------
 # Generic setup.
@@ -649,7 +587,6 @@ build_and_test_client() {
             exit 1
         fi
 
-        "$(dirname "$0")"/github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build started" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
         source oe-init-build-env build-$board_name
         cd ../
 
@@ -668,10 +605,7 @@ build_and_test_client() {
             bitbake mender-image-full-cmdline-rofs || bitbake_result=$?
         fi
 
-        if [[ $bitbake_result -eq 0 ]]; then
-            "$(dirname "$0")"/github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build completed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
-        else
-            "$(dirname "$0")"/github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} build failed" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_build"
+        if [[ $bitbake_result -ne 0 ]]; then
             exit $bitbake_result
         fi
 
@@ -696,7 +630,6 @@ build_and_test_client() {
                 pip_cmd=pip3
             fi
 
-            "$(dirname "$0")"/github_pull_request_status "pending" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests started in Jenkins" "$BUILD_URL" "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
 
             bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
             if [ -d "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci ]; then
@@ -760,24 +693,15 @@ build_and_test_client() {
                     $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
             fi
 
-            local html_report=$(find . -iname report.html  | head -n 1)
-            local report_dir=$BUILD_NUMBER
-            s3cmd_put \
-                $html_report \
-                s3://mender-testing-reports/acceptance-$board_name/$report_dir/
-            local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/acceptance-$board_name/$report_dir/report.html
-
             if [ $qemu_testing_status -ne 0 ]; then
                 if is_hardware_board "$board_name"; then
                     board_support_update "$board_name" "failed"
                 fi
-                "$(dirname "$0")"/github_pull_request_status "failure" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests failed" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
                 exit $qemu_testing_status
             else
                 if is_hardware_board "$board_name"; then
                     board_support_update "$board_name" "passed"
                 fi
-                "$(dirname "$0")"/github_pull_request_status "success" "$board_name integration:${INTEGRATION_REV} poky:${POKY_REV} acceptance tests passed!" $report_url "${board_name}_${INTEGRATION_REV}_${POKY_REV}_acceptance_tests"
             fi
 
             if [ $qemu_testing_status -ne 0 ]; then
@@ -795,15 +719,6 @@ build_and_test_client() {
             # make references to it.
             cp $clean_image $BUILDDIR/tmp/deploy/images/$machine_name/$(basename $image)
         done
-
-        if [ "$UPLOAD_OUTPUT" = "true" ]
-        then
-            # store useful output to directory
-            cd $WORKSPACE
-            mkdir -p "$board_name-deploy"
-            cp -r $BUILDDIR/tmp/deploy/* "$board_name-deploy"
-            upload_output
-        fi
 
         # Currently we don't support publishing non-ext4 images.
         if [ -e "$WORKSPACE/$board_name/$image_name-$device_type.ext4" ]; then
@@ -844,17 +759,6 @@ build_and_test_client() {
 
             $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu --version pr
         fi
-    )
-}
-
-upload_output() {
-    (
-        cd $WORKSPACE
-        tar acvf output.tar.xz  --ignore-failed-read *-deploy
-        s3cmd_put_public \
-            output.tar.xz \
-            s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz
-        echo "Download build output from: https://s3.amazonaws.com/mender/temp/yoctobuilds/${BUILD_TAG}/output.tar.xz"
     )
 }
 
