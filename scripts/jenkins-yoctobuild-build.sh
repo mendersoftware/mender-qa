@@ -4,10 +4,6 @@ set -e -x -E
 
 echo $WORKSPACE
 
-SSH_TUNNEL_IP=188.166.29.46
-RASPBERRYPI3_PORT=2210
-BEAGLEBONEBLACK_PORT=2211
-
 declare -a CONFIG_MACHINE_NAMES
 declare -a CONFIG_BOARD_NAMES
 declare -a CONFIG_IMAGE_NAMES
@@ -53,10 +49,6 @@ is_testing_board() {
     return $ret
 }
 
-port_for_board() {
-    eval echo \$$(tr '[:lower:]' '[:upper:]' <<<"$1")_PORT
-}
-
 disable_mender_service() {
     if [ "$DISABLE_MENDER_SERVICE" = "true" ]
     then
@@ -99,27 +91,6 @@ modify_artifact() {
     fi
 
     mender-artifact write rootfs-image $device_types -n $new_artifact_name $file_flag $new_fs_image -o $new_artifact_file
-}
-
-board_support_update() {
-    local board=$1
-    local status=$2
-
-    local git_commit=$(cd "$WORKSPACE"/meta-mender/ && git log --pretty=format:"%h" | head -n 1)
-    local request_body=$(cat <<EOF
-    {
-      "jenkins_url": "$BUILD_URL",
-      "commit": "$git_commit",
-      "branch": "$META_MENDER_REV",
-      "build": $BUILD_NUMBER,
-      "status": "$status"
-    }
-EOF
-)
-
-    curl -u "$BS_JENKINS_AUTH" -H "Content-Type: application/json" \
-         -d "$request_body" \
-         -X POST https://board-support.mender.io/board/"$board"/ci_report || true
 }
 
 prepare_and_set_PATH() {
@@ -427,60 +398,6 @@ is_hardware_board() {
     esac
 }
 
-# Prepare the board for testing. Arguments.
-# - machine name
-# - board name
-prepare_board_for_testing() {
-    local machine_name="$1"
-    local board_name="$2"
-
-    /bin/cp ~/.ssh/id_rsa* "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci/recipes-mender/mender-qa/files/$board_name
-    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-        -t root@${SSH_TUNNEL_IP} \
-        -p $(port_for_board $board_name) \
-        "mender-qa activate-test-image off"
-    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-        -t root@${SSH_TUNNEL_IP} \
-        -p $(port_for_board $board_name) \
-        "reboot" \
-        || true
-}
-
-# Takes three arguments, the machine name, the board name, and image name.
-deploy_image_to_board() {
-    local counter=0
-    local machine_name="$1"
-    local board_name="$2"
-    local image_name="$3"
-    local device_type="$4"
-    while [  $counter -lt 5 ]; do
-        local scp_exit_code=0
-        scp -o UserKnownHostsFile=/dev/null \
-            -o StrictHostKeyChecking=no -C \
-            -oPort=$(port_for_board $board_name) \
-            "$BUILDDIR"/tmp/deploy/images/$machine_name/$image_name-$device_type.sdimg \
-            root@${SSH_TUNNEL_IP}:/tmp/ \
-            || scp_exit_code=$?
-        if [ "$scp_exit_code" -ne 0 ]; then
-            let counter=counter+1
-            sleep 30
-        else
-            ssh -o UserKnownHostsFile=/dev/null \
-                -o StrictHostKeyChecking=no \
-                -t root@${SSH_TUNNEL_IP} \
-                -p $(port_for_board $board_name) \
-                "env IMAGE_FILE=$image_name-$device_type.sdimg mender-qa deploy-test-image"
-            ssh -o UserKnownHostsFile=/dev/null \
-                -o StrictHostKeyChecking=no \
-                -t root@${SSH_TUNNEL_IP} \
-                -p $(port_for_board $board_name) \
-                "reboot" \
-                || true
-            break
-        fi
-    done
-}
-
 # ------------------------------------------------------------------------------
 # Adds the given build configuration to the list of possibilities. Later, the
 # correct one will be chosen with build_and_test().
@@ -594,19 +511,13 @@ build_and_test_client() {
         disable_mender_service
 
         cd $BUILDDIR
-        local bitbake_result=0
-        bitbake $image_name || bitbake_result=$?
+        bitbake $image_name
 
         # Check if there is a R/O rootfs recipe available.
-        if [[ $bitbake_result -eq 0 ]] \
-               && [[ $image_name == core-image-full-cmdline ]] \
+        if [[ $image_name == core-image-full-cmdline ]] \
                && [[ -f $WORKSPACE/meta-mender/meta-mender-demo/recipes-extended/images/mender-image-full-cmdline-rofs.bb ]]; then
 
-            bitbake mender-image-full-cmdline-rofs || bitbake_result=$?
-        fi
-
-        if [[ $bitbake_result -ne 0 ]]; then
-            exit $bitbake_result
+            bitbake mender-image-full-cmdline-rofs
         fi
 
         mkdir -p $WORKSPACE/$board_name
@@ -643,15 +554,7 @@ build_and_test_client() {
                 sudo $pip_cmd install -r $WORKSPACE/meta-mender/tests/acceptance/requirements.txt
             fi
 
-            if is_hardware_board $board_name; then
-                prepare_board_for_testing $machine_name $board_name
-            fi
-
             bitbake $image_name
-
-            if is_hardware_board $board_name; then
-                deploy_image_to_board $machine_name $board_name $image_name $device_type
-            fi
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
 
@@ -668,13 +571,6 @@ build_and_test_client() {
                 acceptance_test_to_run=" -k $ACCEPTANCE_TEST"
             fi
 
-            local host_args
-            if is_hardware_board $board_name; then
-                host_args="--host=$SSH_TUNNEL_IP:$(port_for_board $board_name)"
-            else
-                host_args=
-            fi
-
             local pytest_args=
             # Assuming thud or newer
             pytest_args="--no-pull"
@@ -682,30 +578,14 @@ build_and_test_client() {
             pytest_args="$pytest_args --commercial-tests"
 
             # run tests with xdist explicitly disabled
-            local qemu_testing_status=0
             if $python3_supported; then
-                python3 -m pytest -p no:xdist --verbose --junit-xml=results.xml $host_args \
+                python3 -m pytest -p no:xdist --verbose --junit-xml=results.xml \
                         --bitbake-image $image_name --board-type=$board_name $pytest_args \
-                        $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
+                        $html_report_args $acceptance_test_to_run
             else
-                py.test -p no:xdist --verbose --junit-xml=results.xml $host_args \
+                py.test -p no:xdist --verbose --junit-xml=results.xml \
                     --bitbake-image $image_name --board-type=$board_name $pytest_args \
-                    $html_report_args $acceptance_test_to_run || qemu_testing_status=$?
-            fi
-
-            if [ $qemu_testing_status -ne 0 ]; then
-                if is_hardware_board "$board_name"; then
-                    board_support_update "$board_name" "failed"
-                fi
-                exit $qemu_testing_status
-            else
-                if is_hardware_board "$board_name"; then
-                    board_support_update "$board_name" "passed"
-                fi
-            fi
-
-            if [ $qemu_testing_status -ne 0 ]; then
-                exit $qemu_testing_status
+                    $html_report_args $acceptance_test_to_run
             fi
 
             cd $WORKSPACE/
