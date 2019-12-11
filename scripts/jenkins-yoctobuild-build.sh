@@ -588,11 +588,6 @@ add_to_build_list() {
     fi
 }
 
-# Selects a configuration from the list to build. Client builds override
-# server-only builds, but the function otherwise tries to detect whether two
-# configurations conflict.
-INTEGRATION_TEST_SUITE=$($WORKSPACE/integration/extra/release_tool.py --select-test-suite || echo "all")
-
 build_and_test() {
     local machine_to_build=
     local board_to_build=
@@ -639,14 +634,6 @@ build_and_test() {
 
     if [ -n "$board_to_build" ]; then
         build_and_test_client $machine_to_build $board_to_build $image_to_build $device_type_to_build
-
-    fi
-
-    if [ "$machine_to_build" = "mender_servers" ]; then
-        run_backend_integration_tests && \
-        run_integration_tests
-    else
-        run_integration_tests $machine_to_build $board_to_build
     fi
 }
 
@@ -943,154 +930,6 @@ upload_output() {
             output.tar.xz \
             s3://mender/temp/yoctobuilds/$BUILD_TAG/output.tar.xz
         echo "Download build output from: https://s3.amazonaws.com/mender/temp/yoctobuilds/${BUILD_TAG}/output.tar.xz"
-    )
-}
-
-# ------------------------------------------------------------------------------
-# Function for running integration tests.
-#
-# Parameters:
-#   - machine name
-#   - board name (usually the same or similar to machine name, but each machine
-#                 name can have several boards)
-# ------------------------------------------------------------------------------
-run_integration_tests() {
-
-    # Install Python dependency pymongo.
-    # This is a Jenkins specific hack to not mofidy jenkins-yoctobuild-init-script.sh and rebuild the image
-    sudo pip2 install pymongo==3.6.1
-
-    (
-        local machine_name="$1"
-        local board_name="$2"
-
-        if [ "$RUN_INTEGRATION_TESTS" != "true" ] || ! grep mender_servers <<<"$JOB_BASE_NAME"; then
-            return
-        fi
-
-        local extra_job_string=
-        local extra_job_info="tests"
-        if [ -n "$SPECIFIC_INTEGRATION_TEST" ]; then
-            extra_job_string="_$SPECIFIC_INTEGRATION_TEST"
-            extra_job_info="specific test:$SPECIFIC_INTEGRATION_TEST"
-        else
-            # only do automatic test suite selection if the user wasn't specific
-            # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
-            case $INTEGRATION_TEST_SUITE in
-                "enterprise")
-                    export SPECIFIC_INTEGRATION_TEST="Enterprise"
-                    ;;
-                "open")
-                    export SPECIFIC_INTEGRATION_TEST="not Enterprise"
-                    ;;
-            esac
-        fi
-
-        "$(dirname "$0")"/github_pull_request_status \
-            "pending" \
-            "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info have started in Jenkins" \
-            "$BUILD_URL" \
-            "${board_name:+${board_name}_}integration_${INTEGRATION_REV}$extra_job_string"
-
-        if is_building_dockerized_board; then
-            cd $WORKSPACE
-            source oe-init-build-env build-$board_name
-        fi
-
-        local testing_status=0
-        cd $WORKSPACE/integration/tests && ./run.sh ${machine_name:+--machine-name=$machine_name} || testing_status=$?
-
-        local html_report=$(find . -iname report.html  | head -n 1)
-        local report_dir=$BUILD_NUMBER
-
-        s3cmd_put \
-            $html_report \
-            s3://mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/
-        local report_url=https://s3-eu-west-1.amazonaws.com/mender-testing-reports/integration-reports${board_name:+-${board_name}}/$report_dir/report.html
-
-        if [ $testing_status -ne 0 ]; then
-            "$(dirname "$0")"/github_pull_request_status \
-                "failure" \
-                "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info failed" \
-                $report_url \
-                "${board_name:+${board_name}_}integration_${INTEGRATION_REV}$extra_job_string"
-        else
-            "$(dirname "$0")"/github_pull_request_status \
-                "success" \
-                "${board_name:+${board_name} }integration:${INTEGRATION_REV} $extra_job_info passed!" \
-                $report_url \
-                "${board_name:+${board_name}_}integration_${INTEGRATION_REV}$extra_job_string"
-        fi
-
-        if [ "$testing_status" -ne 0 ]; then
-            exit $testing_status
-        fi
-    )
-}
-
-# ------------------------------------------------------------------------------
-# Function for running backend specific integration tests.
-# ------------------------------------------------------------------------------
-run_backend_integration_tests() {
-    (
-        if [ "$RUN_INTEGRATION_TESTS" != "true" ] || ! grep mender_servers <<<"$JOB_BASE_NAME"; then
-            return
-        fi
-
-        "$(dirname "$0")"/github_pull_request_status \
-            "pending" \
-            "integration:${INTEGRATION_REV} have started in Jenkins" \
-            "$BUILD_URL" \
-            "backend_integration_${INTEGRATION_REV}"
-
-        local testing_status=0
-
-
-        if [ -f $WORKSPACE/integration/docker-compose.enterprise.yml ]; then
-            cd $WORKSPACE/integration/backend-tests && \
-
-                case $INTEGRATION_TEST_SUITE in
-                    "enterprise")
-                        PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
-                        testing_status=$?
-                        ;;
-                    "open")
-                        PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run || \
-                        testing_status=$?
-                        ;;
-                    *)
-                        PYTEST_ARGS="-k 'not Enterprise and not Multitenant'" ./run && \
-                        PYTEST_ARGS="-k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml || \
-                        testing_status=$?
-                        ;;
-                esac
-        else
-            # for older releases, ignore test suite selection and just run open tests
-            cd $WORKSPACE/integration/backend-tests && \
-                PYTEST_ARGS="-k 'not Multitenant'" ./run || \
-                testing_status=$?
-
-        fi
-
-        if [ $testing_status -ne 0 ]; then
-            "$(dirname "$0")"/github_pull_request_status \
-                "failure" \
-                "integration:${INTEGRATION_REV}" \
-                "$BUILD_URL" \
-                "backend_integration_${INTEGRATION_REV}"
-        else
-            "$(dirname "$0")"/github_pull_request_status \
-                "success" \
-                "integration:${INTEGRATION_REV}" \
-                "$BUILD_URL" \
-                "backend_integration_${INTEGRATION_REV}"
-        fi
-
-        docker ps -q | xargs -r docker rm -v -f
-
-        if [ "$testing_status" -ne 0 ]; then
-            exit $testing_status
-        fi
     )
 }
 
