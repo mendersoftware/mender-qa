@@ -835,11 +835,6 @@ build_and_test_client() {
             if is_hardware_board $board_name; then
                 gzip -c $WORKSPACE/$board_name/$image_name-$device_type.sdimg > $WORKSPACE/$board_name/mender-${board_name}_${client_version}.sdimg.gz
             fi
-
-            # Actual publishing
-            if [ "$PUBLISH_ARTIFACTS" = true ]; then
-                publish_artifacts $machine_name $board_name $image_name $device_type
-            fi
         fi
 
         if is_building_dockerized_board; then
@@ -868,57 +863,6 @@ build_and_test_client() {
 
             $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu --version pr
         fi
-    )
-}
-
-# Published the artifacts for the board in the argument.
-publish_artifacts() {
-    # Arguments
-    local machine_name="$1"
-    local board_name="$2"
-    local image_name="$3"
-    local device_type="$4"
-
-    # This makes the whole function run in a subshell. So no need for path
-    # cleanups.
-    (
-        local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
-        local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
-
-        if grep -q build-natives-contained $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/Makefile; then
-            # New style platform-indexed mender-artifact upload.
-            for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
-                platform=${bin#mender-artifact-}
-                platform=${platform%.*}
-                s3cmd_put_public \
-                    $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact/${bin} \
-                    s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact \
-                    --cf-invalidate -F
-            done
-        else
-            # Old style Linux-only mender-artifact upload.
-            s3cmd_put_public \
-                $WORKSPACE/go/bin/mender-artifact \
-                s3://mender/mender-artifact/${mender_artifact_version}/mender-artifact \
-                --cf-invalidate -F
-        fi
-
-        cd $WORKSPACE/$board_name/
-        s3cmd_put_public \
-            $image_name-$device_type.ext4 \
-            s3://mender/temp_${client_version}/$image_name-$device_type.ext4 \
-            -F
-
-        if is_hardware_board $board_name; then
-            s3cmd_put_public \
-                mender-${board_name}_${client_version}.sdimg.gz \
-                s3://mender/${client_version}/$board_name/mender-${board_name}_${client_version}.sdimg.gz \
-                --cf-invalidate -F
-        fi
-        s3cmd_put_public \
-            ${board_name}_release_1_${client_version}.mender \
-            s3://mender/${client_version}/$board_name/${board_name}_release_1_${client_version}.mender \
-            --cf-invalidate -F
     )
 }
 
@@ -962,87 +906,3 @@ else
 fi
 
 build_and_test
-
-# Reset docker tag names to their cloned values after tests are done.
-cd $WORKSPACE/integration
-git checkout -f -- .
-
-if [ "$PUBLISH_ARTIFACTS" = true ]; then
-    if grep mender_servers <<<"$JOB_BASE_NAME"; then
-        # Use release tool to query for available docker images.
-        for image in $($WORKSPACE/integration/extra/release_tool.py --list docker ); do (
-            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
-            docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
-            # Upload containers.
-            case "$image" in
-                api-gateway|deployments|deployments-enterprise|deviceauth|email-sender|gui|inventory|mender-client-docker|mender-conductor|mender-conductor-enterprise|org-welcome-email-preparer|tenantadm|useradm|useradm-enterprise)
-                    docker tag $docker_url:pr $docker_url:${version}
-                    docker push $docker_url:${version}
-                    ;;
-                mender-client-qemu|mender-client-qemu-rofs)
-                    # Handled below.
-                    :
-                    ;;
-                *)
-                    echo "Don't know how to upload containers for $image!"
-                    exit 1
-                    ;;
-            esac
-        ); done
-        # Listing all git components.
-        for image in $($WORKSPACE/integration/extra/release_tool.py --list git ); do (
-            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD)
-            # Upload binaries.
-            case "$image" in
-                deployments|deployments-enterprise|deviceauth|gui|integration|inventory|mender-api-gateway-docker|mender-conductor|mender-conductor-enterprise|tenantadm|useradm|useradm-enterprise)
-                    # No binaries.
-                    :
-                    ;;
-                mender-cli)
-                    if grep -q build-multiplatform $WORKSPACE/go/src/github.com/mendersoftware/mender-cli/Makefile; then
-                        # New style platform-indexed mender-cli upload.
-                        for bin in mender-cli.linux.amd64 mender-cli.darwin.amd64; do
-                            platform=${bin#mender-cli.}
-                            platform=${platform%.amd64}
-                            s3cmd_put_public \
-                                $WORKSPACE/go/src/github.com/mendersoftware/mender-cli/${bin} \
-                                s3://mender/mender-cli/${version}/${platform}/mender-cli \
-                                --cf-invalidate -F
-                        done
-                    else
-                        # Old style Linux-only mender-cli upload.
-                        s3cmd_put_public \
-                            $WORKSPACE/go/bin/$image \
-                            s3://mender/$image/$version/$image \
-                            --cf-invalidate -F
-                    fi
-                    ;;
-                mender-artifact|mender)
-                    # Handled in publish_artifacts().
-                    :
-                    ;;
-                *)
-                    echo "Don't know how to upload binaries for $image!"
-                    exit 1
-                    ;;
-            esac
-        ); done
-    fi
-
-    if is_poky_branch morty || is_poky_branch pyro; then
-        board_to_publish=vexpress-qemu
-    else
-        board_to_publish=qemux86-64-uefi-grub
-    fi
-    if is_building_board $board_to_publish; then
-        for container in mender-client-qemu mender-client-qemu-rofs; do
-            if ! docker inspect mendersoftware/$container:pr >/dev/null; then
-                continue
-            fi
-
-            version=$($WORKSPACE/integration/extra/release_tool.py --version-of $container --in-integration-version HEAD)
-            docker tag mendersoftware/$container:pr mendersoftware/$container:${version}
-            docker push mendersoftware/$container:${version}
-        done
-    fi
-fi
