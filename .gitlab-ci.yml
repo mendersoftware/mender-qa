@@ -400,6 +400,10 @@ init_workspace:
     - ")"
 
 build_client:
+  only:
+    variables:
+      - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
+      - $RUN_INTEGRATION_TESTS == "true"
   stage: build
   dependencies:
     - init_workspace
@@ -407,10 +411,6 @@ build_client:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
     ONLY_BUILD: "true"
-  only:
-    variables:
-      - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
-      - $RUN_INTEGRATION_TESTS == "true"
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mkdir -p stage-artifacts
@@ -458,6 +458,12 @@ build_servers:
       - sysstat.svg
 
 test_accep_qemux86_64_uefi_grub:
+  only:
+    # Even though the build for this configuration is done unconditionally in build_client job,
+    # we will still trigger this one for BUILD_QEMUX86_64_UEFI_GRUB to be able to collect artifacts
+    variables:
+      - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
+      - $TEST_QEMUX86_64_UEFI_GRUB == "true"
   stage: test
   dependencies:
     - init_workspace
@@ -487,14 +493,12 @@ test_accep_qemux86_64_uefi_grub:
       - sysstat.svg
     reports:
       junit: results_accep_qemux86_64_uefi_grub.xml
-  only:
-    # Even though the build for this configuration is done unconditionally in build_client job,
-    # we will still trigger this one for BUILD_QEMUX86_64_UEFI_GRUB to be able to collect artifacts
-    variables:
-      - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
-      - $TEST_QEMUX86_64_UEFI_GRUB == "true"
 
 test_accep_vexpress_qemu:
+  only:
+    variables:
+      - $BUILD_VEXPRESS_QEMU == "true"
+      - $TEST_VEXPRESS_QEMU == "true"
   stage: test
   dependencies:
     - init_workspace
@@ -524,12 +528,12 @@ test_accep_vexpress_qemu:
       - sysstat.svg
     reports:
       junit: results_accep_vexpress_qemu.xml
-  only:
-    variables:
-      - $BUILD_VEXPRESS_QEMU == "true"
-      - $TEST_VEXPRESS_QEMU == "true"
 
 test_accep_qemux86_64_bios_grub:
+  only:
+    variables:
+      - $BUILD_QEMUX86_64_BIOS_GRUB == "true"
+      - $TEST_QEMUX86_64_BIOS_GRUB == "true"
   stage: test
   dependencies:
     - init_workspace
@@ -559,12 +563,12 @@ test_accep_qemux86_64_bios_grub:
       - sysstat.svg
     reports:
       junit: results_accep_qemux86_64_bios_grub.xml
-  only:
-    variables:
-      - $BUILD_QEMUX86_64_BIOS_GRUB == "true"
-      - $TEST_QEMUX86_64_BIOS_GRUB == "true"
 
 test_accep_qemux86_64_bios_grub_gpt:
+  only:
+    variables:
+      - $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
+      - $TEST_QEMUX86_64_BIOS_GRUB_GPT == "true"
   stage: test
   dependencies:
     - init_workspace
@@ -594,12 +598,12 @@ test_accep_qemux86_64_bios_grub_gpt:
       - sysstat.svg
     reports:
       junit: results_accep_qemux86_64_bios_grub_gpt.xml
-  only:
-    variables:
-      - $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
-      - $TEST_QEMUX86_64_BIOS_GRUB_GPT == "true"
 
 test_accep_vexpress_qemu_uboot_uefi_grub:
+  only:
+    variables:
+      - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
+      - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
   stage: test
   dependencies:
     - init_workspace
@@ -629,15 +633,15 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
       - sysstat.svg
     reports:
       junit: results_accep_vexpress_qemu_uboot_uefi_grub.xml
-  only:
-    variables:
-      - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
-      - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
 
 # Note that vexpress-qemu-flash yoctobuild does not generate a ext4 image so
 # the build script does not generate the Mender Artifact neither.
 # Therefore this job has no deliverables to be passed to the release stage.
 test_accep_vexpress_qemu_flash:
+  only:
+    variables:
+      - $BUILD_VEXPRESS_QEMU_FLASH == "true"
+      - $TEST_VEXPRESS_QEMU_FLASH == "true"
   stage: test
   dependencies:
     - init_workspace
@@ -664,12 +668,12 @@ test_accep_vexpress_qemu_flash:
       - sysstat.svg
     reports:
       junit: results_accep_vexpress_qemu_flash.xml
-  only:
-    variables:
-      - $BUILD_VEXPRESS_QEMU_FLASH == "true"
-      - $TEST_VEXPRESS_QEMU_FLASH == "true"
 
 test_accep_beagleboneblack:
+  only:
+    variables:
+      - $BUILD_BEAGLEBONEBLACK == "true"
+      - $TEST_BEAGLEBONEBLACK == "true"
   stage: test
   dependencies:
     - init_workspace
@@ -700,12 +704,12 @@ test_accep_beagleboneblack:
       - sysstat.svg
     reports:
       junit: results_accep_beagleboneblack.xml
-  only:
-    variables:
-      - $BUILD_BEAGLEBONEBLACK == "true"
-      - $TEST_BEAGLEBONEBLACK == "true"
 
 test_accep_raspberrypi3:
+  only:
+    variables:
+      - $BUILD_RASPBERRYPI3 == "true"
+      - $TEST_RASPBERRYPI3 == "true"
   stage: test
   dependencies:
     - init_workspace
@@ -736,12 +740,11 @@ test_accep_raspberrypi3:
       - sysstat.svg
     reports:
       junit: results_accep_raspberrypi3.xml
-  only:
-    variables:
-      - $BUILD_RASPBERRYPI3 == "true"
-      - $TEST_RASPBERRYPI3 == "true"
 
 test_backend_integration:
+  only:
+    variables:
+      - $RUN_INTEGRATION_TESTS == "true"
   stage: test
   image: docker:18-dind
   tags:
@@ -843,11 +846,11 @@ test_backend_integration:
       - sysstat.svg
     reports:
       junit: results_backend_integration_*.xml
+
+test_full_integration:
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
-
-test_full_integration:
   allow_failure: true
   stage: test
   image: docker:18-dind
@@ -948,9 +951,6 @@ test_full_integration:
       - sysstat.svg
     reports:
       junit: results_full_integration.xml
-  only:
-    variables:
-      - $RUN_INTEGRATION_TESTS == "true"
 
 release_docker_images:
   when: manual
