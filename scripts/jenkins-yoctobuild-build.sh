@@ -13,10 +13,6 @@ export PATH=$PATH:$WORKSPACE/go/bin
 
 declare -A TEST_TRACKER
 
-# patch Fabric
-wget https://github.com/fabric/fabric/commit/b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
-sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
-
 is_poky_branch() {
     if egrep -q "^ *DISTRO_CODENAME *= *\"$1\" *\$" $WORKSPACE/meta-poky/conf/distro/poky.conf; then
         return 0
@@ -552,6 +548,12 @@ build_and_test_client() {
                 sudo $pip_cmd install -r $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt
             else
                 sudo $pip_cmd install -r $WORKSPACE/meta-mender/tests/acceptance/requirements.txt
+            fi
+
+            # patch Fabric (Python2 only)
+            if ! $python3_supported; then
+                wget https://github.com/fabric/fabric/commit/b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
+                sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
             fi
 
             bitbake $image_name
