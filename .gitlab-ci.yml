@@ -224,9 +224,6 @@ init_workspace:
       git checkout -f -b pr ${TENANTADM_REV})
     - (cd go/src/github.com/mendersoftware/tenantadm && echo -e "# $(git log -n1 --oneline)\nexport TENANTADM_REV=$TENANTADM_REV\nexport TENANTADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
-    - git clone https://github.com/mem/oe-meta-go.git
-    - (cd oe-meta-go && git checkout -f master)
-
     - git clone git://git.openembedded.org/meta-openembedded.git
     - (cd meta-openembedded && git checkout -f ${META_OPENEMBEDDED_REV})
     - (cd meta-openembedded && echo -e "# $(git log -n1 --oneline)\nexport META_OPENEMBEDDED_REV=$META_OPENEMBEDDED_REV\nexport META_OPENEMBEDDED_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)

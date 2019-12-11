@@ -222,22 +222,12 @@ LICENSE_FLAGS_WHITELIST = "commercial_mender-binary-delta"
 FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "${WORKSPACE}/mender-binary-delta:"
 EOF
 
-    # See comment in local.conf
-    if is_poky_branch morty || is_poky_branch pyro; then
-        # Pyro and morty need old style full Go paths.
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-EXTERNALSRC_pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
-EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
-EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact"
-EOF
-    else
-        # Newer branches need new style single Go path
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+    # Assuming sumo or newer
+    cat >> $BUILDDIR/conf/local.conf <<EOF
 EXTERNALSRC_pn-mender = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go"
 EOF
-    fi
 
     # Use network cache if present, if not, use local cache.
     if [ -d /mnt/sstate-cache ]; then
@@ -286,13 +276,6 @@ EOF
         cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION_pn-mender-artifact = "$mender_artifact_version-git%"
 PREFERRED_VERSION_pn-mender-artifact-native = "$mender_artifact_version-git%"
-EOF
-    fi
-
-    if is_poky_branch morty; then
-        # Morty needs oe-meta-go
-        cat >> $BUILDDIR/conf/bblayers.conf <<EOF
-BBLAYERS_append = " $WORKSPACE/oe-meta-go"
 EOF
     fi
 }
@@ -760,12 +743,10 @@ build_and_test_client() {
             fi
 
             local pytest_args=
-            if ! ( is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko || is_poky_branch sumo ); then
-                pytest_args="--no-pull"
-            fi
-            if ! ( is_poky_branch morty || is_poky_branch pyro ); then
-                pytest_args="$pytest_args --commercial-tests"
-            fi
+            # Assuming thud or newer
+            pytest_args="--no-pull"
+            # Assuming rocko or newer
+            pytest_args="$pytest_args --commercial-tests"
 
             # run tests with xdist explicitly disabled
             local qemu_testing_status=0
@@ -887,22 +868,10 @@ add_to_build_list          vexpress-qemu-flash       vexpress-qemu-flash        
 add_to_build_list          raspberrypi3              raspberrypi3                   core-image-full-cmdline
 # Server build, without client build.
 add_to_build_list          mender_servers
-
-if is_poky_branch morty || is_poky_branch pyro || is_poky_branch rocko; then
-    # Rocko and earlier used "beaglebone" MACHINE name.
-    add_to_build_list      beaglebone                beagleboneblack                core-image-base
-else
-    if is_poky_branch sumo; then
-        add_to_build_list  beaglebone-yocto          beagleboneblack                core-image-base
-    else
-        # In post-sumo we started compiling for Beaglebone using GRUB instead.
-        add_to_build_list  beaglebone-yocto          beagleboneblack                core-image-base          beaglebone-yocto-grub
-
-        add_to_build_list  qemux86-64                qemux86-64-bios-grub-gpt       core-image-full-cmdline  qemux86-64-bios-grub-gpt
-    fi
-
-    add_to_build_list      qemux86-64                qemux86-64-bios-grub           core-image-full-cmdline  qemux86-64-bios
-    add_to_build_list      vexpress-qemu             vexpress-qemu-uboot-uefi-grub  core-image-full-cmdline  vexpress-qemu-grub
-fi
+# Assuming thud or newer
+add_to_build_list          beaglebone-yocto          beagleboneblack                core-image-base          beaglebone-yocto-grub
+add_to_build_list          qemux86-64                qemux86-64-bios-grub-gpt       core-image-full-cmdline  qemux86-64-bios-grub-gpt
+add_to_build_list          qemux86-64                qemux86-64-bios-grub           core-image-full-cmdline  qemux86-64-bios
+add_to_build_list          vexpress-qemu             vexpress-qemu-uboot-uefi-grub  core-image-full-cmdline  vexpress-qemu-grub
 
 build_and_test
