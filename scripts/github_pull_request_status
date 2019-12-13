@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if [ "$DISABLE_GITHUB_PULL_REQUEST_STATUS" != "" ]; then
-    exit 0
-fi
-
 request_body=$(cat <<EOF
 {
   "state": "$1",
