@@ -17,7 +17,7 @@ variables:
   USERADM_ENTERPRISE_REV: "master"
   MENDER_API_GATEWAY_DOCKER_REV: "master"
   MENDER_CLI_REV: "master"
-  INTEGRATION_REV: "master"
+  INTEGRATION_REV: "men_2985_es6"
   TENANTADM_REV: "master"
   MENDER_STRESS_TEST_CLIENT_REV: "master"
   META_OPENEMBEDDED_REV: "warrior"
