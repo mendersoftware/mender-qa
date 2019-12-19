@@ -115,7 +115,7 @@ init_workspace:
     - (cd mender-qa && echo -e "# $(git log -n1 --oneline)\nexport MENDER_QA_REV=$MENDER_QA_REV\nexport MENDER_QA_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     # Add integration first, as github_pull_request_status depends on release_tool.
-    - git clone -b men_2985_es6 https://github.com/merlin-northern/integration
+    - git clone https://github.com/mendersoftware/integration
     - (cd integration &&
       git fetch -u -f origin ${INTEGRATION_REV}:pr &&
       git checkout pr ||
