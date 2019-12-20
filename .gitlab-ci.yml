@@ -631,9 +631,9 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
     reports:
       junit: results_accep_vexpress_qemu_uboot_uefi_grub.xml
 
-# Note that vexpress-qemu-flash yoctobuild does not generate a ext4 image so
+# Note that vexpress-qemu-flash configuration does not generate a ext4 image so
 # the build script does not generate the Mender Artifact neither.
-# Therefore this job has no deliverables to be passed to the release stage.
+# This job collects the .ubifs for debugging but not for release publishing
 test_accep_vexpress_qemu_flash:
   only:
     variables:
@@ -651,6 +651,8 @@ test_accep_vexpress_qemu_flash:
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_flash.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_flash.html;
       fi
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/vexpress-qemu-flash/core-image-minimal-vexpress-qemu-flash.ubifs stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
     # Post job status
@@ -659,6 +661,7 @@ test_accep_vexpress_qemu_flash:
     expire_in: 2w
     when: always
     paths:
+      - stage-artifacts/
       - results_accep_vexpress_qemu_flash.xml
       - report_accep_vexpress_qemu_flash.html
       - sysstat.log
