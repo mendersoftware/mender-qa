@@ -19,6 +19,7 @@ variables:
   MENDER_CLI_REV: "master"
   INTEGRATION_REV: "master"
   TENANTADM_REV: "master"
+  WORKFLOWS_REV: "master"
   MENDER_STRESS_TEST_CLIENT_REV: "master"
   META_OPENEMBEDDED_REV: "warrior"
   META_RASPBERRYPI_REV: "warrior"
@@ -223,6 +224,13 @@ init_workspace:
       git checkout pr ||
       git checkout -f -b pr ${TENANTADM_REV})
     - (cd go/src/github.com/mendersoftware/tenantadm && echo -e "# $(git log -n1 --oneline)\nexport TENANTADM_REV=$TENANTADM_REV\nexport TENANTADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+
+    - git clone git@github.com:mendersoftware/workflows go/src/github.com/mendersoftware/workflows
+    - (cd go/src/github.com/mendersoftware/workflows &&
+      git fetch -u -f origin ${WORKFLOWS_REV}:pr &&
+      git checkout pr ||
+      git checkout -f -b pr ${WORKFLOWS_REV})
+    - (cd go/src/github.com/mendersoftware/workflows && echo -e "# $(git log -n1 --oneline)\nexport WORKFLOWS_REV=$WORKFLOWS_REV\nexport WORKFLOWS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - git clone git://git.openembedded.org/meta-openembedded.git
     - (cd meta-openembedded && git checkout -f ${META_OPENEMBEDDED_REV})
