@@ -282,7 +282,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
 
         case "$docker" in
-            deployments|deployments-enterprise|deviceauth|inventory|tenantadm|useradm|useradm-enterprise)
+            deployments|deployments-enterprise|deviceauth|inventory|tenantadm|useradm|useradm-enterprise|workflows)
                 cd go/src/github.com/mendersoftware/$git
                 # Versions before 2.0.0 used "go build", later ones
                 # build everything inside multi-stage docker builds.
