@@ -59,8 +59,10 @@ variables:
 # Check signoffs in commits
 include:
     - project: 'Northern.tech/Mender/mendertesting'
-      ref: master
       file: '.gitlab-ci-check-commits-signoffs.yml'
+      only:
+        variables:
+          - $MENDER_QA_REV != "master"
 
 stages:
   - init
