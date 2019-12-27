@@ -1,0 +1,4 @@
+FROM nginx:alpine
+
+ARG REPORT
+COPY $REPORT /usr/share/nginx/html/
