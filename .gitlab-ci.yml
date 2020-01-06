@@ -195,7 +195,7 @@ init_workspace:
       git fetch -u -f origin ${USERADM_ENTERPRISE_REV}:pr &&
       git checkout pr ||
       git checkout -f -b pr ${USERADM_ENTERPRISE_REV})
-    - (cd go/src/github.com/mendersoftware/useradm-enterprise && echo -e "# $(git log -n1 --oneline)\nexport USERADM_ENTERPRISE_REV=$USERADM_ENTERPRISE_REV\nexport USERADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+    - (cd go/src/github.com/mendersoftware/useradm-enterprise && echo -e "# $(git log -n1 --oneline)\nexport USERADM_ENTERPRISE_REV=$USERADM_ENTERPRISE_REV\nexport USERADM_ENTERPRISE_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - git clone https://github.com/mendersoftware/mender-api-gateway-docker
     - (cd mender-api-gateway-docker &&
