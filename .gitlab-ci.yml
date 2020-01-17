@@ -855,6 +855,7 @@ test_backend_integration:
       junit: results_backend_integration_*.xml
 
 test_full_integration:
+  timeout: 4h
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
