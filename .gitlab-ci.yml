@@ -943,6 +943,7 @@ test_full_integration:
 
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - tar -cjf mender_testing_logs.tar.bz2 -C ${CI_PROJECT_DIR}/../integration/tests/mender_testing_logs . || true
     - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_full_integration.xml
     - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_full_integration.html
     - cp /var/log/sysstat/sysstat.log .
@@ -953,6 +954,7 @@ test_full_integration:
     expire_in: 2w
     when: always
     paths:
+      - mender_testing_logs.tar.bz2
       - results_full_integration.xml
       - report_full_integration.html
       - sysstat.log
