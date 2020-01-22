@@ -995,6 +995,7 @@ test_full_integration:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
 
+    - cp -r ${CI_PROJECT_DIR}/../integration/tests/mender_test_logs .
     - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_full_integration.xml
     - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_full_integration.html
     - cp /var/log/sysstat/sysstat.log .
@@ -1007,6 +1008,7 @@ test_full_integration:
     expire_in: 2w
     when: always
     paths:
+      - mender_test_logs
       - results_full_integration.xml
       - report_full_integration.html
       - sysstat.log
