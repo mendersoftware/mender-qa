@@ -425,13 +425,17 @@ build_client:
     ONLY_BUILD: "true"
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - mkdir -p stage-artifacts
     - docker save mendersoftware/mender-client-qemu:pr -o stage-artifacts/mender-client-qemu.tar
     - docker save mendersoftware/mender-client-qemu-rofs:pr -o stage-artifacts/mender-client-qemu-rofs.tar
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     paths:
@@ -449,6 +453,8 @@ build_servers:
     ONLY_BUILD: "true"
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - mkdir -p stage-artifacts
     - for repo in `${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker -a`; do
       if ! echo $repo | grep -q mender-client-qemu; then
@@ -459,6 +465,7 @@ build_servers:
     - tar -cf stage-artifacts/host-tools.tar -C ../go/bin/ .
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
@@ -484,6 +491,8 @@ test_accep_qemux86_64_uefi_grub:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - if [ "$TEST_QEMUX86_64_UEFI_GRUB" = "true" ]; then
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html;
@@ -492,8 +501,10 @@ test_accep_qemux86_64_uefi_grub:
     - cp $WORKSPACE/qemux86-64-uefi-grub/qemux86-64-uefi-grub_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -519,6 +530,8 @@ test_accep_vexpress_qemu:
     JOB_BASE_NAME: mender_vexpress_qemu
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - if [ "$TEST_VEXPRESS_QEMU" = "true" ]; then
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu.html;
@@ -527,8 +540,10 @@ test_accep_vexpress_qemu:
     - cp $WORKSPACE/vexpress-qemu/vexpress-qemu_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -554,6 +569,8 @@ test_accep_qemux86_64_bios_grub:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - if [ "$TEST_QEMUX86_64_BIOS_GRUB" = "true" ]; then
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub.html;
@@ -562,8 +579,10 @@ test_accep_qemux86_64_bios_grub:
     - cp $WORKSPACE/qemux86-64-bios-grub/qemux86-64-bios-grub_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -589,6 +608,8 @@ test_accep_qemux86_64_bios_grub_gpt:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - if [ "$TEST_QEMUX86_64_BIOS_GRUB_GPT" = "true" ]; then
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub_gpt.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub_gpt.html;
@@ -597,8 +618,10 @@ test_accep_qemux86_64_bios_grub_gpt:
     - cp $WORKSPACE/qemux86-64-bios-grub-gpt/qemux86-64-bios-grub-gpt_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -624,6 +647,8 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - if [ "$TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB" = "true" ]; then
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_uboot_uefi_grub.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_uboot_uefi_grub.html;
@@ -632,8 +657,10 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
     - cp $WORKSPACE/vexpress-qemu-uboot-uefi-grub/vexpress-qemu-uboot-uefi-grub_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -662,6 +689,8 @@ test_accep_vexpress_qemu_flash:
     JOB_BASE_NAME: mender_vexpress_qemu_flash
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - if [ "$TEST_VEXPRESS_QEMU_FLASH" = "true" ]; then
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_flash.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_flash.html;
@@ -670,8 +699,10 @@ test_accep_vexpress_qemu_flash:
     - cp $WORKSPACE/vexpress-qemu-flash/core-image-minimal-vexpress-qemu-flash.ubifs stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -697,6 +728,8 @@ test_accep_beagleboneblack:
     JOB_BASE_NAME: mender_beagleboneblack
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - if [ "$TEST_BEAGLEBONEBLACK" = "true" ]; then
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_beagleboneblack.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_beagleboneblack.html;
@@ -706,8 +739,10 @@ test_accep_beagleboneblack:
     - cp $WORKSPACE/beagleboneblack/mender-beagleboneblack_*.sdimg.gz stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -733,6 +768,8 @@ test_accep_raspberrypi3:
     JOB_BASE_NAME: mender_raspberrypi3
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - if [ "$TEST_RASPBERRYPI3" = "true" ]; then
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_raspberrypi3.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_raspberrypi3.html;
@@ -742,8 +779,10 @@ test_accep_raspberrypi3:
     - cp $WORKSPACE/raspberrypi3/mender-raspberrypi3_*.sdimg.gz stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -845,12 +884,16 @@ test_backend_integration:
 
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - ls ${CI_PROJECT_DIR}/../integration/backend-tests/results_*xml | xargs -n 1 -i cp {} .
     - ls ${CI_PROJECT_DIR}/../integration/backend-tests/report_*html | xargs -n 1 -i cp {} .
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
@@ -950,12 +993,16 @@ test_full_integration:
 
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
     - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_full_integration.xml
     - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_full_integration.html
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
   artifacts:
     expire_in: 2w
     when: always
