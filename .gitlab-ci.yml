@@ -416,6 +416,7 @@ build_client:
     variables:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
       - $RUN_INTEGRATION_TESTS == "true"
+      - $FALSE == "true"
   stage: build
   dependencies:
     - init_workspace
@@ -444,6 +445,9 @@ build_client:
       - sysstat.svg
 
 build_servers:
+  only:
+    variables:
+      - $FALSE == "true"
   stage: build
   dependencies:
     - init_workspace
@@ -1107,6 +1111,9 @@ release_board_artifacts:
       done
 
 build_mender-cli:
+  only:
+    variables:
+      - $FALSE == "true"
   stage: build
   image: golang:1.11.4
   tags:
@@ -1154,6 +1161,9 @@ build_mender-cli:
       - mender-cli*
 
 build_mender-artifact:
+  only:
+    variables:
+      - $FALSE == "true"
   stage: build
   image: docker
   services:
