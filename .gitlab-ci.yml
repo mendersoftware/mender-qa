@@ -412,10 +412,6 @@ init_workspace:
     - ")"
 
 build_client:
-  only:
-    variables:
-      - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
-      - $RUN_INTEGRATION_TESTS == "true"
   stage: build
   dependencies:
     - init_workspace
