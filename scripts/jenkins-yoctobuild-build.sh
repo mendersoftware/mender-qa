@@ -301,7 +301,11 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 if ! grep "COPY --from=build" Dockerfile; then
                     gulp build
                 fi
-                docker build -t $docker_url:pr .
+                docker build \
+                    -t $docker_url:pr \
+                    --build-arg GIT_REF=$(git describe) \
+                    --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) \
+                    .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
