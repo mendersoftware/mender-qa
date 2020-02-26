@@ -45,7 +45,6 @@ variables:
   RUN_INTEGRATION_TESTS: "true"
   SPECIFIC_INTEGRATION_TEST: ""
   TESTS_IN_PARALLEL: "2"
-  PUBLISH_ARTIFACTS: "false"
   WAIT_IN_STAGE_INIT: ""
   WAIT_IN_STAGE_BUILD: ""
   WAIT_IN_STAGE_TEST: ""
@@ -312,7 +311,6 @@ init_workspace:
     # for build stage, force default configuration QEMUX86_64_UEFI_GRUB
     - test -n "$ONLY_BUILD" && export BUILD_QEMUX86_64_UEFI_GRUB=true
     - test -n "$ONLY_BUILD" && export TEST_QEMUX86_64_UEFI_GRUB=false
-    - test -n "$ONLY_BUILD" && export PUBLISH_ARTIFACTS=false
     - export RUN_INTEGRATION_TESTS=false
     # basic tools
     - apt-get update -q
@@ -1018,9 +1016,6 @@ test_full_integration:
 
 release_docker_images:
   when: manual
-  only:
-    variables:
-      - $PUBLISH_ARTIFACTS == "true"
   stage: release
   image: teracy/ubuntu:18.04-dind-18.09.9
   services:
@@ -1060,9 +1055,6 @@ release_docker_images:
 
 release_board_artifacts:
   when: manual
-  only:
-    variables:
-      - $PUBLISH_ARTIFACTS == "true"
   stage: release
   image: debian:buster
   tags:
@@ -1205,9 +1197,6 @@ build_mender-artifact:
 
 release_binary_tools:
   when: manual
-  only:
-    variables:
-      - $PUBLISH_ARTIFACTS == "true"
   stage: release
   image: debian:buster
   dependencies:
