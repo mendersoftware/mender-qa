@@ -1208,8 +1208,6 @@ build_mender-artifact:
     expire_in: 2w
     paths:
       - mender-artifact-*
-  tags:
-    - docker
 
 release_binary_tools:
   when: manual
@@ -1218,6 +1216,8 @@ release_binary_tools:
       - $PUBLISH_ARTIFACTS == "true"
   stage: release
   image: debian:buster
+  tags:
+    - mender-qa-slave
   dependencies:
     - init_workspace
     - build_mender-cli
