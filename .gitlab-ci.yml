@@ -457,10 +457,11 @@ build_servers:
 
     - mkdir -p stage-artifacts
     - for repo in `${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker -a`; do
-      if ! echo $repo | grep -q mender-client-qemu; then
-      docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker $repo docker_url);
-      docker save $docker_url:pr -o stage-artifacts/${repo}.tar;
-      fi; done
+        if ! echo $repo | grep -q mender-client-qemu; then
+          docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker $repo docker_url);
+          docker save $docker_url:pr -o stage-artifacts/${repo}.tar;
+        fi;
+      done
     # Tarball with mender-cli, mender-artifact, mender-stress-test-client and Artifact generation scripts
     - tar -cf stage-artifacts/host-tools.tar -C ../go/bin/ .
     - cp /var/log/sysstat/sysstat.log .
@@ -833,15 +834,16 @@ test_backend_integration:
 
     # Load all docker images except client
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
-      if ! echo $repo | grep -q mender-client-qemu; then
-      docker load -i stage-artifacts/${repo}.tar;
-      fi; done
+        if ! echo $repo | grep -q mender-client-qemu; then
+          docker load -i stage-artifacts/${repo}.tar;
+        fi;
+      done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
-      integration/extra/release_tool.py --set-version-of $repo --version pr;
+        integration/extra/release_tool.py --set-version-of $repo --version pr;
       done
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
@@ -867,14 +869,17 @@ test_backend_integration:
 
     # for older releases, ignore test suite selection and just run open tests
     - if [ -f ../docker-compose.enterprise.yml ]; then
-      case $INTEGRATION_TEST_SUITE in
-      "enterprise") PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml -f=../extra/smtp-testing/conductor-workers-smtp-test.yml ;;
-      "open") PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;;
-      *) PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;
-      PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml -f=../extra/smtp-testing/conductor-workers-smtp-test.yml ;;
-      esac
+        case $INTEGRATION_TEST_SUITE in
+          "enterprise")
+            PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml -f=../extra/smtp-testing/conductor-workers-smtp-test.yml ;;
+          "open")
+            PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;;
+          *)
+            PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;
+            PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml -f=../extra/smtp-testing/conductor-workers-smtp-test.yml ;;
+        esac
       else
-      PYTEST_ARGS="-k 'not Multitenant'" ./run;
+        PYTEST_ARGS="-k 'not Multitenant'" ./run;
       fi
 
     # Always keep this at the end of the script stage
@@ -947,14 +952,14 @@ test_full_integration:
 
     # Load all docker images
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
-      docker load -i stage-artifacts/${repo}.tar;
+        docker load -i stage-artifacts/${repo}.tar;
       done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker -a`; do
-      integration/extra/release_tool.py --set-version-of $repo --version pr;
+        integration/extra/release_tool.py --set-version-of $repo --version pr;
       done
     # Other dependencies
     - tar -xf stage-artifacts/host-tools.tar ./mender-artifact && mv mender-artifact /usr/local/bin/
@@ -978,10 +983,13 @@ test_full_integration:
     # only do automatic test suite selection if the user wasn't specific
     # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
     - if [ -z "$SPECIFIC_INTEGRATION_TEST" ]; then
-      case $INTEGRATION_TEST_SUITE in
-      "enterprise") export SPECIFIC_INTEGRATION_TEST="Enterprise";;
-      "open") export SPECIFIC_INTEGRATION_TEST="not Enterprise";;
-      esac fi
+        case $INTEGRATION_TEST_SUITE in
+          "enterprise")
+            export SPECIFIC_INTEGRATION_TEST="Enterprise";;
+          "open")
+            export SPECIFIC_INTEGRATION_TEST="not Enterprise";;
+        esac
+      fi
     - source ${CI_PROJECT_DIR}/build_revisions.env
     - cd integration/tests
     - ./run.sh --no-download --machine-name qemux86-64
