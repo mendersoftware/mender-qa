@@ -72,8 +72,6 @@ stages:
 init_workspace:
   stage: init
   image: alpine:latest
-  tags:
-    - mender-qa-slave
   script:
     # Traps only work if executed in a sub shell.
     - "("
@@ -1056,11 +1054,9 @@ test_full_integration:
 release_docker_images:
   when: manual
   stage: release
-  image: teracy/ubuntu:18.04-dind-18.09.9
+  image: docker
   services:
-    - docker:18-dind
-  tags:
-    - mender-qa-slave
+    - docker:19.03.5-dind
   dependencies:
     - init_workspace
     - build_servers
@@ -1096,8 +1092,6 @@ release_board_artifacts:
   when: manual
   stage: release
   image: debian:buster
-  tags:
-    - mender-qa-slave
   dependencies:
     - init_workspace
     - test_accep_qemux86_64_uefi_grub
@@ -1140,8 +1134,6 @@ release_board_artifacts:
 build_mender-cli:
   stage: build
   image: golang:1.11.4
-  tags:
-    - mender-qa-slave
   dependencies:
     - init_workspace
   before_script:
@@ -1190,7 +1182,7 @@ build_mender-artifact:
   services:
     - docker:dind
   tags:
-    - mender-qa-slave
+    - docker
   dependencies:
     - init_workspace
   before_script:
@@ -1231,8 +1223,6 @@ build_mender-artifact:
     expire_in: 2w
     paths:
       - mender-artifact-*
-  tags:
-    - docker
 
 release_binary_tools:
   when: manual
