@@ -48,7 +48,6 @@ for integ_version in $integration_versions; do
   curl -v -f -X POST \
     -F token=$MENDER_QA_TRIGGER_TOKEN \
     -F ref=master \
-    -F variables[PUBLISH_ARTIFACTS]=true \
     -F variables[BUILD_QEMUX86_64_UEFI_GRUB]=true \
     -F variables[TEST_QEMUX86_64_UEFI_GRUB]=true \
     -F variables[BUILD_QEMUX86_64_BIOS_GRUB]=false \
