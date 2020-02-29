@@ -283,14 +283,21 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
 
         case "$docker" in
-            deployments|deployments-enterprise|deviceauth|inventory|tenantadm|useradm|useradm-enterprise|workflows|create-artifact-worker)
+            deployments|deployments-enterprise|deviceauth|inventory|tenantadm|useradm|useradm-enterprise|workflows|workflows-worker|create-artifact-worker)
                 cd go/src/github.com/mendersoftware/$git
                 # Versions before 2.0.0 used "go build", later ones
                 # build everything inside multi-stage docker builds.
                 if ! grep "COPY --from=build" Dockerfile; then
                     CGO_ENABLED=0 go build
                 fi
-                docker build -t $docker_url:pr .
+                # workflows repoitory builds two different Docker images:
+                # - workflows, from Dockerfile
+                # - workflows-worker, from Dockerfile.worker
+                if [ "$docker" = "workflows-worker" ]; then
+                    docker build -t $docker_url:pr -f Dockerfile.worker .
+                else
+                    docker build -t $docker_url:pr .
+                fi
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
