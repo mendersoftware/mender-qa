@@ -13,6 +13,7 @@ variables:
   DEVICEAUTH_REV: "master"
   GUI_REV: "master"
   INVENTORY_REV: "master"
+  INVENTORY_ENTERPRISE_REV: "master"
   USERADM_REV: "master"
   USERADM_ENTERPRISE_REV: "master"
   MENDER_API_GATEWAY_DOCKER_REV: "master"
@@ -181,6 +182,14 @@ init_workspace:
       git checkout pr ||
       git checkout -f -b pr ${INVENTORY_REV})
     - (cd go/src/github.com/mendersoftware/inventory && echo -e "# $(git log -n1 --oneline)\nexport INVENTORY_REV=$INVENTORY_REV\nexport INVENTORY_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+
+
+    - git clone https://github.com/mendersoftware/inventory-enterprise go/src/github.com/mendersoftware/inventory-enterprise
+    - (cd go/src/github.com/mendersoftware/inventory-enterprise &&
+      git fetch -u -f origin ${INVENTORY_ENTERPRISE_REV}:pr &&
+      git checkout pr ||
+      git checkout -f -b pr ${INVENTORY_ENTERPRISE_REV})
+    - (cd go/src/github.com/mendersoftware/inventory-enterprise && echo -e "# $(git log -n1 --oneline)\nexport INVENTORY_ENTERPRISE_REV=$INVENTORY_ENTERPRISE_REV\nexport INVENTORY_ENTERPRISE_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - git clone https://github.com/mendersoftware/useradm go/src/github.com/mendersoftware/useradm
     - (cd go/src/github.com/mendersoftware/useradm &&
