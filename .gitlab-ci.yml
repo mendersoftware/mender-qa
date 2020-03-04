@@ -875,10 +875,10 @@ test_backend_integration:
     # for older releases, ignore test suite selection and just run open tests
     - if [ -f ../docker-compose.enterprise.yml ]; then
       case $INTEGRATION_TEST_SUITE in
-      "enterprise") PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml -f=../extra/smtp-testing/conductor-workers-smtp-test.yml ;;
+      "enterprise") PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml -f=../extra/smtp-testing/conductor-workers-smtp-test.yml -f=../extra/stripe-testing/stripe-test.docker-compose.yml ;;
       "open") PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;;
       *) PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;
-      PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml -f=../extra/smtp-testing/conductor-workers-smtp-test.yml ;;
+      PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run -f=../docker-compose.enterprise.yml -f=../docker-compose.storage.minio.yml -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml -f=../extra/smtp-testing/conductor-workers-smtp-test.yml -f=../extra/stripe-testing/stripe-test.docker-compose.yml ;;
       esac
       else
       PYTEST_ARGS="-k 'not Multitenant'" ./run;
