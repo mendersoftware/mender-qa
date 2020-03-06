@@ -21,6 +21,7 @@ variables:
   INTEGRATION_REV: "master"
   TENANTADM_REV: "master"
   WORKFLOWS_REV: "master"
+  WORKFLOWS_ENTERPRISE_REV: "master"
   CREATE_ARTIFACT_WORKER_REV: "master"
   MENDER_STRESS_TEST_CLIENT_REV: "master"
   META_OPENEMBEDDED_REV: "warrior"
@@ -239,6 +240,13 @@ init_workspace:
       git checkout pr ||
       git checkout -f -b pr ${WORKFLOWS_REV})
     - (cd go/src/github.com/mendersoftware/workflows && echo -e "# $(git log -n1 --oneline)\nexport WORKFLOWS_REV=$WORKFLOWS_REV\nexport WORKFLOWS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+
+    - git clone git@github.com:mendersoftware/workflows-enterprise go/src/github.com/mendersoftware/workflows-enterprise
+    - (cd go/src/github.com/mendersoftware/workflows-enterprise &&
+      git fetch -u -f origin ${WORKFLOWS_ENTERPRISE_REV}:pr &&
+      git checkout pr ||
+      git checkout -f -b pr ${WORKFLOWS_ENTERPRISE_REV})
+    - (cd go/src/github.com/mendersoftware/workflows-enterprise && echo -e "# $(git log -n1 --oneline)\nexport WORKFLOWS_ENTERPRISE_REV=$WORKFLOWS_ENTERPRISE_REV\nexport WORKFLOWS_ENTERPRISE_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - git clone git@github.com:mendersoftware/create-artifact-worker go/src/github.com/mendersoftware/create-artifact-worker
     - (cd go/src/github.com/mendersoftware/create-artifact-worker &&
