@@ -293,7 +293,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 # workflows repoitory builds two different Docker images:
                 # - workflows, from Dockerfile
                 # - workflows-worker, from Dockerfile.worker
-                if [ "$docker" = "workflows-worker" ] || [ "$docker" = "workflows-enterprise-worker" ] || ; then
+                if [ "$docker" = "workflows-worker" ] || [ "$docker" = "workflows-enterprise-worker" ]; then
                     docker build -t $docker_url:pr -f Dockerfile.worker .
                 else
                     docker build -t $docker_url:pr .
