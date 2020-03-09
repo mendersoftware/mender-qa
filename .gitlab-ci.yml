@@ -5,8 +5,6 @@ variables:
   POKY_REV: "warrior"
   MENDER_QA_REV: "master"
   MENDER_ARTIFACT_REV: "master"
-  MENDER_CONDUCTOR_REV: "master"
-  MENDER_CONDUCTOR_ENTERPRISE_REV: "master"
   DEPLOYMENTS_REV: "master"
   DEPLOYMENTS_ENTERPRISE_REV: "master"
   DEVICEADM_REV: "master"
@@ -260,20 +258,6 @@ init_workspace:
     - git clone git://github.com/agherzan/meta-raspberrypi.git
     - (cd meta-raspberrypi && git checkout -f ${META_RASPBERRYPI_REV})
     - (cd meta-raspberrypi && echo -e "# $(git log -n1 --oneline)\nexport META_RASPBERRYPI_REV=$META_RASPBERRYPI_REV\nexport META_RASPBERRYPI_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
-
-    - git clone git://github.com/mendersoftware/mender-conductor.git go/src/github.com/mendersoftware/mender-conductor
-    - (cd go/src/github.com/mendersoftware/mender-conductor &&
-      git fetch -u -f origin ${MENDER_CONDUCTOR_REV}:pr &&
-      git checkout pr ||
-      git checkout -f -b pr ${MENDER_CONDUCTOR_REV})
-    - (cd go/src/github.com/mendersoftware/mender-conductor && echo -e "# $(git log -n1 --oneline)\nexport MENDER_CONDUCTOR_REV=$MENDER_CONDUCTOR_REV\nexport MENDER_CONDUCTOR_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
-
-    - git clone git@github.com:mendersoftware/mender-conductor-enterprise.git go/src/github.com/mendersoftware/mender-conductor-enterprise
-    - (cd go/src/github.com/mendersoftware/mender-conductor-enterprise &&
-      git fetch -u -f origin ${MENDER_CONDUCTOR_ENTERPRISE_REV}:pr &&
-      git checkout pr ||
-      git checkout -f -b pr ${MENDER_CONDUCTOR_ENTERPRISE_REV})
-    - (cd go/src/github.com/mendersoftware/mender-conductor-enterprise && echo -e "# $(git log -n1 --oneline)\nexport MENDER_CONDUCTOR_ENTERPRISE_REV=$MENDER_CONDUCTOR_ENTERPRISE_REV\nexport MENDER_CONDUCTOR_ENTERPRISE_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - git clone https://github.com/mendersoftware/mender-cli.git go/src/github.com/mendersoftware/mender-cli
     - (cd go/src/github.com/mendersoftware/mender-cli &&
@@ -890,7 +874,6 @@ test_backend_integration:
                 -f=../docker-compose.enterprise.yml
                 -f=../docker-compose.storage.minio.yml
                 -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml
-                -f=../extra/smtp-testing/conductor-workers-smtp-test.yml
                 -f=../extra/stripe-testing/stripe-test.docker-compose.yml ;;
           *)
             PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;
@@ -898,7 +881,6 @@ test_backend_integration:
                 -f=../docker-compose.enterprise.yml
                 -f=../docker-compose.storage.minio.yml
                 -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml
-                -f=../extra/smtp-testing/conductor-workers-smtp-test.yml
                 -f=../extra/stripe-testing/stripe-test.docker-compose.yml ;;
         esac
       else

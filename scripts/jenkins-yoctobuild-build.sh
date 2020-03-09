@@ -340,24 +340,6 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
-            mender-conductor|mender-conductor-enterprise)
-                cd go/src/github.com/mendersoftware/$git
-                docker build --build-arg REVISION=pr -t $docker_url:pr ./server
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
-                ;;
-
-            email-sender)
-                cd go/src/github.com/mendersoftware/$git
-                docker build -t $docker_url:pr ./workers/send_email
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
-                ;;
-
-            org-welcome-email-preparer)
-                cd go/src/github.com/mendersoftware/$git
-                docker build --build-arg REVISION=pr -t $docker_url:pr ./workers/prepare_org_welcome_email
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
-                ;;
-
             *)
                 echo "Don't know how to build docker image $docker"
                 exit 1
