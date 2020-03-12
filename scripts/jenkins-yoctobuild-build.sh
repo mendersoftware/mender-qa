@@ -289,7 +289,7 @@ export GOPATH="$WORKSPACE/go"
 
 if grep mender_servers <<<"$JOB_BASE_NAME"; then
     # Use release tool to query for available docker names.
-    for docker in $($WORKSPACE/integration/extra/release_tool.py --list docker -a ); do (
+    for docker in $($WORKSPACE/integration/extra/release_tool.py --list docker ); do (
 
         git=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker git)
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
@@ -378,7 +378,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
     ); done
 
     # Builds that don't use Docker
-    for git in $($WORKSPACE/integration/extra/release_tool.py --list git -a ); do (
+    for git in $($WORKSPACE/integration/extra/release_tool.py --list git ); do (
         case "$git" in
             mender-cli)
                 cd $WORKSPACE/go/src/github.com/mendersoftware/$git
