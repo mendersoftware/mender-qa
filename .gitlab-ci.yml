@@ -1065,7 +1065,7 @@ release_docker_images:
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apt update && apt install -yyq git python3 python3-pip
+    - apk add git python3 py3-pip
     - pip3 install --upgrade pyyaml
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
