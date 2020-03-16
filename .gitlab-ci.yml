@@ -873,34 +873,12 @@ test_backend_integration:
       };
       trap handle_exit EXIT
 
-    - export INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
+    - INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
     - cd integration/backend-tests/
 
-    # pytest arguments for the different test reports
-    - PYTEST_ARGS_REPORT_ENTERPRISE="--junit-xml=results_backend_integration_enterprise.xml --html=report_backend_integration_enterprise.html --self-contained-html"
-    - PYTEST_ARGS_REPORT_OPEN="--junit-xml=results_backend_integration_open.xml --html=report_backend_integration_open.html --self-contained-html"
-
-    # for older releases, ignore test suite selection and just run open tests
-    - if [ -f ../docker-compose.enterprise.yml ]; then
-        case $INTEGRATION_TEST_SUITE in
-          "open")
-            PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;;
-          "enterprise")
-            PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run
-                -f=../docker-compose.enterprise.yml
-                -f=../docker-compose.storage.minio.yml
-                -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml
-                -f=../extra/smtp-testing/conductor-workers-smtp-test.yml
-                -f=../extra/stripe-testing/stripe-test.docker-compose.yml ;;
-          *)
-            PYTEST_ARGS="$PYTEST_ARGS_REPORT_OPEN -k 'not Enterprise and not Multitenant'" ./run ;
-            PYTEST_ARGS="$PYTEST_ARGS_REPORT_ENTERPRISE -k Enterprise" ./run
-                -f=../docker-compose.enterprise.yml
-                -f=../docker-compose.storage.minio.yml
-                -f=../extra/recaptcha-testing/tenantadm-test-recaptcha-conf.yml
-                -f=../extra/smtp-testing/conductor-workers-smtp-test.yml
-                -f=../extra/stripe-testing/stripe-test.docker-compose.yml ;;
-        esac
+    # for pre 2.2.x releases, ignore test suite selection and just run open tests
+    - if ./run --help | grep -q "\-\-suite"; then
+        ./run --suite $INTEGRATION_TEST_SUITE;
       else
         PYTEST_ARGS="-k 'not Multitenant'" ./run;
       fi
