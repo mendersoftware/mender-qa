@@ -48,8 +48,9 @@ for integ_version in $integration_versions; do
   curl -v -f -X POST \
     -F token=$MENDER_QA_TRIGGER_TOKEN \
     -F ref=master \
-    -F variables[BUILD_QEMUX86_64_UEFI_GRUB]=true \
-    -F variables[TEST_QEMUX86_64_UEFI_GRUB]=true \
+    -F variables[PUBLISH_DOCKER_CLIENT_IMAGES]=true \
+    -F variables[BUILD_QEMUX86_64_UEFI_GRUB]=false \
+    -F variables[TEST_QEMUX86_64_UEFI_GRUB]=false \
     -F variables[BUILD_QEMUX86_64_BIOS_GRUB]=false \
     -F variables[TEST_QEMUX86_64_BIOS_GRUB]=false \
     -F variables[BUILD_QEMUX86_64_BIOS_GRUB_GPT]=false \
