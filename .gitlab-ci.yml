@@ -1044,6 +1044,7 @@ publish_docker_client_images:
     - docker:19.03.5-dind
   dependencies:
     - init_workspace
+    - build_servers
     - build_client
   before_script:
     # Check correct dind setup
