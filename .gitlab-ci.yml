@@ -859,6 +859,8 @@ test_backend_integration:
     - for repo in `integration/extra/release_tool.py -l docker`; do
         integration/extra/release_tool.py --set-version-of $repo --version pr;
       done
+    # Other dependencies
+    - tar -xf stage-artifacts/host-tools.tar ./mender-artifact && mv mender-artifact ./integration/backend-tests/mender-artifact
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
