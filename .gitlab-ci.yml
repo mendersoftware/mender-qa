@@ -853,7 +853,7 @@ test_backend_integration:
         fi;
       done
     # Login for private repos
-    - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker`; do
@@ -963,7 +963,7 @@ test_full_integration:
         docker load -i stage-artifacts/${repo}.tar;
       done
     # Login for private repos
-    - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker`; do
@@ -1063,7 +1063,7 @@ publish_docker_client_images:
     - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
     # Login for private repos
-    - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
   script:
     # Load, tag and push mender-client-docker, mender-client-qemu, mender-client-qemu-rofs
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep mender-client); do
@@ -1099,7 +1099,7 @@ release_docker_images:
     - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
     # Login for private repos
-    - docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+    - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
   script:
     # Load, tag and push Docker images
