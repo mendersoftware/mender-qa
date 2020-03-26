@@ -418,6 +418,8 @@ init_workspace:
     - source ${CI_PROJECT_DIR}/build_revisions.env
     - chown -R mender:mender ${WORKSPACE}
     - export HOME="/home/mender"
+    - export DOCKER_PASSWORD
+    - export REGISTRY_MENDER_IO_PASSWORD
     - sudo -E -u mender ${WORKSPACE}/mender-qa/scripts/jenkins-yoctobuild-build.sh
 
     # Always keep this at the end of the script stage
