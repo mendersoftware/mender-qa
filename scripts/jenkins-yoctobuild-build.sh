@@ -240,7 +240,7 @@ then
 fi
 
 # private docker containers, require login:
-docker login -u menderbuildsystem -p ${DOCKER_PASSWORD}
+docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
 docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
 
 # if we abort a build, docker might still be up and running
