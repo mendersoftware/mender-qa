@@ -877,6 +877,7 @@ test_backend_integration:
       trap handle_exit EXIT
 
     - INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
+    - echo Running backend-tests suite $INTEGRATION_TEST_SUITE
     - cd integration/backend-tests/
 
     # for pre 2.2.x releases, ignore test suite selection and just run open tests
@@ -988,6 +989,7 @@ test_full_integration:
       trap handle_exit EXIT
 
     - export INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
+    - echo Running integration tests suite $INTEGRATION_TEST_SUITE
     # only do automatic test suite selection if the user wasn't specific
     # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
     - if [ -z "$SPECIFIC_INTEGRATION_TEST" ]; then
