@@ -881,7 +881,7 @@ test_backend_integration:
     - cd integration/backend-tests/
 
     # for pre 2.2.x releases, ignore test suite selection and just run open tests
-    - if ./run --help | grep -q "\-\-suite"; then
+    - if ./run --help | grep -e --suite; then
         ./run --suite $INTEGRATION_TEST_SUITE;
       else
         PYTEST_ARGS="-k 'not Multitenant'" ./run;
