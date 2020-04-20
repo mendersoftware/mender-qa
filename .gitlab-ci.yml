@@ -58,18 +58,29 @@ variables:
 
   DEBIAN_FRONTEND: noninteractive
 
-# Check signoffs in commits
 include:
-    - project: 'Northern.tech/Mender/mendertesting'
-      file: '.gitlab-ci-check-commits-signoffs.yml'
-    - project: 'Northern.tech/Mender/mendertesting'
-      file: '.gitlab-ci-github-status-updates.yml'
+  - project: 'Northern.tech/Mender/mendertesting'
+    file: '.gitlab-ci-check-commits-signoffs.yml'
+  - project: 'Northern.tech/Mender/mendertesting'
+    file: '.gitlab-ci-github-status-updates.yml'
 
 stages:
   - init
   - build
   - test
   - release
+
+# Skip the GitHub reports for master, as this repo is most of the times in master
+# while running the integration pipeline for other repos' PRs
+github:start:
+  except:
+    - master
+github:success:
+  except:
+    - master
+github:failure:
+  except:
+    - master
 
 init_workspace:
   stage: init
