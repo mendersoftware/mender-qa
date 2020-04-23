@@ -933,7 +933,6 @@ test_full_integration:
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
-  allow_failure: true
   stage: test
   image: docker:18-dind
   tags:
