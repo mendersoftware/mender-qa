@@ -68,6 +68,7 @@ stages:
   - init
   - build
   - test
+  - publish
   - release
 
 # Skip the GitHub reports for master, as this repo is most of the times in master
@@ -432,6 +433,11 @@ init_workspace:
     - export HOME="/home/mender"
     - sudo -E -u mender ${WORKSPACE}/mender-qa/scripts/jenkins-yoctobuild-build.sh
 
+    - if [ -d $WORKSPACE/meta-mender/tests/acceptance/coverage ]; then
+        mkdir -p ${CI_PROJECT_DIR}/acceptance-tests-coverage;
+        cp -r $WORKSPACE/meta-mender/tests/acceptance/coverage/* ${CI_PROJECT_DIR}/acceptance-tests-coverage;
+      fi
+
     # Always keep this at the end of the script stage
     - echo "success" > /JOB_RESULT.txt
 
@@ -539,6 +545,7 @@ test_accep_qemux86_64_uefi_grub:
       - stage-artifacts/
       - results_accep_qemux86_64_uefi_grub.xml
       - report_accep_qemux86_64_uefi_grub.html
+      - acceptance-tests-coverage
       - sysstat.log
       - sysstat.svg
     reports:
@@ -578,6 +585,7 @@ test_accep_vexpress_qemu:
       - stage-artifacts/
       - results_accep_vexpress_qemu.xml
       - report_accep_vexpress_qemu.html
+      - acceptance-tests-coverage
       - sysstat.log
       - sysstat.svg
     reports:
@@ -617,6 +625,7 @@ test_accep_qemux86_64_bios_grub:
       - stage-artifacts/
       - results_accep_qemux86_64_bios_grub.xml
       - report_accep_qemux86_64_bios_grub.html
+      - acceptance-tests-coverage
       - sysstat.log
       - sysstat.svg
     reports:
@@ -656,6 +665,7 @@ test_accep_qemux86_64_bios_grub_gpt:
       - stage-artifacts/
       - results_accep_qemux86_64_bios_grub_gpt.xml
       - report_accep_qemux86_64_bios_grub_gpt.html
+      - acceptance-tests-coverage
       - sysstat.log
       - sysstat.svg
     reports:
@@ -695,6 +705,7 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
       - stage-artifacts/
       - results_accep_vexpress_qemu_uboot_uefi_grub.xml
       - report_accep_vexpress_qemu_uboot_uefi_grub.html
+      - acceptance-tests-coverage
       - sysstat.log
       - sysstat.svg
     reports:
@@ -737,6 +748,7 @@ test_accep_vexpress_qemu_flash:
       - stage-artifacts/
       - results_accep_vexpress_qemu_flash.xml
       - report_accep_vexpress_qemu_flash.html
+      - acceptance-tests-coverage
       - sysstat.log
       - sysstat.svg
     reports:
@@ -777,6 +789,7 @@ test_accep_beagleboneblack:
       - stage-artifacts/
       - results_accep_beagleboneblack.xml
       - report_accep_beagleboneblack.html
+      - acceptance-tests-coverage
       - sysstat.log
       - sysstat.svg
     reports:
@@ -817,6 +830,7 @@ test_accep_raspberrypi3:
       - stage-artifacts/
       - results_accep_raspberrypi3.xml
       - report_accep_raspberrypi3.html
+      - acceptance-tests-coverage
       - sysstat.log
       - sysstat.svg
     reports:
@@ -1043,6 +1057,121 @@ test_full_integration:
       - sysstat.svg
     reports:
       junit: results_full_integration.xml
+
+# Publish acceptance test coverage into codecov when either running tests for a
+# mender PR (MENDER_REV != "master") or new merge into mender/master that requires
+# Docker images publishing (PUBLISH_DOCKER_CLIENT_IMAGES == "true")
+.template_publish_acceptance_coverage:
+  only:
+    variables:
+      - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
+      - $MENDER_REV != "master"
+  stage: publish
+  image: alpine
+  dependencies:
+    - init_workspace
+  before_script:
+    - apk add --no-cache bash curl findutils git
+    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
+    - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
+  script:
+    - if [ ! -d ${CI_PROJECT_DIR}/acceptance-tests-coverage ]; then
+        echo "No acceptance-tests-coverage directory found. Skipping the upload";
+        exit 0;
+      fi
+    # Blank GITLAB_CI to force codecov to inspect the git repo instead of rely on GitLab env variblaes
+    # see source at https://github.com/codecov/codecov-bash/blob/master/codecov
+    - export GITLAB_CI=""
+    - cd ${CI_PROJECT_DIR}/mender
+    - bash -c "bash <(curl -s https://codecov.io/bash) -Z -t ${MENDER_CODECOV_TOKEN} -F acceptance,${JOB_BASE_NAME} -s ${CI_PROJECT_DIR}/acceptance-tests-coverage"
+
+publish_accep_qemux86_64_uefi_grub:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_QEMUX86_64_UEFI_GRUB != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_qemux86_64_uefi_grub
+  variables:
+    JOB_BASE_NAME: qemux86_64_uefi_grub
+
+publish_accep_vexpress_qemu:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_VEXPRESS_QEMU != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_vexpress_qemu
+  variables:
+    JOB_BASE_NAME: vexpress_qemu
+
+publish_accep_qemux86_64_bios_grub:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_QEMUX86_64_BIOS_GRUB != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_qemux86_64_bios_grub
+  variables:
+    JOB_BASE_NAME: qemux86_64_bios_grub
+
+publish_accep_qemux86_64_bios_grub_gpt:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_QEMUX86_64_BIOS_GRUB_GPT != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_qemux86_64_bios_grub_gpt
+  variables:
+    JOB_BASE_NAME: qemux86_64_bios_grub_gpt
+
+publish_accep_vexpress_qemu_uboot_uefi_grub:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_vexpress_qemu_uboot_uefi_grub
+  variables:
+    JOB_BASE_NAME: vexpress_qemu_uboot_uefi_grub
+
+publish_accep_vexpress_qemu_flash:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_VEXPRESS_QEMU_FLASH != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_vexpress_qemu_flash
+  variables:
+    JOB_BASE_NAME: vexpress_qemu_flash
+
+publish_accep_beagleboneblack:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_BEAGLEBONEBLACK != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_beagleboneblack
+  variables:
+    JOB_BASE_NAME: beagleboneblack
+
+publish_accep_raspberrypi3:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_RASPBERRYPI3 != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_raspberrypi3
+  variables:
+    JOB_BASE_NAME: raspberrypi3
 
 # This job allows mender repo to publish the related Docker client images on
 # merges to master or release branches.
