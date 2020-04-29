@@ -1214,9 +1214,13 @@ publish_docker_client_images:
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
   script:
+    # for pre 2.4.x releases, ignore test suite selection and just run open tests
+    - if $($WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
+    -   VERSION_TYPE_PARAMS="--version-type docker"
+    - fi
     # Load, tag and push mender-client-docker, mender-client-qemu, mender-client-qemu-rofs
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep mender-client); do
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD);
+        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version HEAD);
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
         docker load -i stage-artifacts/${image}.tar;
         docker tag $docker_url:pr $docker_url:${version};
@@ -1251,9 +1255,13 @@ release_docker_images:
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
   script:
+    # for pre 2.4.x releases, ignore test suite selection and just run open tests
+    - if $($WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
+    -   VERSION_TYPE_PARAMS="--version-type docker"
+    - fi
     # Load, tag and push Docker images
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --in-integration-version HEAD);
+        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version HEAD);
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
         docker load -i stage-artifacts/${image}.tar;
         docker tag $docker_url:pr $docker_url:${version};
