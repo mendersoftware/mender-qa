@@ -407,6 +407,7 @@ init_workspace:
     # Enable nesting VMs
     - modprobe -r kvm_intel
     - modprobe kvm_intel nested=Y
+    # Enable NFS cache for yocto
     - apt-get install nfs-common
     - mkdir -p /mnt/sstate-cache
     - mount.nfs4 ${SSTATE_CACHE_INTRNL_ADDR}:/sstate-cache /mnt/sstate-cache
@@ -494,8 +495,6 @@ build_servers:
           docker save $docker_url:pr -o stage-artifacts/${repo}.tar;
         fi;
       done
-    # Tarball with mender-cli, mender-artifact, mender-stress-test-client and Artifact generation scripts
-    - tar -cf stage-artifacts/host-tools.tar -C ../go/bin/ .
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
@@ -847,6 +846,7 @@ test_backend_integration:
   dependencies:
     - init_workspace
     - build_servers
+    - build_mender-artifact
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -885,8 +885,11 @@ test_backend_integration:
     - for repo in `integration/extra/release_tool.py -l docker`; do
         integration/extra/release_tool.py --set-version-of $repo --version pr;
       done
-    # Other dependencies
-    - tar -xf stage-artifacts/host-tools.tar ./mender-artifact && mv mender-artifact ./integration/backend-tests/mender-artifact
+    # mender-artifact
+    - mkdir -p integration/backend-tests/downloaded-tools
+    - mv stage-artifacts/mender-artifact-linux integration/backend-tests/downloaded-tools/mender-artifact
+    # copy for pre 2.4.x releases
+    - cp integration/backend-tests/downloaded-tools/mender-artifact integration/backend-tests/mender-artifact
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
@@ -906,9 +909,14 @@ test_backend_integration:
     - echo Running backend-tests suite $INTEGRATION_TEST_SUITE
     - cd integration/backend-tests/
 
+    # From 2.4.x on, the script would download the requirements by default
+    - if ./run --help | grep -e --no-download; then
+        RUN_ARGS="--no-download";
+      fi
+
     # for pre 2.2.x releases, ignore test suite selection and just run open tests
     - if ./run --help | grep -e --suite; then
-        ./run --suite $INTEGRATION_TEST_SUITE;
+        ./run --suite $INTEGRATION_TEST_SUITE $RUN_ARGS;
       else
         PYTEST_ARGS="-k 'not Multitenant'" ./run;
       fi
@@ -955,6 +963,7 @@ test_full_integration:
     - init_workspace
     - build_servers
     - build_client
+    - build_mender-artifact
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -994,8 +1003,8 @@ test_full_integration:
         integration/extra/release_tool.py --set-version-of $repo --version pr;
       done
     # Other dependencies
-    - tar -xf stage-artifacts/host-tools.tar ./mender-artifact && mv mender-artifact /usr/local/bin/
-    - tar -xf stage-artifacts/host-tools.tar ./directory-artifact-gen && mv directory-artifact-gen /usr/local/bin/
+    - install stage-artifacts/mender-artifact-linux /usr/local/bin/mender-artifact
+    - make -C ${WORKSPACE}/go/src/github.com/mendersoftware/mender install-modules-gen
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
@@ -1325,7 +1334,8 @@ build_mender-cli:
       else
         make build;
       fi
-    - cp mender-cli* $CI_PROJECT_DIR/
+    - mkdir -p $CI_PROJECT_DIR/stage-artifacts
+    - cp mender-cli* $CI_PROJECT_DIR/stage-artifacts
 
     # Always keep this at the end of the script stage
     - echo "success" > /JOB_RESULT.txt
@@ -1337,7 +1347,7 @@ build_mender-cli:
 
   artifacts:
     paths:
-      - mender-cli*
+      - stage-artifacts/
 
 build_mender-artifact:
   stage: build
@@ -1372,7 +1382,8 @@ build_mender-artifact:
     - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-artifact
   script:
     - make build-natives-contained
-    - cp mender-artifact-* $CI_PROJECT_DIR/
+    - mkdir -p $CI_PROJECT_DIR/stage-artifacts
+    - cp mender-artifact-* $CI_PROJECT_DIR/stage-artifacts
 
     # Always keep this at the end of the script stage
     - echo "success" > /JOB_RESULT.txt
@@ -1385,7 +1396,7 @@ build_mender-artifact:
   artifacts:
     expire_in: 2w
     paths:
-      - mender-artifact-*
+      - stage-artifacts/
 
 release_binary_tools:
   when: manual
@@ -1401,14 +1412,12 @@ release_binary_tools:
     - pip3 install --upgrade pyyaml
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env /tmp
-    - mv mender-cli* mender-artifact-* /tmp
+    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
     - tar -xf /tmp/workspace.tar.gz
-    - mv /tmp/build_revisions.env .
-    - mv /tmp/mender-cli* /tmp/mender-artifact-* .
+    - mv /tmp/build_revisions.env stage-artifacts .
   script:
     # mender-cli
     - mender_cli_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-cli --in-integration-version HEAD)
@@ -1416,17 +1425,17 @@ release_binary_tools:
     # We can simplify once mender-cli 1.2.0 is not supported
     - if grep -q build-multiplatform $WORKSPACE/go/src/github.com/mendersoftware/mender-cli/Makefile; then
         echo "Publishing ${mender_cli_version} version for linux to S3";
-        aws s3 cp mender-cli.linux.amd64
+        aws s3 cp stage-artifacts/mender-cli.linux.amd64
           s3://mender/mender-cli/${mender_cli_version}/linux/mender-cli;
         aws s3api put-object-acl --acl public-read --bucket mender
           --key mender-cli/${mender_cli_version}/linux/mender-cli;
         echo "Publishing ${mender_cli_version} version for darwin to S3";
-        aws s3 cp mender-cli.darwin.amd64
+        aws s3 cp stage-artifacts/mender-cli.darwin.amd64
           s3://mender/mender-cli/${mender_cli_version}/darwin/mender-cli;
         aws s3api put-object-acl --acl public-read --bucket mender
           --key mender-cli/${mender_cli_version}/darwin/mender-cli;
       else
-        aws s3 cp mender-cli
+        aws s3 cp stage-artifacts/mender-cli
           s3://mender/mender-cli/${mender_cli_version}/mender-cli;
         aws s3api put-object-acl --acl public-read --bucket mender
           --key mender-cli/${mender_cli_version}/mender-cli;
@@ -1438,7 +1447,7 @@ release_binary_tools:
         platform=${bin#mender-artifact-};
         platform=${platform%.*};
         echo "Publishing ${mender_artifact_version} version for ${platform} to S3";
-        aws s3 cp ${bin}
+        aws s3 cp stage-artifacts/${bin}
           s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact;
         aws s3api put-object-acl --acl public-read --bucket mender
           --key mender-artifact/${mender_artifact_version}/${platform}/mender-artifact;
