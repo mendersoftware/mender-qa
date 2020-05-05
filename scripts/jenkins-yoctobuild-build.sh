@@ -271,22 +271,6 @@ cd $WORKSPACE
 # Build server repositories.
 # ---------------------------------------------------
 
-# Build Go repositories.
-export GOPATH="$WORKSPACE/go"
-(
-    cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact
-    make install
-    if grep -q build-natives-contained Makefile; then
-        make build-natives-contained
-    fi
-)
-# Build fake client
-(
-    cd go/src/github.com/mendersoftware/mender-stress-test-client
-    go build
-    go install
-)
-
 if grep mender_servers <<<"$JOB_BASE_NAME"; then
     # Use release tool to query for available docker names.
     for docker in $($WORKSPACE/integration/extra/release_tool.py --list docker ); do (
