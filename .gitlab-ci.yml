@@ -1256,7 +1256,7 @@ release_docker_images:
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
   script:
     # for pre 2.4.x releases, ignore test suite selection and just run open tests
-    - if $($WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
+    - if $WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
     -   VERSION_TYPE_PARAMS="--version-type docker"
     - fi
     # Load, tag and push Docker images
