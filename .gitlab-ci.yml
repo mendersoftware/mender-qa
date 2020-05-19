@@ -1215,7 +1215,7 @@ publish_docker_client_images:
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
   script:
     # for pre 2.4.x releases, ignore test suite selection and just run open tests
-    - if $($WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
+    - if $WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
     -   VERSION_TYPE_PARAMS="--version-type docker"
     - fi
     # Load, tag and push mender-client-docker, mender-client-qemu, mender-client-qemu-rofs
