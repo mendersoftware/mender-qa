@@ -1425,7 +1425,7 @@ release_binary_tools:
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
     - tar -xf /tmp/workspace.tar.gz
-    - mv /tmp/build_revisions.env stage-artifacts .
+    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
   script:
     # mender-cli
     - mender_cli_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-cli --in-integration-version HEAD)
