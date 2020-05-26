@@ -660,6 +660,7 @@ add_to_build_list          qemux86-64                qemux86-64-uefi-grub       
 add_to_build_list          vexpress-qemu             vexpress-qemu                  core-image-full-cmdline
 add_to_build_list          vexpress-qemu-flash       vexpress-qemu-flash            core-image-minimal
 add_to_build_list          raspberrypi3              raspberrypi3                   core-image-full-cmdline
+add_to_build_list          raspberrypi4              raspberrypi4                   core-image-full-cmdline
 # Server build, without client build.
 add_to_build_list          mender_servers
 # Assuming thud or newer
