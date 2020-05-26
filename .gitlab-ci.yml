@@ -9,7 +9,6 @@ variables:
   MENDER_CONDUCTOR_ENTERPRISE_REV: "master"
   DEPLOYMENTS_REV: "master"
   DEPLOYMENTS_ENTERPRISE_REV: "master"
-  DEVICEADM_REV: "master"
   DEVICEAUTH_REV: "master"
   GUI_REV: "master"
   INVENTORY_REV: "master"
@@ -167,13 +166,6 @@ init_workspace:
       git checkout pr ||
       git checkout -f -b pr ${DEPLOYMENTS_ENTERPRISE_REV})
     - (cd go/src/github.com/mendersoftware/deployments-enterprise && echo -e "# $(git log -n1 --oneline)\nexport DEPLOYMENTS_ENTERPRISE_REV=$DEPLOYMENTS_ENTERPRISE_REV\nexport DEPLOYMENTS_ENTERPRISE_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
-
-    - git clone https://github.com/mendersoftware/deviceadm go/src/github.com/mendersoftware/deviceadm
-    - (cd go/src/github.com/mendersoftware/deviceadm &&
-      git fetch -u -f origin ${DEVICEADM_REV}:pr &&
-      git checkout pr ||
-      git checkout -f -b pr ${DEVICEADM_REV})
-    - (cd go/src/github.com/mendersoftware/deviceadm && echo -e "# $(git log -n1 --oneline)\nexport DEVICEADM_REV=$DEVICEADM_REV\nexport DEVICEADM_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - git clone https://github.com/mendersoftware/deviceauth go/src/github.com/mendersoftware/deviceauth
     - (cd go/src/github.com/mendersoftware/deviceauth &&
