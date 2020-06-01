@@ -100,7 +100,7 @@ init_workspace:
       trap handle_exit EXIT
 
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - apk --update --no-cache add git openssh bash python3 curl
+    - apk --update --no-cache add git openssh bash python3 curl py3-pip
     - pip3 install --upgrade pyyaml
 
     # Prepare SSH keys
