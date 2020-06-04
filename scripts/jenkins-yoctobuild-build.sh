@@ -384,9 +384,9 @@ fi
 # -----------------------
 
 if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
-    RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta | sort | tail -n1)
+    RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
     mkdir -p $WORKSPACE/mender-binary-delta
-    s3cmd get --recursive s3://$(sed -e 's,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
+    s3cmd get --recursive s3://$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
 fi
 
 # Check whether the given board name is a hardware board or not.
