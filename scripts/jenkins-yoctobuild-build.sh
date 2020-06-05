@@ -141,9 +141,12 @@ prepare_build_config() {
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
     local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
 
+
+    local mender_binary_delta_version=$($WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST = "commercial_mender-binary-delta"
 FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "${WORKSPACE}/mender-binary-delta:"
+PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
 
     # Assuming sumo or newer
@@ -387,6 +390,8 @@ if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
     RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
     mkdir -p $WORKSPACE/mender-binary-delta
     s3cmd get --recursive s3://$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
+    chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta
+    chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta-generator
 fi
 
 # Check whether the given board name is a hardware board or not.
