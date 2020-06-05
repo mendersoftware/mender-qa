@@ -141,15 +141,18 @@ prepare_build_config() {
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
     local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
 
+
+    local mender_binary_delta_version=$($WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST = "commercial_mender-binary-delta"
 FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "${WORKSPACE}/mender-binary-delta:"
+PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
 
     # Assuming sumo or newer
     cat >> $BUILDDIR/conf/local.conf <<EOF
 # MEN-2948: Renamed mender recipe -> mender-client
-# But the `mender` reference has to be kept for backwards compatibility
+# But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
 EXTERNALSRC_pn-mender = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-client = "$WORKSPACE/go"
@@ -188,7 +191,7 @@ EOF
     if [ -n "$mender_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
 # MEN-2948: Renamed mender recipe -> mender-client
-# But the `mender` reference has to be kept for backwards compatibility
+# But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
 PREFERRED_VERSION_pn-mender = "$mender_on_exact_tag"
 PREFERRED_VERSION_pn-mender-client = "$mender_on_exact_tag"
@@ -196,7 +199,7 @@ EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
 # MEN-2948: Renamed mender recipe -> mender-client
-# But the `mender` reference has to be kept for backwards compatibility
+# But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
 PREFERRED_VERSION_pn-mender = "$client_version-git%"
 PREFERRED_VERSION_pn-mender-client= "$client_version-git%"
@@ -384,9 +387,11 @@ fi
 # -----------------------
 
 if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
-    RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta | sort | tail -n1)
+    RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
     mkdir -p $WORKSPACE/mender-binary-delta
-    s3cmd get --recursive s3://$(sed -e 's,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
+    s3cmd get --recursive s3://$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
+    chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta
+    chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta-generator
 fi
 
 # Check whether the given board name is a hardware board or not.
