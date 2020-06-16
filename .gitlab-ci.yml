@@ -1,5 +1,6 @@
 
 variables:
+  # Versions
   MENDER_REV: "master"
   META_MENDER_REV: "master"
   POKY_REV: "zeus"
@@ -27,6 +28,12 @@ variables:
   META_RASPBERRYPI_REV: "zeus"
   MENDER_IMAGE_TESTS_REV: "master"
   BASE_BRANCH: "master"
+
+  # Build stage
+  BUILD_CLIENT: "true"
+  BUILD_SERVERS: "true"
+
+  # Client test stage
   BUILD_QEMUX86_64_UEFI_GRUB: "true"
   TEST_QEMUX86_64_UEFI_GRUB: "true"
   BUILD_QEMUX86_64_BIOS_GRUB: "true"
@@ -45,18 +52,27 @@ variables:
   TEST_RASPBERRYPI3: "false"
   BUILD_RASPBERRYPI4: "false"
   TEST_RASPBERRYPI4: "false"
+
+  # Integration and backend integration tests
   RUN_INTEGRATION_TESTS: "true"
   SPECIFIC_INTEGRATION_TEST: ""
   TESTS_IN_PARALLEL: "2"
+
+  # Publication
+  PUBLISH_DOCKER_CLIENT_IMAGES: "false"
+
+  # Debugging options
   WAIT_IN_STAGE_INIT: ""
   WAIT_IN_STAGE_BUILD: ""
   WAIT_IN_STAGE_TEST: ""
+
+  # Maintenance
   CLEAN_BUILD_CACHE: ""
-  PUBLISH_DOCKER_CLIENT_IMAGES: "false"
 
   # Internal address for nfs sstate cache server (northamerica-northeast1-b)
   SSTATE_CACHE_INTRNL_ADDR: 10.162.0.2
 
+  # Global environment variables (not meant to be changed)
   DEBIAN_FRONTEND: noninteractive
 
 include:
@@ -441,7 +457,7 @@ init_workspace:
 build_client:
   only:
     variables:
-      - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
+      - $BUILD_CLIENT == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   stage: build
   dependencies:
@@ -472,6 +488,10 @@ build_client:
 
 build_servers:
   stage: build
+  only:
+    variables:
+      - $BUILD_SERVERS == "true"
+      - $RUN_INTEGRATION_TESTS == "true"
   dependencies:
     - init_workspace
   <<: *build_and_test_acceptance
@@ -1360,6 +1380,10 @@ release_board_artifacts:
 
 build_mender-cli:
   stage: build
+  only:
+    variables:
+      - $BUILD_SERVERS == "true"
+      - $RUN_INTEGRATION_TESTS == "true"
   image: golang:1.11.4
   dependencies:
     - init_workspace
@@ -1406,6 +1430,10 @@ build_mender-cli:
 
 build_mender-artifact:
   stage: build
+  only:
+    variables:
+      - $BUILD_CLIENT == "true"
+      - $RUN_INTEGRATION_TESTS == "true"
   image: docker
   services:
     - docker:dind
