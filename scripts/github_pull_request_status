@@ -39,35 +39,18 @@ for key in $(env | sed -e 's/=.*//'); do
         # GitLab script defines env variables with _GIT_SHA suffix for the PR commit under test
         git_commit="$(eval echo \$${key}_GIT_SHA)"
     else
-        # Fallback to classic method of relying on locally cloned repos
-        case "$key" in
-            MENDER_QA_REV)
-                location=$WORKSPACE/mender-qa
-                ;;
-            META_MENDER_REV)
-                location=$WORKSPACE/meta-mender
-                ;;
-            *_REV)
-                if ! $WORKSPACE/integration/extra/release_tool.py --version-of $repo; then
-                    # If the release tool doesn't recognize the repository, don't use it.
-                    continue
-                fi
-                location=
-                if [ -d "$WORKSPACE/$repo" ]; then
-                    location="$WORKSPACE/$repo"
-                elif [ -d "$WORKSPACE/go/src/github.com/mendersoftware/$repo" ]; then
-                    location="$WORKSPACE/go/src/github.com/mendersoftware/$repo"
-                else
-                    echo "github_pull_request_status: Unable to find repository location: $repo"
-                    return 1
-                fi
-                ;;
-            *)
-                # Not a revision, go to next entry.
-                continue
-                ;;
-        esac
-        git_commit=$(cd "$location" && git rev-parse HEAD)
+        # Use Github API to fetch commit SHAs
+        eval sha_endpoint=https://api.github.com/repos/mendersoftware/$repo/git/ref/\$${key}
+        response="$(curl -fH "Authorization: bearer $GITHUB_BOT_TOKEN" $sha_endpoint)"
+        if [ $? -ne 0 ]; then
+            continue
+        fi
+        # Ideally we should use jq here, but this is run in so many different
+        # jobs, that we will use the fully portable sed instead.
+        git_commit="$(echo "$response" | sed -ne '/^ *"sha":/{s/^ *"sha": *"\([^"]*\)".*$/\1/; p}')"
+        if [ $? -ne 0 ]; then
+            continue
+        fi
     fi
     pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
 
