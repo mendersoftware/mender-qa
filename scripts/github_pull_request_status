@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 request_body=$(cat <<EOF
 {
@@ -24,7 +24,7 @@ fi
 # Split on newlines
 IFS='
 '
-for key in $(compgen -A export); do
+for key in $(env | sed -e 's/=.*//'); do
     if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
         # Not a pull request, skip.
         continue
@@ -34,7 +34,7 @@ for key in $(compgen -A export); do
         continue
     fi
 
-    repo=$(tr '[A-Z_]' '[a-z-]' <<<${key%_REV})
+    repo=$(echo ${key%_REV} | tr '[A-Z_]' '[a-z-]')
     if [ -n "$(eval echo \$${key}_GIT_SHA)" ]; then
         # GitLab script defines env variables with _GIT_SHA suffix for the PR commit under test
         git_commit="$(eval echo \$${key}_GIT_SHA)"
