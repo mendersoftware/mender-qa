@@ -71,7 +71,7 @@ for key in $(compgen -A export); do
     fi
     pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
 
-    curl -iv -H "Authorization: bearer $GITHUB_BOT_TOKEN" \
+    curl -H "Authorization: bearer $GITHUB_BOT_TOKEN" \
          -d "$request_body" \
          "$pr_status_endpoint"
 done
