@@ -82,11 +82,16 @@ include:
     file: '.gitlab-ci-github-status-updates.yml'
 
 stages:
+  # .pre and .post have no effect and are only for documentation purposes. .pre
+  # and .post stages run at the very start and very end of a pipeline,
+  # regardless of where they are defined.
+  - .pre
   - init
   - build
   - test
   - publish
   - release
+  - .post
 
 # Skip the GitHub reports for master, as this repo is most of the times in master
 # while running the integration pipeline for other repos' PRs
@@ -99,6 +104,29 @@ github:success:
 github:failure:
   except:
     - master
+
+mender-qa:start:
+  stage: .pre
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status pending "mender-qa pipeline running" $CI_PIPELINE_URL ci/mender-qa
+
+mender-qa:success:
+  stage: .post
+  when: on_success
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status success "mender-qa pipeline passed" $CI_PIPELINE_URL ci/mender-qa
+
+mender-qa:failure:
+  stage: .post
+  when: on_failure
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status failure "mender-qa pipeline failed" $CI_PIPELINE_URL ci/mender-qa
 
 init_workspace:
   stage: init
