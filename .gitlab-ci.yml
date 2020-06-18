@@ -130,7 +130,7 @@ init_workspace:
       trap handle_exit EXIT
 
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - apk --update --no-cache add git openssh bash python3 curl py3-pip
+    - apk --update add git openssh bash python3 curl py3-pip
     - pip3 install --upgrade pyyaml
 
     # Post job status
@@ -923,11 +923,10 @@ test_backend_integration:
     - sleep 10
     - export DOCKER_HOST="unix:///var/run/docker.sock"
     - docker version
-    - apk --update --no-cache add bash git py-pip gcc make python2-dev
+    - apk --update add bash git py-pip gcc make python2-dev
       libc-dev libffi-dev openssl-dev python3 curl
     - pip install docker-compose==1.24.0
     - pip3 install pyyaml
-    - rm -rf /var/cache/apk/*
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -961,7 +960,7 @@ test_backend_integration:
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
-    - apk --update --no-cache add sysstat
+    - apk add sysstat
     - ln -s /var/log/sa/ /var/log/sysstat
     - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
   script:
@@ -1041,7 +1040,6 @@ test_full_integration:
     - export DOCKER_HOST="unix:///var/run/docker.sock"
     - docker version
 
-    - rm -rf /var/cache/apk/*
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -1052,7 +1050,7 @@ test_full_integration:
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
     # Get and install the integration test requirements
-    - apk --update --no-cache add $(cat ${WORKSPACE}/integration/tests/requirements/apk-requirements.txt)
+    - apk --update add $(cat ${WORKSPACE}/integration/tests/requirements/apk-requirements.txt)
     - pip install  -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
     - pip3 install -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
 
@@ -1076,7 +1074,7 @@ test_full_integration:
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
-    - apk --update --no-cache add sysstat
+    - apk add sysstat
     - ln -s /var/log/sa/ /var/log/sysstat
     - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
   script:
@@ -1147,7 +1145,7 @@ test_full_integration:
   dependencies:
     - init_workspace
   before_script:
-    - apk add --no-cache bash curl findutils git
+    - apk --update add bash curl findutils git
     - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
     - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
   script:
@@ -1280,7 +1278,7 @@ publish_docker_client_images:
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apk add git python3 py3-pip
+    - apk --update add git python3 py3-pip
     - pip3 install --upgrade pyyaml
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
@@ -1320,7 +1318,7 @@ release_docker_images:
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apk add git python3 py3-pip
+    - apk --update add git python3 py3-pip
     - pip3 install --upgrade pyyaml
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
@@ -1461,7 +1459,7 @@ build_mender-artifact:
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apk add --no-cache bash curl git make
+    - apk --update add bash curl git make
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env /tmp
