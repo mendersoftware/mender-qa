@@ -45,9 +45,7 @@ for key in $(env | sed -e 's/=.*//'); do
         if [ $? -ne 0 ]; then
             continue
         fi
-        # Ideally we should use jq here, but this is run in so many different
-        # jobs, that we will use the fully portable sed instead.
-        git_commit="$(echo "$response" | sed -ne '/^ *"sha":/{s/^ *"sha": *"\([^"]*\)".*$/\1/; p}')"
+        git_commit="$(echo "$response" | jq -r '.object.sha')"
         if [ $? -ne 0 ]; then
             continue
         fi
