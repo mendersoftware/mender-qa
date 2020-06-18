@@ -78,8 +78,6 @@ variables:
 include:
   - project: 'Northern.tech/Mender/mendertesting'
     file: '.gitlab-ci-check-commits-signoffs.yml'
-  - project: 'Northern.tech/Mender/mendertesting'
-    file: '.gitlab-ci-github-status-updates.yml'
 
 stages:
   # .pre and .post have no effect and are only for documentation purposes. .pre
@@ -92,18 +90,6 @@ stages:
   - publish
   - release
   - .post
-
-# Skip the GitHub reports for master, as this repo is most of the times in master
-# while running the integration pipeline for other repos' PRs
-github:start:
-  except:
-    - master
-github:success:
-  except:
-    - master
-github:failure:
-  except:
-    - master
 
 mender-qa:start:
   stage: .pre
