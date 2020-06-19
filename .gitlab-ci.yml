@@ -78,27 +78,47 @@ variables:
 include:
   - project: 'Northern.tech/Mender/mendertesting'
     file: '.gitlab-ci-check-commits-signoffs.yml'
-  - project: 'Northern.tech/Mender/mendertesting'
-    file: '.gitlab-ci-github-status-updates.yml'
 
 stages:
+  # .pre and .post have no effect and are only for documentation purposes. .pre
+  # and .post stages run at the very start and very end of a pipeline,
+  # regardless of where they are defined.
+  - .pre
   - init
   - build
   - test
   - publish
   - release
+  - .post
 
-# Skip the GitHub reports for master, as this repo is most of the times in master
-# while running the integration pipeline for other repos' PRs
-github:start:
-  except:
-    - master
-github:success:
-  except:
-    - master
-github:failure:
-  except:
-    - master
+mender-qa:start:
+  stage: .pre
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  before_script:
+    - apk --update add jq
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status pending "mender-qa pipeline running" $CI_PIPELINE_URL ci/mender-qa
+
+mender-qa:success:
+  stage: .post
+  when: on_success
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  before_script:
+    - apk --update add jq
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status success "mender-qa pipeline passed" $CI_PIPELINE_URL ci/mender-qa
+
+mender-qa:failure:
+  stage: .post
+  when: on_failure
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  before_script:
+    - apk --update add jq
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status failure "mender-qa pipeline failed" $CI_PIPELINE_URL ci/mender-qa
 
 init_workspace:
   stage: init
@@ -116,8 +136,11 @@ init_workspace:
       trap handle_exit EXIT
 
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - apk --update --no-cache add git openssh bash python3 curl py3-pip
+    - apk --update add git openssh bash python3 curl py3-pip jq
     - pip3 install --upgrade pyyaml
+
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
     # Prepare SSH keys
     - eval $(ssh-agent -s)
@@ -145,16 +168,12 @@ init_workspace:
       fi
     - (cd mender-qa && echo -e "# $(git log -n1 --oneline)\nexport MENDER_QA_REV=$MENDER_QA_REV\nexport MENDER_QA_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
-    # Add integration first, as github_pull_request_status depends on release_tool.
     - git clone https://github.com/mendersoftware/integration
     - (cd integration &&
       git fetch -u -f origin ${INTEGRATION_REV}:pr &&
       git checkout pr ||
       git checkout -f -b pr ${INTEGRATION_REV})
     - (cd integration && echo -e "# $(git log -n1 --oneline)\nexport INTEGRATION_REV=$INTEGRATION_REV\nexport INTEGRATION_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
-
-    # Post job status
-    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
     # Add other repositories.
     - git clone https://github.com/mendersoftware/meta-mender
@@ -910,11 +929,10 @@ test_backend_integration:
     - sleep 10
     - export DOCKER_HOST="unix:///var/run/docker.sock"
     - docker version
-    - apk --update --no-cache add bash git py-pip gcc make python2-dev
-      libc-dev libffi-dev openssl-dev python3 curl
+    - apk --update add bash git py-pip gcc make python2-dev
+      libc-dev libffi-dev openssl-dev python3 curl jq
     - pip install docker-compose==1.24.0
     - pip3 install pyyaml
-    - rm -rf /var/cache/apk/*
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -948,7 +966,7 @@ test_backend_integration:
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
-    - apk --update --no-cache add sysstat
+    - apk add sysstat
     - ln -s /var/log/sa/ /var/log/sysstat
     - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
   script:
@@ -1028,7 +1046,6 @@ test_full_integration:
     - export DOCKER_HOST="unix:///var/run/docker.sock"
     - docker version
 
-    - rm -rf /var/cache/apk/*
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -1038,13 +1055,14 @@ test_full_integration:
     - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
+    # Post job status
+    - apk --update add curl jq
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
     # Get and install the integration test requirements
-    - apk --update --no-cache add $(cat ${WORKSPACE}/integration/tests/requirements/apk-requirements.txt)
+    - apk add $(cat ${WORKSPACE}/integration/tests/requirements/apk-requirements.txt)
     - pip install  -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
     - pip3 install -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
-
-    # Post job status
-    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
     # Load all docker images
     - for repo in `integration/extra/release_tool.py -l docker`; do
@@ -1063,7 +1081,7 @@ test_full_integration:
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
-    - apk --update --no-cache add sysstat
+    - apk add sysstat
     - ln -s /var/log/sa/ /var/log/sysstat
     - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
   script:
@@ -1134,7 +1152,7 @@ test_full_integration:
   dependencies:
     - init_workspace
   before_script:
-    - apk add --no-cache bash curl findutils git
+    - apk --update add bash curl findutils git
     - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
     - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
   script:
@@ -1267,7 +1285,7 @@ publish_docker_client_images:
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apk add git python3 py3-pip
+    - apk --update add git python3 py3-pip
     - pip3 install --upgrade pyyaml
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
@@ -1307,7 +1325,7 @@ release_docker_images:
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apk add git python3 py3-pip
+    - apk --update add git python3 py3-pip
     - pip3 install --upgrade pyyaml
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
@@ -1402,6 +1420,9 @@ build_mender-cli:
     # Export GOPATH
     - export GOPATH="$WORKSPACE/go"
 
+    - apt-get update -q
+    - apt-get install -qqy jq
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
@@ -1448,7 +1469,7 @@ build_mender-artifact:
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apk add --no-cache bash curl git make
+    - apk --update add bash curl git make jq
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env /tmp
