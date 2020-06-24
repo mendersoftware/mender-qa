@@ -41,71 +41,42 @@ directory with the same name as the board name in the previously mentioned
 script, and make the necessary modifications to the Yocto files.
 
 
-## Jenkins configuration
+## CI configuration
 
-Start by opening the configuration for the build job. At the time of writing,
-this is "mender-builder" and then "Configure".
+The GitLab pipeline is defined in the `.gitlab-ci.yml` file. There are several
+parts of this file that need modifications when adding a platform.
 
-### Parameters
+### Variables
 
 First you need to add the build parameters for the new platform, which allows
 the building and testing of the platform to be turned on and off. This consists
 of the two prefixes `BUILD_` and `TEST_`, followed by an uppercase version of
 the board name that was added in the `jenkins-yoctobuild-build.sh` script.
 
-1. Click on "Add Parameter" -> "Boolean Parameter"
+For example:
+```
+variables:
+  (...)
+  BUILD_QEMUX86_64_UEFI_GRUB: "true"
+  TEST_QEMUX86_64_UEFI_GRUB: "true"
+```
+### Pipeline job: Build and test
 
-   ![Add Boolean Parameter](images/add-boolean-parameter.png)
+Next add a new build and test job for this platform. These jobs all
+extend `build_and_test_acceptance`. Take one of them as a base, for
+example `test_accep_qemux86_64_uefi_grub`, and modify it for the new
+platform (namely: search and replace on `qemux86_64_uefi_grub`).
 
-2. Drag the parameter to a "logical" place, for example add the end of the
-   current parameter list of platforms. Trust me, this helps a lot later when
-   going through parameters and figuring out what to build.
+### Pipeline job: Publish acceptance tests coverage reports
 
-3. Repeat steps 1 and 2 twice and add the two `BUILD_` and `TEST_`
-   parameters. The end result should be something like this:
+Similarly, add a job that extends `.template_publish_acceptance_coverage` to
+publish acceptance tests coverage. Use `publish_accep_qemux86_64_uefi_grub`
+as an example.
 
-   ![Add Jenkins parameters](images/adding-jenkins-parameters.png)
+### Pipeline job: Publish release artifacts
 
-### Build matrix
-
-Add the platform label to the build matrix. It is the string "mender_" followed
-by the board name from the `jenkins-yoctobuild-build.sh` script.
-
-![Jenkins matrix](images/jenkins-matrix.png)
-
-### Combination filter
-
-The combination filter is a mechanism to only trigger certain job labels
-depending on which job parameters have been enabled. For example, if you've
-selected only one platform, then this should trigger only one node, not all of
-them. Unfortunately the filter is a bit tricky to understand and get right, but
-it boils down to an expression that should evaluate to true for platforms that
-should run, and false for platforms that shouldn't.
-
-For most platforms, this means adding one expression. However, there is some
-additional complexity for platforms that also run integration tests (signaled by
-the "mender_servers" label), since these need to run also in the case where only
-servers are being tested, and no client platform is built. You can see how this
-works around the references to "RUN_INTEGRATION_TESTS".
-
-In this example, we're keeping it simple, and just adding a platform that
-doesn't run integration tests. The part in bold is the part we have added, in
-this case for the platform "vexpress_qemu_uboot_uefi_grub":
-
-> (label.contains("mender_servers") && "${RUN_INTEGRATION_TESTS}" == "true" && !label.contains("mender_qemux86_64_uefi_grub") && "${BUILD_QEMUX86_64_UEFI_GRUB}" != "true" && !label.contains("mender_vexpress_qemu ") && "${BUILD_VEXPRESS_QEMU}" != "true") || (label.contains("mender_qemux86_64_uefi_grub") && "${BUILD_QEMUX86_64_UEFI_GRUB}" == "true") || **(label.contains("mender_vexpress_qemu_uboot_uefi_grub") && "${BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB}" == "true") ||** (label.contains("mender_qemux86_64_bios_grub") && "${BUILD_QEMUX86_64_BIOS_GRUB}" == "true") || (label.contains("mender_vexpress_qemu ") && "${BUILD_VEXPRESS_QEMU}" == "true") || (label.contains("mender_vexpress_qemu_flash") && "${BUILD_VEXPRESS_QEMU_FLASH}" == "true") || (label.contains("mender_beaglebone") && "${BUILD_BEAGLEBONEBLACK}" == "true") || (label.contains("mender_raspberrypi3") && "${BUILD_RASPBERRYPI3}" == "true")
-
-### Adding the label to the node
-
-You also need to add the platform label to one of the actual nodes, so that one
-of them will be used to build the platforms. This is done by entering the main
-configuration section of Jenkins, under "Jenkins" -> "Manage Jenkins" ->
-"Configure System". For the time being it is under the Google jCloud Provider
-plugin section, but this might change. If there are no special requirements for
-the node, it can just be added to the list of labels for an existing, generic
-build node. For example:
-
-![Adding node label](images/adding-node-label.png)
-
+Modify `release_board_artifacts` job adding the new platform in the `dependencies`
+and in the main loop for the `script` part.
 
 ## integration-test-runner
 
@@ -117,7 +88,7 @@ commit](https://github.com/mendersoftware/integration-test-runner/commit/8e01cb8
 
 2. Compile the program locally
 
-3. Log in to our Jenkins server using SSH
+3. Log in to our VM using SSH
 
 4. Run `systemctl stop integration-test-runner`
 
@@ -127,5 +98,10 @@ commit](https://github.com/mendersoftware/integration-test-runner/commit/8e01cb8
 
 7. (Check that it works)
 
+## Mender codecov configuration
+
+Update `after_n_builds` in the [codecov settings](https://github.com/mendersoftware/mender/blob/master/codecov.yml)
+for mender client repo to expect the updated number of reports (one report per
+tested platform)
 
 # The end!
