@@ -98,5 +98,10 @@ commit](https://github.com/mendersoftware/integration-test-runner/commit/8e01cb8
 
 7. (Check that it works)
 
+## Mender codecov configuration
+
+Update `after_n_builds` in the [codecov settings](https://github.com/mendersoftware/mender/blob/master/codecov.yml)
+for mender client repo to expect the updated number of reports (one report per
+tested platform)
 
 # The end!
