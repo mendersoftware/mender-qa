@@ -28,6 +28,7 @@ variables:
   META_RASPBERRYPI_REV: "zeus"
   MENDER_IMAGE_TESTS_REV: "master"
   BASE_BRANCH: "master"
+  AUDITLOGS_REV: "master"
 
   # Build stage
   BUILD_CLIENT: "true"
@@ -331,6 +332,13 @@ init_workspace:
       git checkout pr ||
       git checkout -f -b pr ${MENDER_IMAGE_TESTS_REV})
     - (cd mender-image-tests && echo -e "# $(git log -n1 --oneline)\nexport MENDER_IMAGE_TESTS_REV=$MENDER_IMAGE_TESTS_REV\nexport MENDER_IMAGE_TESTS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+
+    - git clone git@github.com:mendersoftware/auditlogs go/src/github.com/mendersoftware/auditlogs
+    - (cd go/src/github.com/mendersoftware/auditlogs &&
+      git fetch -u -f origin ${AUDITLOGS_REV}:pr &&
+      git checkout pr ||
+      git checkout -f -b pr ${AUDITLOGS_REV})
+    - (cd go/src/github.com/mendersoftware/auditlogs && echo -e "# $(git log -n1 --oneline)\nexport AUDITLOGS_REV=$AUDITLOGS_REV\nexport AUDITLOGS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - cat ${CI_PROJECT_DIR}/build_revisions.env
     - tar -czf /tmp/workspace.tar.gz .
