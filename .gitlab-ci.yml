@@ -29,6 +29,7 @@ variables:
   MENDER_IMAGE_TESTS_REV: "master"
   BASE_BRANCH: "master"
   AUDITLOGS_REV: "master"
+  MTLS_AMBASSADOR_REV: "master"
 
   # Build stage
   BUILD_CLIENT: "true"
@@ -339,6 +340,13 @@ init_workspace:
       git checkout pr ||
       git checkout -f -b pr ${AUDITLOGS_REV})
     - (cd go/src/github.com/mendersoftware/auditlogs && echo -e "# $(git log -n1 --oneline)\nexport AUDITLOGS_REV=$AUDITLOGS_REV\nexport AUDITLOGS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
+
+    - git clone git@github.com:mendersoftware/mtls-ambassador go/src/github.com/mendersoftware/mtls-ambassador
+    - (cd go/src/github.com/mendersoftware/mtls-ambassador &&
+      git fetch -u -f origin ${MTLS_AMBASSADOR_REV}:pr &&
+      git checkout pr ||
+      git checkout -f -b pr ${MTLS_AMBASSADOR_REV})
+    - (cd go/src/github.com/mendersoftware/mtls-ambassador && echo -e "# $(git log -n1 --oneline)\nexport MTLS_AMBASSADOR_REV=$MTLS_AMBASSADOR_REV\nexport MTLS_AMBASSADOR_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - cat ${CI_PROJECT_DIR}/build_revisions.env
     - tar -czf /tmp/workspace.tar.gz .
