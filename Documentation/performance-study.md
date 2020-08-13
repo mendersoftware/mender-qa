@@ -1,9 +1,4 @@
-This is a log of sorts concerning QA-related issues, actions taken, and conclusions. 
-
-Hopefully this format will make it easier to track the shared knowledge 
-domain that is QA, and fewer things will go through the cracks in the process.
-
-# 11.02.2019
+# Performance study 11.02.2019 on GCP slaves
 
 - 3 weeks debugging **master-agent connectivity issues** [QA-51](https://tracker.mender.io/browse/QA-51)
     - 100% builds broken in 5 mins
