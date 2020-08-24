@@ -552,6 +552,11 @@ build_and_test_client() {
                 sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
             fi
 
+	    # Zeus and older do not have this.
+	    if grep -q mender-testing-enabled $WORKSPACE/meta-mender/meta-mender-core/classes/mender-maybe-setup.bbclass; then
+		echo 'MENDER_FEATURES_ENABLE_append = " mender-testing-enabled"' >> $BUILDDIR/conf/local.conf
+	    fi
+
             bitbake $image_name
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
