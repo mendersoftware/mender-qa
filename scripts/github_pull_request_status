@@ -52,8 +52,20 @@ for key in $(env | sed -e 's/=.*//'); do
     fi
     pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
 
+    # Print the variables
+    echo "Reporting GitHub status for:"
+    echo "    key=$key"
+    echo "    repo=$repo"
+    echo "    sha_endpoint=$sha_endpoint"
+    echo "    git_commit=$git_commit"
+    echo "    pr_status_endpoint=$pr_status_endpoint"
+    echo "    request_body:"
+    echo "$request_body"
+    echo
+
     curl -H "Authorization: bearer $GITHUB_BOT_TOKEN" \
          -d "$request_body" \
          "$pr_status_endpoint"
 done
 
+IFS=' '
