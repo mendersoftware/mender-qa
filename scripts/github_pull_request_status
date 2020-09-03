@@ -25,12 +25,16 @@ fi
 IFS='
 '
 for key in $(env | sed -e 's/=.*//'); do
-    if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
-        # Not a pull request, skip.
+    if ! echo $key | egrep -q "_REV"; then
+        # Not a Mender repo variable
         continue
     fi
     if echo $key | egrep -q "^DOCKER_ENV_"; then
         # Skip GitLab/Docker duplicated environment vars, i.e. MENDER_REV has a DOCKER_ENV_MENDER_REV
+        continue
+    fi
+    if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
+        # Not a pull request, skip.
         continue
     fi
 
