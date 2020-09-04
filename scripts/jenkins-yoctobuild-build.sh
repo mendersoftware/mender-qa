@@ -3,7 +3,7 @@
 set -e -x -E
 
 
-echo $WORKSPACE
+echo "WORKSPACE=$WORKSPACE"
 
 declare -a CONFIG_MACHINE_NAMES
 declare -a CONFIG_BOARD_NAMES
@@ -11,16 +11,6 @@ declare -a CONFIG_IMAGE_NAMES
 declare -a CONFIG_DEVICE_TYPES
 
 export PATH=$PATH:$WORKSPACE/go/bin
-
-declare -A TEST_TRACKER
-
-is_poky_branch() {
-    if egrep -q "^ *DISTRO_CODENAME *= *\"$1\" *\$" $WORKSPACE/meta-poky/conf/distro/poky.conf; then
-        return 0
-    else
-        return 1
-    fi
-}
 
 is_building_dockerized_board() {
     local ret=0
@@ -543,6 +533,7 @@ build_and_test_client() {
         # run tests on qemu
         if is_testing_board $board_name; then
             export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
+            # TODO: clean-up python2 support after warrior goes unsupported
             local python3_supported=false
             local pip_cmd=pip2
             if [ -f $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt ]; then

@@ -25,12 +25,16 @@ fi
 IFS='
 '
 for key in $(env | sed -e 's/=.*//'); do
-    if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
-        # Not a pull request, skip.
+    if ! echo $key | egrep -q "_REV"; then
+        # Not a Mender repo variable
         continue
     fi
     if echo $key | egrep -q "^DOCKER_ENV_"; then
         # Skip GitLab/Docker duplicated environment vars, i.e. MENDER_REV has a DOCKER_ENV_MENDER_REV
+        continue
+    fi
+    if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
+        # Not a pull request, skip.
         continue
     fi
 
@@ -52,8 +56,20 @@ for key in $(env | sed -e 's/=.*//'); do
     fi
     pr_status_endpoint=https://api.github.com/repos/mendersoftware/$repo/statuses/$git_commit
 
+    # Print the variables
+    echo "Reporting GitHub status for:"
+    echo "    key=$key"
+    echo "    repo=$repo"
+    echo "    sha_endpoint=$sha_endpoint"
+    echo "    git_commit=$git_commit"
+    echo "    pr_status_endpoint=$pr_status_endpoint"
+    echo "    request_body:"
+    echo "$request_body"
+    echo
+
     curl -H "Authorization: bearer $GITHUB_BOT_TOKEN" \
          -d "$request_body" \
          "$pr_status_endpoint"
 done
 
+IFS=' '
