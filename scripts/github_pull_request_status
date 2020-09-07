@@ -45,6 +45,7 @@ for key in $(env | sed -e 's/=.*//'); do
     else
         # Use Github API to fetch commit SHAs
         eval sha_endpoint=https://api.github.com/repos/mendersoftware/$repo/git/ref/\$${key}
+        echo "Querying API: $sha_endpoint"
         response="$(curl -fH "Authorization: bearer $GITHUB_BOT_TOKEN" $sha_endpoint)"
         if [ $? -ne 0 ]; then
             continue
