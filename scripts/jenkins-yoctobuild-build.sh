@@ -297,10 +297,12 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 if ! grep "COPY --from=build" Dockerfile; then
                     gulp build
                 fi
+                # GIT_REF + GIT_COMMIT for old versions, GIT_COMMIT_TAG for newer
                 docker build \
                     -t $docker_url:pr \
                     --build-arg GIT_REF=$(git describe) \
                     --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) \
+                    --build-arg GIT_COMMIT_TAG="$(git describe)" \
                     .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
