@@ -27,7 +27,6 @@ variables:
   META_OPENEMBEDDED_REV: "dunfell"
   META_RASPBERRYPI_REV: "dunfell"
   MENDER_IMAGE_TESTS_REV: "master"
-  BASE_BRANCH: "master"
   AUDITLOGS_REV: "master"
   MTLS_AMBASSADOR_REV: "master"
 

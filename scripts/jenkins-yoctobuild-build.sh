@@ -274,12 +274,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
         case "$docker" in
             deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|workflows-worker|workflows-enterprise-worker|create-artifact-worker|auditlogs|mtls-ambassador)
                 cd go/src/github.com/mendersoftware/$git
-                # Versions before 2.0.0 used "go build", later ones
-                # build everything inside multi-stage docker builds.
-                if ! grep "COPY --from=build" Dockerfile; then
-                    CGO_ENABLED=0 go build
-                fi
-                # workflows repoitory builds two different Docker images:
+                # workflows repository builds two different Docker images:
                 # - workflows, from Dockerfile
                 # - workflows-worker, from Dockerfile.worker
                 if [ "$docker" = "workflows-worker" ] || [ "$docker" = "workflows-enterprise-worker" ]; then
@@ -292,12 +287,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
 
             gui)
                 cd gui
-                # Versions of gui before 2.0.0 used "gulp build", later ones
-                # build everything inside multi-stage docker builds.
-                if ! grep "COPY --from=build" Dockerfile; then
-                    gulp build
-                fi
-                # GIT_REF + GIT_COMMIT for old versions, GIT_COMMIT_TAG for newer
+                # GIT_REF + GIT_COMMIT for 2.3 or older, GIT_COMMIT_TAG for newer
                 docker build \
                     -t $docker_url:pr \
                     --build-arg GIT_REF=$(git describe) \
