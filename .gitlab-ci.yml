@@ -1160,7 +1160,7 @@ test_full_integration:
 # Publish acceptance test coverage into codecov when either running tests for a
 # mender PR (MENDER_REV != "master") or new merge into mender/master that requires
 # Docker images publishing (PUBLISH_DOCKER_CLIENT_IMAGES == "true")
-.template_publish_acceptance_coverage:
+.template_publish_acceptance_coverage_codecov:
   only:
     variables:
       - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
@@ -1183,6 +1183,161 @@ test_full_integration:
     - export GITLAB_CI=""
     - cd ${CI_PROJECT_DIR}/mender
     - bash -c "bash <(curl -s https://codecov.io/bash) -Z -t ${MENDER_CODECOV_TOKEN} -F acceptance,${JOB_BASE_NAME} -s ${CI_PROJECT_DIR}/acceptance-tests-coverage"
+
+# Publish acceptance test coverage into coveralls when either running tests for a
+# mender PR (MENDER_REV != "master") or new merge into mender/master that requires
+# Docker images publishing (PUBLISH_DOCKER_CLIENT_IMAGES == "true")
+.template_publish_acceptance_coverage:
+  only:
+    variables:
+      - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
+      - $MENDER_REV != "master"
+  stage: publish
+  dependencies:
+    - init_workspace
+  image: golang:1.14-alpine3.11
+  before_script:
+    - apk add --no-cache git
+    # Run go get out of the repo to not modify go.mod
+    - cd / && go get github.com/mattn/goveralls && cd -
+    # Coveralls env variables:
+    #  According to https://docs.coveralls.io/supported-ci-services
+    #  we should set CI_NAME, CI_BUILD_NUMBER, etc. But according
+    #  to goveralls source code (https://github.com/mattn/goveralls)
+    #  many of these are not supported. Set CI_BRANCH, CI_PR_NUMBER,
+    #  and pass few others as command line arguments.
+    #  See also https://docs.coveralls.io/api-reference
+    - export CI_BRANCH=${CI_COMMIT_BRANCH}
+    - export CI_PR_NUMBER=${CI_COMMIT_BRANCH#pr_}
+    # Get mender source
+    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
+    - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
+    - cd ${CI_PROJECT_DIR}/mender
+  script:
+    - goveralls
+      -repotoken ${MENDER_COVERALLS_TOKEN}
+      -service gitlab-ci
+      -jobid $(git rev-parse HEAD)
+      -covermode set
+      -flagname acceptance-${JOB_BASE_NAME}
+      -parallel
+      -coverprofile $(find ${CI_PROJECT_DIR}/acceptance-tests-coverage -name 'coverage*.out' | tr '\n' ',' | sed 's/,$//')
+
+coveralls:finish-build:
+  stage: .post
+  # See https://docs.coveralls.io/parallel-build-webhook
+  variables:
+    COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
+  image: appropriate/curl
+  dependencies:
+    - init_workspace
+  before_script:
+    - apk add --no-cache git
+    # Get mender source
+    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
+    - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
+    - cd ${CI_PROJECT_DIR}/mender
+  script:
+    - 'curl -k ${COVERALLS_WEBHOOK_URL}?repo_token=${MENDER_COVERALLS_TOKEN} -d "payload[build_num]=$(git rev-parse HEAD)&payload[status]=done"'
+
+publish_accep_qemux86_64_uefi_grub:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_QEMUX86_64_UEFI_GRUB != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_qemux86_64_uefi_grub
+  variables:
+    JOB_BASE_NAME: qemux86_64_uefi_grub
+
+publish_accep_vexpress_qemu:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_VEXPRESS_QEMU != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_vexpress_qemu
+  variables:
+    JOB_BASE_NAME: vexpress_qemu
+
+publish_accep_qemux86_64_bios_grub:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_QEMUX86_64_BIOS_GRUB != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_qemux86_64_bios_grub
+  variables:
+    JOB_BASE_NAME: qemux86_64_bios_grub
+
+publish_accep_qemux86_64_bios_grub_gpt:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_QEMUX86_64_BIOS_GRUB_GPT != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_qemux86_64_bios_grub_gpt
+  variables:
+    JOB_BASE_NAME: qemux86_64_bios_grub_gpt
+
+publish_accep_vexpress_qemu_uboot_uefi_grub:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_vexpress_qemu_uboot_uefi_grub
+  variables:
+    JOB_BASE_NAME: vexpress_qemu_uboot_uefi_grub
+
+publish_accep_vexpress_qemu_flash:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_VEXPRESS_QEMU_FLASH != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_vexpress_qemu_flash
+  variables:
+    JOB_BASE_NAME: vexpress_qemu_flash
+
+publish_accep_beagleboneblack:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_BEAGLEBONEBLACK != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_beagleboneblack
+  variables:
+    JOB_BASE_NAME: beagleboneblack
+
+publish_accep_raspberrypi3:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_RASPBERRYPI3 != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_raspberrypi3
+  variables:
+    JOB_BASE_NAME: raspberrypi3
+
+publish_accep_raspberrypi4:codecov:
+  extends: .template_publish_acceptance_coverage_codecov
+  except:
+    variables:
+      - $TEST_RASPBERRYPI4 != "true"
+  dependencies:
+    - init_workspace
+    - test_accep_raspberrypi4
+  variables:
+    JOB_BASE_NAME: raspberrypi4
 
 publish_accep_qemux86_64_uefi_grub:
   extends: .template_publish_acceptance_coverage
