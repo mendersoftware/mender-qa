@@ -1052,9 +1052,6 @@ test_full_integration:
     - build_servers
     - build_client
     - build_mender-artifact
-  variables:
-    DOCKER_CLIENT_TIMEOUT: 300
-    COMPOSE_HTTP_TIMEOUT: 300
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
