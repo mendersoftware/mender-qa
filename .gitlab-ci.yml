@@ -1044,7 +1044,7 @@ test_full_integration:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   stage: test
-  image: docker:18-dind
+  image: docker:19-dind
   tags:
     - mender-qa-slave-highmem
   dependencies:
