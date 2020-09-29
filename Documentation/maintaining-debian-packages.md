@@ -78,17 +78,56 @@ gbp push
 * If not, launch a Merge Request for the package(s) and ping Lluís, Fabio, or
   Andreas.
 
-## Working with patches
+### Typical session with patches
 
-There is a convenient way `gbp` to recreate the upstream patch queue and remove,
-modify or add patches.
+A typical session with gbp can look as follows. Lets assume you have the code and
+you are in the repo root directory. Furthermore, lets assume that you want to 
+change something and rebuild and that you have just cloned (the tree is clean).
 
-Run `gbp pq import` to create a patch branch, where you can see upstream code
-and the debian patches in your git history (see `git log`). Remove, fix, add
-whatever needed, and when done use `gbp pq export` to convert back the git
-history into Debian patches. If the patches are modified, commit the changes.
+1. run:
 
-To start from stratch, use `gbp pq drop`.
+```bash
+gbp pq import
+```
+It will switch to `patch-queue/debian/sid` branch.
+
+2. do make your changes
+
+3. commit them
+
+4. run:
+
+```bash
+gbp pq export
+```
+
+It will will export all the patches to `debian/patches` where you can see them.
+
+5. run:
+
+```bash
+gbp buildpackage --git-pbuilder --git-pbuilder-options=--source-only-changes -us -uc --git-ignore-new
+```
+
+to rebuild.
+
+6. when you want to add more changes, run:
+
+```bash
+gbp pq switch
+```
+
+The main idea is to swtich to _patch-queue/..._, which you can also
+do with _git checkout patch-queue/..._. The `gbp pq switch` switches
+back-and forth between _patch-queue/..._ and the main git branch.
+(For instance, the two branches can be: `patch-queue/debian/sid`
+and `debian/sid`)
+
+8. goto 2.
+
+
+_Note_: anytime you can start from scratch with: `gbp pq drop`
+
 
 ## Testing the package builds
 
