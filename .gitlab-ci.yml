@@ -57,7 +57,7 @@ variables:
   # Integration and backend integration tests
   RUN_INTEGRATION_TESTS: "true"
   SPECIFIC_INTEGRATION_TEST: ""
-  TESTS_IN_PARALLEL: "2"
+  TESTS_IN_PARALLEL: "4"
 
   # Publication
   PUBLISH_DOCKER_CLIENT_IMAGES: "false"
