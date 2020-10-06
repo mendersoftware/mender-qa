@@ -25,6 +25,14 @@ There is a script and a systemd timer service in this repository under
 releases and creates a new kvm enabled image and updates the gitlab config in 
 `/etc/gitlab-runner/config.toml`.
 
+NOTE: To apply the to apply the KVM-enabled image to the gitlab-runners using 
+`docker+machine` autoscaling build hosts, update the configuration option 
+`google-machine-image` under `runners.machine.Machineoptions` with image URI.
+The image URI can be aquired from the SDK from with following command:
+```
+gcloud compute images list --uri --filter="name~'^<image-name>$'"
+```
+
 For step two, on Ubuntu 18.04 we need to install `qemu-kvm` package along with
 dependencies required for running nested VMs, and then reload the 
 `kvm_(intel|amd)` kernel module with flag `nested=Y` to enable nesting VMs. 
