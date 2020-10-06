@@ -83,6 +83,13 @@ user, and the `anonuid,anongid` options fixes the clients user and group ids.
 Moreover, the `insecure` option lifts the restrictions that inbound client must 
 use reserved ports (<= 1024) for accessing the directory.
 
+If you plan on exposing an NFS export outside the local area network, you will
+have to setup an additional firewall rule for the configured NFS port 
+(default: 2049). To create a new firewall rule, enter "VPC Network" -> 
+"Firewall" in the navigation menu and select "Create Firewall Rule". To apply
+the rule, update the NFS server instance tags to include the tag corresponding
+to the new rule.
+
 
 ### Mounting a remote NFS directory
 Mounting an exported NFS directory is almost as easy as mounting a local device,
