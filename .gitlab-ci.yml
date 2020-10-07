@@ -441,6 +441,8 @@ init_workspace:
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
     - apt-get install -qqy sysstat
+    - rm -f /etc/cron.d/sysstat || true # see QA-223 just in case sa1 from cron
+                                        # conflicts with the sar below
     - sed -i 's/false/true/g' /etc/default/sysstat
     - service sysstat start
     - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
