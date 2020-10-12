@@ -369,7 +369,7 @@ init_workspace:
 .template_build_test_acc: &build_and_test_acceptance
   image: teracy/ubuntu:18.04-dind-18.09.9
   services:
-  - docker:18-dind
+  - docker:19-dind
   tags:
     - mender-qa-slave-highcpu
   before_script:
@@ -929,7 +929,7 @@ test_backend_integration:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   stage: test
-  image: docker:18-dind
+  image: docker:19-dind
   tags:
     - mender-qa-slave-highcpu
   dependencies:
@@ -1044,7 +1044,7 @@ test_full_integration:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   stage: test
-  image: docker:18-dind
+  image: docker:19-dind
   tags:
     - mender-qa-slave-highmem
   dependencies:
@@ -1323,7 +1323,7 @@ publish_docker_client_images:
   stage: release
   image: docker
   services:
-    - docker:19.03.5-dind
+    - docker:19-dind
   dependencies:
     - init_workspace
     - build_servers
@@ -1363,7 +1363,7 @@ release_docker_images:
   stage: release
   image: docker
   services:
-    - docker:19.03.5-dind
+    - docker:19-dind
   dependencies:
     - init_workspace
     - build_servers
@@ -1504,7 +1504,7 @@ build_mender-artifact:
       - $RUN_INTEGRATION_TESTS == "true"
   image: docker
   services:
-    - docker:dind
+    - docker:19-dind
   tags:
     - docker
   dependencies:
