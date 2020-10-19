@@ -242,22 +242,9 @@ docker ps -q -a | xargs -r docker rm -f || true
 docker system prune -f -a
 sudo killall -s9 mender-stress-test-client || true
 
-# ---------------------------------------------------
-# Generic setup.
-# ---------------------------------------------------
-
-# Handle sub modules. This is a noop for branches that don't have them. It only
-# looks complicated because in Jenkins we want to build the repository it
-# cloned, not the upstream repository.
+# Handle meta-mender sub modules.
 cd $WORKSPACE/meta-mender
-git submodule deinit -f . || true
-rm -rf .git/modules
-git submodule init
-git config submodule.tests/acceptance/image-tests.url $WORKSPACE/mender-image-tests
-# This may fail if a branch is missing from Jenkins' clone. Doesn't matter, we
-# will checkout HEAD instead.
-git submodule update || git submodule foreach git reset --hard
-git submodule foreach "git fetch origin HEAD && git checkout FETCH_HEAD"
+git submodule update --init --recursive
 cd $WORKSPACE
 
 # ---------------------------------------------------
@@ -552,10 +539,10 @@ build_and_test_client() {
                 sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
             fi
 
-	    # Zeus and older do not have this.
-	    if grep -q mender-testing-enabled $WORKSPACE/meta-mender/meta-mender-core/classes/mender-maybe-setup.bbclass; then
-		echo 'MENDER_FEATURES_ENABLE_append = " mender-testing-enabled"' >> $BUILDDIR/conf/local.conf
-	    fi
+            # Zeus and older do not have this.
+            if grep -q mender-testing-enabled $WORKSPACE/meta-mender/meta-mender-core/classes/mender-maybe-setup.bbclass; then
+            echo 'MENDER_FEATURES_ENABLE_append = " mender-testing-enabled"' >> $BUILDDIR/conf/local.conf
+            fi
 
             bitbake $image_name
 
@@ -575,8 +562,6 @@ build_and_test_client() {
             fi
 
             local pytest_args=
-            # Assuming thud or newer
-            pytest_args="--no-pull"
             # Assuming rocko or newer
             pytest_args="$pytest_args --commercial-tests"
 

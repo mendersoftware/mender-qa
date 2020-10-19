@@ -26,7 +26,6 @@ variables:
   MENDER_STRESS_TEST_CLIENT_REV: "master"
   META_OPENEMBEDDED_REV: "dunfell"
   META_RASPBERRYPI_REV: "dunfell"
-  MENDER_IMAGE_TESTS_REV: "master"
   AUDITLOGS_REV: "master"
   MTLS_AMBASSADOR_REV: "master"
 
@@ -325,13 +324,6 @@ init_workspace:
       git checkout pr ||
       git checkout -f -b pr ${MENDER_CLI_REV})
     - (cd go/src/github.com/mendersoftware/mender-cli && echo -e "# $(git log -n1 --oneline)\nexport MENDER_CLI_REV=$MENDER_CLI_REV\nexport MENDER_CLI_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
-
-    - git clone https://github.com/mendersoftware/mender-image-tests
-    - (cd mender-image-tests &&
-      git fetch -u -f origin ${MENDER_IMAGE_TESTS_REV}:pr &&
-      git checkout pr ||
-      git checkout -f -b pr ${MENDER_IMAGE_TESTS_REV})
-    - (cd mender-image-tests && echo -e "# $(git log -n1 --oneline)\nexport MENDER_IMAGE_TESTS_REV=$MENDER_IMAGE_TESTS_REV\nexport MENDER_IMAGE_TESTS_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env)
 
     - git clone git@github.com:mendersoftware/auditlogs go/src/github.com/mendersoftware/auditlogs
     - (cd go/src/github.com/mendersoftware/auditlogs &&
