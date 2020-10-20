@@ -14,8 +14,7 @@ export PATH=$PATH:$WORKSPACE/go/bin
 
 is_building_dockerized_board() {
     local ret=0
-    is_building_board vexpress-qemu \
-        || is_building_board qemux86-64-uefi-grub \
+    is_building_board qemux86-64-uefi-grub \
         || ret=$?
     return $ret
 }
