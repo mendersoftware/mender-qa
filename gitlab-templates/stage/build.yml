@@ -1,4 +1,7 @@
 
+include:
+  - local: '../shared/build_and_test_acceptance.yml'
+
 build_client:
   only:
     variables:
@@ -7,7 +10,7 @@ build_client:
   stage: build
   dependencies:
     - init_workspace
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
     ONLY_BUILD: "true"
