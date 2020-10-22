@@ -1,0 +1,217 @@
+
+# This job allows mender repo to publish the related Docker client images on
+# merges to master or release branches.
+# Do not confuse with release_docker_images which publishes all images
+# (including client ones) used during releases.
+publish_docker_client_images:
+  only:
+    variables:
+      - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
+  stage: release
+  image: docker
+  services:
+    - docker:19.03.5-dind
+  dependencies:
+    - init_workspace
+    - build_servers
+    - build_client
+  before_script:
+    # Check correct dind setup
+    - docker version
+    # Install dependencies
+    - apk --update add git python3 py3-pip
+    - pip3 install --upgrade pyyaml
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
+    # Login for private repos
+    - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
+  script:
+    # for pre 2.4.x releases, omit --version-type
+    - if $WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
+    -   VERSION_TYPE_PARAMS="--version-type docker"
+    - fi
+    # Load, tag and push mender-client-docker, mender-client-qemu, mender-client-qemu-rofs
+    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep mender-client); do
+        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version HEAD);
+        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
+        docker load -i stage-artifacts/${image}.tar;
+        docker tag $docker_url:pr $docker_url:${version};
+        docker push $docker_url:${version};
+      done
+
+
+.template_release_docker_images:
+  stage: release
+  image: docker
+  services:
+    - docker:19.03.5-dind
+  dependencies:
+    - init_workspace
+    - build_servers
+    - build_client
+  before_script:
+    # Check correct dind setup
+    - docker version
+    # Install dependencies
+    - apk --update add git python3 py3-pip
+    - pip3 install --upgrade pyyaml
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
+    # Login for private repos
+    - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
+    - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
+  script:
+    # for pre 2.4.x releases, omit --version-type
+    - if $WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
+    -   VERSION_TYPE_PARAMS="--version-type docker"
+    - fi
+    # Load, tag and push Docker images
+    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
+        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version HEAD);
+        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
+        docker load -i stage-artifacts/${image}.tar;
+        docker tag $docker_url:pr $docker_url:${version};
+        docker push $docker_url:${version};
+      done
+
+
+release_docker_images:manual:
+  when: manual
+  extends: .template_release_docker_images
+
+release_docker_images:automatic:
+  only:
+    variables:
+      - $PUBLISH_RELEASE_AUTOMATIC == "true"
+  extends: .template_release_docker_images
+
+.template_release_board_artifacts:
+  stage: release
+  image: debian:buster
+  dependencies:
+    - init_workspace
+    - test_accep_qemux86_64_uefi_grub
+    - test_accep_vexpress_qemu
+    - test_accep_qemux86_64_bios_grub
+    - test_accep_qemux86_64_bios_grub_gpt
+    - test_accep_vexpress_qemu_uboot_uefi_grub
+    - test_accep_vexpress_qemu_flash
+    - test_accep_beagleboneblack
+    - test_accep_raspberrypi3
+    - test_accep_raspberrypi4
+  before_script:
+    # Install dependencies
+    - apt update && apt install -yyq awscli git python3 python3-pip
+    - pip3 install --upgrade pyyaml
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
+  script:
+    # Publish boards artifacts and sdimg (when hw). Note that vexpress-qemu-flash is ignored
+    - client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
+    - for board_name in qemux86-64-uefi-grub vexpress-qemu qemux86-64-bios-grub-gpt qemux86-64-bios-grub
+      vexpress-qemu-uboot-uefi-grub beagleboneblack raspberrypi3 raspberrypi4; do
+        aws s3 cp stage-artifacts/${board_name}_release_1_${client_version}.mender
+          s3://mender/${client_version}/${board_name}/${board_name}_release_1_${client_version}.mender;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key ${client_version}/${board_name}/${board_name}_release_1_${client_version}.mender;
+        if ! echo $board_name | grep -q qemu; then
+          aws s3 cp stage-artifacts/mender-${board_name}_${client_version}.sdimg.gz
+            s3://mender/${client_version}/${board_name}/mender-${board_name}_${client_version}.sdimg.gz;
+          aws s3api put-object-acl --acl public-read --bucket mender
+            --key ${client_version}/${board_name}/mender-${board_name}_${client_version}.sdimg.gz;
+        fi;
+      done
+
+
+release_board_artifacts:manual:
+  when: manual
+  extends: .template_release_board_artifacts
+
+release_board_artifacts:automatic:
+  only:
+    variables:
+      - $PUBLISH_RELEASE_AUTOMATIC == "true"
+  extends: .template_release_board_artifacts
+
+
+.template_release_binary_tools:
+  stage: release
+  image: debian:buster
+  dependencies:
+    - init_workspace
+    - build_mender-cli
+    - build_mender-artifact
+  before_script:
+    # Install dependencies
+    - apt update && apt install -yyq awscli git python3 python3-pip
+    - pip3 install --upgrade pyyaml
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
+  script:
+    # mender-cli
+    - mender_cli_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-cli --in-integration-version HEAD)
+    - echo "=== mender-cli $mender_cli_version ==="
+    # We can simplify once mender-cli 1.2.0 is not supported
+    - if grep -q build-multiplatform $WORKSPACE/go/src/github.com/mendersoftware/mender-cli/Makefile; then
+        echo "Publishing ${mender_cli_version} version for linux to S3";
+        aws s3 cp stage-artifacts/mender-cli.linux.amd64
+          s3://mender/mender-cli/${mender_cli_version}/linux/mender-cli;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key mender-cli/${mender_cli_version}/linux/mender-cli;
+        echo "Publishing ${mender_cli_version} version for darwin to S3";
+        aws s3 cp stage-artifacts/mender-cli.darwin.amd64
+          s3://mender/mender-cli/${mender_cli_version}/darwin/mender-cli;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key mender-cli/${mender_cli_version}/darwin/mender-cli;
+      else
+        aws s3 cp stage-artifacts/mender-cli
+          s3://mender/mender-cli/${mender_cli_version}/mender-cli;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key mender-cli/${mender_cli_version}/mender-cli;
+      fi
+    # mender-artifact
+    - mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
+    - echo "=== mender-artifact $mender_artifact_version ==="
+    - for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
+        platform=${bin#mender-artifact-};
+        platform=${platform%.*};
+        echo "Publishing ${mender_artifact_version} version for ${platform} to S3";
+        aws s3 cp stage-artifacts/${bin}
+          s3://mender/mender-artifact/${mender_artifact_version}/${platform}/mender-artifact;
+        aws s3api put-object-acl --acl public-read --bucket mender
+          --key mender-artifact/${mender_artifact_version}/${platform}/mender-artifact;
+      done
+
+release_binary_tools:manual:
+  when: manual
+  extends: .template_release_binary_tools
+
+release_binary_tools:automatic:
+  only:
+    variables:
+      - $PUBLISH_RELEASE_AUTOMATIC == "true"
+  extends: .template_release_binary_tools
