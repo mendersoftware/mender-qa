@@ -1150,13 +1150,13 @@ test_full_integration:
       junit: results_full_integration.xml
 
 # Publish acceptance test coverage into coveralls when either running tests for a
-# mender PR (MENDER_REV != "master") or new merge into mender/master that requires
+# mender PR (MENDER_REV ~= /pull/XXX/head/) or new merge into mender/master that requires
 # Docker images publishing (PUBLISH_DOCKER_CLIENT_IMAGES == "true")
 .template_publish_acceptance_coverage:
   only:
     variables:
       - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
-      - $MENDER_REV != "master"
+      - $MENDER_REV =~ /pull\/.*\/head/
   stage: publish
   dependencies:
     - init_workspace
