@@ -1391,6 +1391,22 @@ release_docker_images:
         docker push $docker_url:${version};
       done
 
+release_docker_images:client_only:
+  extends: release_docker_images
+  script:
+    # for pre 2.4.x releases, omit --version-type
+    - if $WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
+    -   VERSION_TYPE_PARAMS="--version-type docker"
+    - fi
+    # Load, tag and push Docker image
+    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep client); do
+        version=$MENDER_REV
+        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
+        docker load -i stage-artifacts/${image}.tar;
+        docker tag $docker_url:pr $docker_url:${version};
+        docker push $docker_url:${version};
+      done
+
 release_board_artifacts:
   when: manual
   stage: release
