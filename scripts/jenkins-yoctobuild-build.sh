@@ -258,7 +258,7 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
 
         case "$docker" in
-            deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|workflows-worker|workflows-enterprise-worker|create-artifact-worker|auditlogs|mtls-ambassador)
+            deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|workflows-worker|workflows-enterprise-worker|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect)
                 cd go/src/github.com/mendersoftware/$git
                 # workflows repository builds two different Docker images:
                 # - workflows, from Dockerfile
