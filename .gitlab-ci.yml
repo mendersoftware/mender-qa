@@ -368,10 +368,10 @@ init_workspace:
 
 .template_build_test_acc: &build_and_test_acceptance
   image: teracy/ubuntu:18.04-dind-19.03.3
-  services:
-  - docker:19.03.3-dind
   tags:
     - mender-qa-slave-highcpu
+  variables:
+    DOCKER_TLS_CERTDIR: ""
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -1321,9 +1321,7 @@ publish_docker_client_images:
     variables:
       - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
   stage: release
-  image: docker
-  services:
-    - docker:19.03.3-dind
+  image: docker:19.03.13
   dependencies:
     - init_workspace
     - build_servers
@@ -1500,9 +1498,7 @@ build_mender-artifact:
     variables:
       - $BUILD_CLIENT == "true"
       - $RUN_INTEGRATION_TESTS == "true"
-  image: docker
-  services:
-    - docker:19.03.3-dind
+  image: docker:19.03.13
   tags:
     - docker
   dependencies:
