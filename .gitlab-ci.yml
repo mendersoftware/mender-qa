@@ -60,6 +60,7 @@ variables:
 
   # Publication
   PUBLISH_DOCKER_CLIENT_IMAGES: "false"
+  PUBLISH_RELEASE_AUTOMATIC: "false"
 
   # Debugging options
   WAIT_IN_STAGE_INIT: ""
@@ -1350,8 +1351,8 @@ publish_docker_client_images:
         docker push $docker_url:${version};
       done
 
-release_docker_images:
-  when: manual
+
+.template_release_docker_images:
   stage: release
   image: docker
   services:
@@ -1391,8 +1392,18 @@ release_docker_images:
         docker push $docker_url:${version};
       done
 
-release_board_artifacts:
+
+release_docker_images:manual:
   when: manual
+  extends: .template_release_docker_images
+
+release_docker_images:automatic:
+  only:
+    variables:
+      - $PUBLISH_RELEASE_AUTOMATIC == "true"
+  extends: .template_release_docker_images
+
+.template_release_board_artifacts:
   stage: release
   image: debian:buster
   dependencies:
@@ -1434,6 +1445,17 @@ release_board_artifacts:
             --key ${client_version}/${board_name}/mender-${board_name}_${client_version}.sdimg.gz;
         fi;
       done
+
+
+release_board_artifacts:manual:
+  when: manual
+  extends: .template_release_board_artifacts
+
+release_board_artifacts:automatic:
+  only:
+    variables:
+      - $PUBLISH_RELEASE_AUTOMATIC == "true"
+  extends: .template_release_board_artifacts
 
 build_mender-cli:
   stage: build
@@ -1541,8 +1563,7 @@ build_mender-artifact:
     paths:
       - stage-artifacts/
 
-release_binary_tools:
-  when: manual
+.template_release_binary_tools:
   stage: release
   image: debian:buster
   dependencies:
@@ -1595,3 +1616,14 @@ release_binary_tools:
         aws s3api put-object-acl --acl public-read --bucket mender
           --key mender-artifact/${mender_artifact_version}/${platform}/mender-artifact;
       done
+
+release_binary_tools:manual:
+  when: manual
+  extends: .template_release_binary_tools
+
+release_binary_tools:automatic:
+  only:
+    variables:
+      - $PUBLISH_RELEASE_AUTOMATIC == "true"
+  extends: .template_release_binary_tools
+
