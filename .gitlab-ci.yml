@@ -1343,7 +1343,7 @@ publish_docker_client_images:
     - fi
     # Load, tag and push mender-client-docker, mender-client-qemu, mender-client-qemu-rofs
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep mender-client); do
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version HEAD);
+        version=${MENDER_REV};
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
         docker load -i stage-artifacts/${image}.tar;
         docker tag $docker_url:pr $docker_url:${version};
@@ -1400,7 +1400,7 @@ release_docker_images:client_only:
     - fi
     # Load, tag and push Docker image
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep client); do
-        version=$MENDER_REV
+        version=${MENDER_REV}
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
         docker load -i stage-artifacts/${image}.tar;
         docker tag $docker_url:pr $docker_url:${version};
@@ -1436,7 +1436,7 @@ release_board_artifacts:
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
   script:
     # Publish boards artifacts and sdimg (when hw). Note that vexpress-qemu-flash is ignored
-    - client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
+    - client_version=${MENDER_REV}
     - for board_name in qemux86-64-uefi-grub vexpress-qemu qemux86-64-bios-grub-gpt qemux86-64-bios-grub
       vexpress-qemu-uboot-uefi-grub beagleboneblack raspberrypi3 raspberrypi4; do
         aws s3 cp stage-artifacts/${board_name}_release_1_${client_version}.mender
