@@ -369,6 +369,8 @@ init_workspace:
 
 .template_build_test_acc: &build_and_test_acceptance
   image: teracy/ubuntu:18.04-dind-18.09.9
+  needs:
+    - init_workspace
   services:
   - docker:18-dind
   tags:
@@ -495,8 +497,6 @@ build_client:
       - $BUILD_CLIENT == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   stage: build
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
@@ -527,8 +527,6 @@ build_servers:
     variables:
       - $BUILD_SERVERS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_servers
@@ -565,8 +563,6 @@ test_accep_qemux86_64_uefi_grub:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
@@ -605,8 +601,6 @@ test_accep_vexpress_qemu:
       - $BUILD_VEXPRESS_QEMU == "true"
       - $TEST_VEXPRESS_QEMU == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu
@@ -645,8 +639,6 @@ test_accep_qemux86_64_bios_grub:
       - $BUILD_QEMUX86_64_BIOS_GRUB == "true"
       - $TEST_QEMUX86_64_BIOS_GRUB == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
@@ -685,8 +677,6 @@ test_accep_qemux86_64_bios_grub_gpt:
       - $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
       - $TEST_QEMUX86_64_BIOS_GRUB_GPT == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
@@ -725,8 +715,6 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
       - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
       - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
@@ -768,8 +756,6 @@ test_accep_vexpress_qemu_flash:
       - $BUILD_VEXPRESS_QEMU_FLASH == "true"
       - $TEST_VEXPRESS_QEMU_FLASH == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_flash
@@ -808,8 +794,6 @@ test_accep_beagleboneblack:
       - $BUILD_BEAGLEBONEBLACK == "true"
       - $TEST_BEAGLEBONEBLACK == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_beagleboneblack
@@ -849,8 +833,6 @@ test_accep_raspberrypi3:
       - $BUILD_RASPBERRYPI3 == "true"
       - $TEST_RASPBERRYPI3 == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_raspberrypi3
@@ -890,8 +872,6 @@ test_accep_raspberrypi4:
       - $BUILD_RASPBERRYPI4 == "true"
       - $TEST_RASPBERRYPI4 == "true"
   stage: test
-  needs:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_raspberrypi4
