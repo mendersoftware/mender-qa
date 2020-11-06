@@ -372,7 +372,7 @@ init_workspace:
   needs:
     - init_workspace
   services:
-  - docker:18-dind
+  - docker:18.08-dind
   tags:
     - mender-qa-slave-highcpu
   before_script:
@@ -910,7 +910,7 @@ test_backend_integration:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   stage: test
-  image: docker:18-dind
+  image: docker:18.08-dind
   tags:
     - mender-qa-slave-highcpu
   needs:
@@ -1025,7 +1025,7 @@ test_full_integration:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   stage: test
-  image: docker:18-dind
+  image: docker:18.08-dind
   tags:
     - mender-qa-slave-highmem
   needs:
@@ -1510,7 +1510,7 @@ build_mender-artifact:
       - $RUN_INTEGRATION_TESTS == "true"
   image: docker
   services:
-    - docker:dind
+    - docker:18.08-dind
   tags:
     - docker
   needs:
