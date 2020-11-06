@@ -369,6 +369,8 @@ init_workspace:
 
 .template_build_test_acc: &build_and_test_acceptance
   image: teracy/ubuntu:18.04-dind-18.09.9
+  needs:
+    - init_workspace
   services:
   - docker:18-dind
   tags:
@@ -495,8 +497,6 @@ build_client:
       - $BUILD_CLIENT == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   stage: build
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
@@ -527,8 +527,6 @@ build_servers:
     variables:
       - $BUILD_SERVERS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_servers
@@ -565,8 +563,6 @@ test_accep_qemux86_64_uefi_grub:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
@@ -605,8 +601,6 @@ test_accep_vexpress_qemu:
       - $BUILD_VEXPRESS_QEMU == "true"
       - $TEST_VEXPRESS_QEMU == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu
@@ -645,8 +639,6 @@ test_accep_qemux86_64_bios_grub:
       - $BUILD_QEMUX86_64_BIOS_GRUB == "true"
       - $TEST_QEMUX86_64_BIOS_GRUB == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
@@ -685,8 +677,6 @@ test_accep_qemux86_64_bios_grub_gpt:
       - $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
       - $TEST_QEMUX86_64_BIOS_GRUB_GPT == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
@@ -725,8 +715,6 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
       - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
       - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
@@ -768,8 +756,6 @@ test_accep_vexpress_qemu_flash:
       - $BUILD_VEXPRESS_QEMU_FLASH == "true"
       - $TEST_VEXPRESS_QEMU_FLASH == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_flash
@@ -808,8 +794,6 @@ test_accep_beagleboneblack:
       - $BUILD_BEAGLEBONEBLACK == "true"
       - $TEST_BEAGLEBONEBLACK == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_beagleboneblack
@@ -849,8 +833,6 @@ test_accep_raspberrypi3:
       - $BUILD_RASPBERRYPI3 == "true"
       - $TEST_RASPBERRYPI3 == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_raspberrypi3
@@ -890,8 +872,6 @@ test_accep_raspberrypi4:
       - $BUILD_RASPBERRYPI4 == "true"
       - $TEST_RASPBERRYPI4 == "true"
   stage: test
-  dependencies:
-    - init_workspace
   <<: *build_and_test_acceptance
   variables:
     JOB_BASE_NAME: mender_raspberrypi4
@@ -933,7 +913,7 @@ test_backend_integration:
   image: docker:18-dind
   tags:
     - mender-qa-slave-highcpu
-  dependencies:
+  needs:
     - init_workspace
     - build_servers
     - build_mender-artifact
@@ -1048,7 +1028,7 @@ test_full_integration:
   image: docker:18-dind
   tags:
     - mender-qa-slave-highmem
-  dependencies:
+  needs:
     - init_workspace
     - build_servers
     - build_client
@@ -1170,8 +1150,6 @@ test_full_integration:
       - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
       - $MENDER_REV =~ /pull\/.*\/head/
   stage: publish
-  dependencies:
-    - init_workspace
   image: golang:1.14-alpine3.11
   before_script:
     - apk add --no-cache git
@@ -1222,7 +1200,7 @@ publish_accep_qemux86_64_uefi_grub:
   except:
     variables:
       - $TEST_QEMUX86_64_UEFI_GRUB != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_qemux86_64_uefi_grub
   variables:
@@ -1233,7 +1211,7 @@ publish_accep_vexpress_qemu:
   except:
     variables:
       - $TEST_VEXPRESS_QEMU != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_vexpress_qemu
   variables:
@@ -1244,7 +1222,7 @@ publish_accep_qemux86_64_bios_grub:
   except:
     variables:
       - $TEST_QEMUX86_64_BIOS_GRUB != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_qemux86_64_bios_grub
   variables:
@@ -1255,7 +1233,7 @@ publish_accep_qemux86_64_bios_grub_gpt:
   except:
     variables:
       - $TEST_QEMUX86_64_BIOS_GRUB_GPT != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_qemux86_64_bios_grub_gpt
   variables:
@@ -1266,7 +1244,7 @@ publish_accep_vexpress_qemu_uboot_uefi_grub:
   except:
     variables:
       - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_vexpress_qemu_uboot_uefi_grub
   variables:
@@ -1277,7 +1255,7 @@ publish_accep_vexpress_qemu_flash:
   except:
     variables:
       - $TEST_VEXPRESS_QEMU_FLASH != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_vexpress_qemu_flash
   variables:
@@ -1288,7 +1266,7 @@ publish_accep_beagleboneblack:
   except:
     variables:
       - $TEST_BEAGLEBONEBLACK != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_beagleboneblack
   variables:
@@ -1299,7 +1277,7 @@ publish_accep_raspberrypi3:
   except:
     variables:
       - $TEST_RASPBERRYPI3 != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_raspberrypi3
   variables:
@@ -1310,7 +1288,7 @@ publish_accep_raspberrypi4:
   except:
     variables:
       - $TEST_RASPBERRYPI4 != "true"
-  dependencies:
+  needs:
     - init_workspace
     - test_accep_raspberrypi4
   variables:
@@ -1328,7 +1306,7 @@ publish_docker_client_images:
   image: docker
   services:
     - docker:19.03.5-dind
-  dependencies:
+  needs:
     - init_workspace
     - build_servers
     - build_client
@@ -1364,11 +1342,14 @@ publish_docker_client_images:
 
 
 .template_release_docker_images:
+  only:
+    variables:
+      - ($BUILD_SERVERS == "true" && $BUILD_CLIENT == "true") || $RUN_INTEGRATION_TESTS == "true"
   stage: release
   image: docker
   services:
     - docker:19.03.5-dind
-  dependencies:
+  needs:
     - init_workspace
     - build_servers
     - build_client
@@ -1475,7 +1456,7 @@ build_mender-cli:
       - $BUILD_SERVERS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   image: golang:1.11.4
-  dependencies:
+  needs:
     - init_workspace
   before_script:
     # Default value, will later be overwritten if successful
@@ -1532,7 +1513,7 @@ build_mender-artifact:
     - docker:dind
   tags:
     - docker
-  dependencies:
+  needs:
     - init_workspace
   before_script:
     # Default value, will later be overwritten if successful
@@ -1575,9 +1556,12 @@ build_mender-artifact:
       - stage-artifacts/
 
 .template_release_binary_tools:
+  only:
+    variables:
+      - ($BUILD_SERVERS == "true" && $BUILD_CLIENT == "true") || $RUN_INTEGRATION_TESTS == "true"
   stage: release
   image: debian:buster
-  dependencies:
+  needs:
     - init_workspace
     - build_mender-cli
     - build_mender-artifact
