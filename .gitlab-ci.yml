@@ -72,7 +72,7 @@ variables:
   CLEAN_BUILD_CACHE: ""
 
   # Internal address for nfs sstate cache server (northamerica-northeast1-b)
-  SSTATE_CACHE_INTRNL_ADDR: 10.162.0.2
+  SSTATE_CACHE_INTRNL_ADDR: "10.162.0.2"
 
   # Global environment variables (not meant to be changed)
   DEBIAN_FRONTEND: noninteractive
@@ -83,7 +83,7 @@ variables:
   # and that the dind service name is always docker (default hostname).
   DOCKER_HOST: "tcp://docker:2376"
   DOCKER_CERT_PATH: "/certs/client"
-  DOCKER_TLS_VERIFY: 1
+  DOCKER_TLS_VERIFY: "1"
   DOCKER_TLS_CERTDIR: "/certs"
 
 include:
