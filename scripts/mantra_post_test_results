@@ -1,0 +1,39 @@
+#!/bin/sh
+
+if [ -z "$3" ]; then
+    echo "Usage: $0 project-id build-name xml-file"
+    exit 1
+fi
+
+project_id=$1
+
+# TODO: we can add more fields like status or build_url
+request_body=$(cat <<EOF
+{
+  "name": "$2"
+}
+EOF
+)
+
+results_file=$3
+
+builds_endpoint=https://qastatus.mender.io/api/projects/${project_id}/builds
+
+rm -f output
+curl --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
+        -H "Content-Type: application/json" \
+        -d "$request_body" \
+        -o output \
+        "$builds_endpoint"
+
+cat output
+echo
+
+build_id=$(cat output | jq .id)
+
+results_endpoint=https://qastatus.mender.io/api/projects/${project_id}/builds/${build_id}/results
+
+curl --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
+        -H "Content-Type: application/xml" \
+        --data-binary @$results_file \
+        "$results_endpoint"

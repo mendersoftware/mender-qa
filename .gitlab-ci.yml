@@ -574,6 +574,11 @@ test_accep_qemux86_64_uefi_grub:
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html;
       fi
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 1 nightly-$(date +%Y-%m-%d) results_accep_qemux86_64_uefi_grub.xml
+    - fi
+
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-uefi-grub/qemux86-64-uefi-grub_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
@@ -612,6 +617,11 @@ test_accep_vexpress_qemu:
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu.html;
       fi
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 2 nightly-$(date +%Y-%m-%d) results_accep_vexpress_qemu.xml
+    - fi
+
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu/vexpress-qemu_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
@@ -650,6 +660,11 @@ test_accep_qemux86_64_bios_grub:
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub.html;
       fi
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 3 nightly-$(date +%Y-%m-%d) results_accep_qemux86_64_bios_grub.xml
+    - fi
+
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-bios-grub/qemux86-64-bios-grub_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
@@ -688,6 +703,11 @@ test_accep_qemux86_64_bios_grub_gpt:
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_bios_grub_gpt.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_bios_grub_gpt.html;
       fi
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 4 nightly-$(date +%Y-%m-%d) results_accep_qemux86_64_bios_grub_gpt.xml
+    - fi
+
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-bios-grub-gpt/qemux86-64-bios-grub-gpt_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
@@ -726,6 +746,11 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_uboot_uefi_grub.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_uboot_uefi_grub.html;
       fi
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 5 nightly-$(date +%Y-%m-%d) results_accep_vexpress_qemu_uboot_uefi_grub.xml
+    - fi
+
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu-uboot-uefi-grub/vexpress-qemu-uboot-uefi-grub_release_1_*.mender stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
@@ -767,6 +792,11 @@ test_accep_vexpress_qemu_flash:
         cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_vexpress_qemu_flash.xml;
         cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_vexpress_qemu_flash.html;
       fi
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 6 nightly-$(date +%Y-%m-%d) results_accep_vexpress_qemu_flash.xml
+    - fi
+
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu-flash/core-image-minimal-vexpress-qemu-flash.ubifs stage-artifacts/
     - cp /var/log/sysstat/sysstat.log .
@@ -1002,6 +1032,12 @@ test_backend_integration:
     - find ${CI_PROJECT_DIR}/../integration/backend-tests -mindepth 1 -maxdepth 1 -name 'acceptance.*' -exec cp "{}" . \;
     - ls ${CI_PROJECT_DIR}/../integration/backend-tests/results_*xml | xargs -n 1 -i cp {} .
     - ls ${CI_PROJECT_DIR}/../integration/backend-tests/report_*html | xargs -n 1 -i cp {} .
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 7 nightly-$(date +%Y-%m-%d) results_backend_integration_open.xml
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 8 nightly-$(date +%Y-%m-%d) results_backend_integration_enterprise.xml
+    - fi
+
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
@@ -1123,6 +1159,11 @@ test_full_integration:
     - cp -r ${CI_PROJECT_DIR}/../integration/tests/mender_test_logs .
     - cp ${CI_PROJECT_DIR}/../integration/tests/results.xml results_full_integration.xml
     - cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_full_integration.html
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results 9 nightly-$(date +%Y-%m-%d) results_full_integration.xml
+    - fi
+
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
