@@ -29,6 +29,7 @@ variables:
   AUDITLOGS_REV: "master"
   MTLS_AMBASSADOR_REV: "master"
   DEVICECONNECT_REV: "master"
+  MENDER_SHELL_REV: "master"
 
   # Build stage
   BUILD_CLIENT: "true"
@@ -245,6 +246,7 @@ init_workspace:
     - checkout_repo AUDITLOGS git@github.com:mendersoftware/auditlogs go/src/github.com/mendersoftware/auditlogs $AUDITLOGS_REV
     - checkout_repo MTLS_AMBASSADOR git@github.com:mendersoftware/mtls-ambassador go/src/github.com/mendersoftware/mtls-ambassador $MTLS_AMBASSADOR_REV
     - checkout_repo DEVICECONNECT https://github.com/mendersoftware/deviceconnect go/src/github.com/mendersoftware/deviceconnect $DEVICECONNECT_REV
+    - checkout_repo MENDER_SHELL https://github.com/mendersoftware/mender-shell go/src/github.com/mendersoftware/mender-shell $MENDER_SHELL_REV
 
     # Print for debug purposes
     - cat ${CI_PROJECT_DIR}/build_revisions.env
