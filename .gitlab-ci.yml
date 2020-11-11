@@ -271,7 +271,7 @@ init_workspace:
       - build_revisions.env
 
 .template_build_test_acc: &build_and_test_acceptance
-  image: ubuntu:18.04
+  image: mendersoftware/mender-test-containers:mender-client-acceptance-testing
   needs:
     - init_workspace
   services:
@@ -279,86 +279,24 @@ init_workspace:
   tags:
     - mender-qa-slave-highcpu
   before_script:
+    # collect cpu, load avg, memory and io usage every 2 secs forever
+    # use 'sar' from sysstat to render the result file manually
+    - service sysstat start && sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Export required yoctobuild script variables
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - export GOPATH="$WORKSPACE/go"
+    - chown -R mender:mender ${WORKSPACE}
     # This template is used in both build and acc test stages,
     # for build stage, force default configuration QEMUX86_64_UEFI_GRUB
     - test -n "$ONLY_BUILD" && export BUILD_QEMUX86_64_UEFI_GRUB=true
     - test -n "$ONLY_BUILD" && export TEST_QEMUX86_64_UEFI_GRUB=false
-    - export RUN_INTEGRATION_TESTS=false
-    # basic tools
-    - apt-get update -q
-    - apt-get install -qqy
-      git docker.io wget gnupg2 pass autoconf automake build-essential diffstat gawk chrpath
-      libsdl1.2-dev e2tools nfs-client s3cmd psmisc screen libssl-dev python-dev bash curl
-      libxml2-dev libxslt-dev libffi-dev nodejs libyaml-dev sysbench texinfo pkg-config
-      zlib1g-dev libaio-dev libbluetooth-dev libbrlapi-dev libbz2-dev libglib2.0-dev
-      libfdt-dev libpixman-1-dev zlib1g-dev jq liblzo2-dev device-tree-compiler
-      qemu-system-x86 qemu-system-arm bc kpartx liblzma-dev cpio sudo awscli gdisk
-    # Verify correct dind setup
-    - docker version
-    # Prepare mender user
-    - useradd -m -u 1010 mender || true
-    - mkdir -p /home/mender/.ssh
-    - echo "mender ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
-    - sed -i -e 's/^\( *Defaults *requiretty *\)$/# \1/' /etc/sudoers
-    - chown -R mender:mender /home/mender
-    - chown -R mender:mender ${WORKSPACE}
-    - usermod -a -G docker mender
-    # docker-compose from upstream
-    - curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    - chmod +x /usr/local/bin/docker-compose
-    # golang from upstream
-    - wget -q https://storage.googleapis.com/golang/go1.12.linux-amd64.tar.gz
-    - gunzip -c go1.12.linux-amd64.tar.gz | (cd /usr/local && tar x)
-    - ln -sf /usr/local/go/bin/go /usr/local/bin/go
-    - ln -sf /usr/local/go/bin/godoc /usr/local/bin/godoc
-    - ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
-    # Python 2 pip
-    - apt-get install -qqy python-pip
-    - pip install --upgrade pip
-    - pip2 install requests --upgrade
-    - pip2 install pytest --upgrade
-    - pip2 install filelock --upgrade
-    - pip2 install pytest-xdist --upgrade
-    - pip2 install pytest-html --upgrade
-    - pip2 install -I fabric==1.14.0
-    - pip2 install psutil --upgrade
-    - pip2 install boto3 --upgrade
-    - pip2 install pycrypto --upgrade
-    # Python 3 pip
-    - apt-get install -qqy python3-pip
-    - pip3 install --upgrade pyyaml
     # Post job status
     - source ${CI_PROJECT_DIR}/build_revisions.env
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
-    # Locales
-    - apt-get install locales
-    - locale-gen --purge en_US.UTF-8
-    - export LC_ALL=en_US.UTF-8
-    - export LANG=en_US.UTF-8
-    - export LANGUAGE=en_US.UTF-8
-    # debugfs
-    - cp /sbin/debugfs /usr/bin/ || echo "debugfs not in /sbin/"
-    # sysstat monitoring suite for Debian/Ubuntu
-    # collect cpu, load avg, memory and io usage every 2 secs forever
-    # use 'sar' from sysstat to render the result file manually
-    - apt-get install -qqy sysstat
-    - sed -i 's/false/true/g' /etc/default/sysstat
-    - service sysstat start
-    - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
-    # Setup KVM
-    - usermod -a -G kvm mender
-    - apt-get install -qqy kmod libvirt-bin qemu-utils qemu-kvm linux-modules-`uname -r`
     # Enable nesting VMs
-    - modprobe -r kvm_intel
-    - modprobe kvm_intel nested=Y
+    - modprobe -r kvm_intel && modprobe kvm_intel nested=Y
     # Enable NFS cache for yocto
-    - apt-get install nfs-common
-    - mkdir -p /mnt/sstate-cache
     - mount.nfs4 ${SSTATE_CACHE_INTRNL_ADDR}:/sstate-cache /mnt/sstate-cache
   script:
     # Traps only work if executed in a sub shell.
@@ -1575,4 +1513,3 @@ release_binary_tools:automatic:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
   extends: .template_release_binary_tools
-
