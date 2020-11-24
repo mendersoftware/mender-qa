@@ -71,8 +71,8 @@ Please use templates as much as possible. The standard is a bit different depend
   * Add new repo into `variables`
   * Add new call to `checkout_repo` in `init_workspace`.
     * For private repositories, use ssh Git url
-2. Modify `jenkins-yoctobuild-build.sh`
-  * ref https://github.com/mendersoftware/mender-qa/blob/master/scripts/jenkins-yoctobuild-build.sh
+2. Modify `servers-build.sh`
+  * ref https://github.com/mendersoftware/mender-qa/blob/master/scripts/servers-build.sh
   * Add the new Docker images, if applicable, to `Build server repositories.`
 
 ## mender-test-bot (integration-test-runner)
