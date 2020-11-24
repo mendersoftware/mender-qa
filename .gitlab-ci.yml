@@ -54,6 +54,7 @@ variables:
   TEST_RASPBERRYPI3: "false"
   BUILD_RASPBERRYPI4: "false"
   TEST_RASPBERRYPI4: "false"
+  SPECIFIC_ACCEPTANCE_TEST: ""
 
   # Integration and backend integration tests
   RUN_INTEGRATION_TESTS: "true"

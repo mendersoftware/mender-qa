@@ -23,7 +23,7 @@ is_building_board() {
     local ret=0
     local uc_board="$(tr [a-z-] [A-Z_] <<<$1)"
     local lc_board="$(tr [A-Z-] [a-z_] <<<$1)"
-    eval test "\$BUILD_${uc_board}" = true && egrep "(^|[^_]\b)mender_${lc_board}(\$|\b[^_])" <<<"$JOB_BASE_NAME" || ret=$?
+    eval test "\$BUILD_${uc_board}" = true && egrep -q "(^|[^_]\b)mender_${lc_board}(\$|\b[^_])" <<<"$JOB_BASE_NAME" || ret=$?
     return $ret
 }
 
@@ -31,17 +31,8 @@ is_testing_board() {
     local ret=0
     local uc_board="$(tr [a-z-] [A-Z_] <<<$1)"
     local lc_board="$(tr [A-Z-] [a-z_] <<<$1)"
-    eval test "\$TEST_${uc_board}" = true && egrep "(^|[^_]\b)mender_${lc_board}(\$|\b[^_])" <<<"$JOB_BASE_NAME" || ret=$?
+    eval test "\$TEST_${uc_board}" = true && egrep -q "(^|[^_]\b)mender_${lc_board}(\$|\b[^_])" <<<"$JOB_BASE_NAME" || ret=$?
     return $ret
-}
-
-disable_mender_service() {
-    if [ "$DISABLE_MENDER_SERVICE" = "true" ]
-    then
-        cat >> "$BUILDDIR"/conf/local.conf <<EOF
-SYSTEMD_AUTO_ENABLE_pn-mender = "disable"
-EOF
-    fi
 }
 
 modify_ext4() {
@@ -208,45 +199,37 @@ EOF
     fi
 }
 
-# ---------------------------------------------------
-# Preliminary checks.
-# ---------------------------------------------------
+init_environment() {
+    # Verify that version references are up to date.
+    $WORKSPACE/integration/extra/release_tool.py --verify-integration-references
 
-# Verify that version references are up to date.
-$WORKSPACE/integration/extra/release_tool.py --verify-integration-references
+    # Verify mender-qa directory exists
+    if [ ! -d mender-qa ]
+    then
+        echo "mender-qa directory is not present"
+        exit 1
+    fi
 
-# Verify mender-qa directory exists
-if [ ! -d mender-qa ]
-then
-    echo "mender-qa directory is not present"
-    exit 1
-fi
+    # Clean up build slave.
+    if [ "$CLEAN_BUILD_CACHE" = "true" ]
+    then
+        sudo rm -rf /mnt/sstate-cache/*
+    fi
 
-# ---------------------------------------------------
-# Clean up build server.
-# ---------------------------------------------------
+    # Handle meta-mender sub modules.
+    cd $WORKSPACE/meta-mender
+    git submodule update --init --recursive
+    cd $WORKSPACE
 
-if [ "$CLEAN_BUILD_CACHE" = "true" ]
-then
-    sudo rm -rf /mnt/sstate-cache/*
-fi
-
-# Handle meta-mender sub modules.
-cd $WORKSPACE/meta-mender
-git submodule update --init --recursive
-cd $WORKSPACE
-
-# -----------------------
-# Get mender-binary-delta
-# -----------------------
-
-if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
-    RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
-    mkdir -p $WORKSPACE/mender-binary-delta
-    s3cmd get --recursive s3://$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
-    chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta
-    chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta-generator
-fi
+    # Get mender-binary-delta
+    if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
+        RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
+        mkdir -p $WORKSPACE/mender-binary-delta
+        s3cmd get --recursive s3://$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
+        chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta
+        chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta-generator
+    fi
+}
 
 # Check whether the given board name is a hardware board or not.
 # Takes one argument: Board name
@@ -263,7 +246,7 @@ is_hardware_board() {
 
 # ------------------------------------------------------------------------------
 # Adds the given build configuration to the list of possibilities. Later, the
-# correct one will be chosen with build_and_test().
+# correct one will be chosen with select_build_config().
 #
 # Parameters:
 #   - machine name - Yocto MACHINE name
@@ -273,8 +256,6 @@ is_hardware_board() {
 #   - device type - Mender device type. In most cases the same as machine name,
 #                   but some machines and boards may have more than one device
 #                   type, for example with different boot loaders
-# The last three parameters can be omitted, which indicates a server-only build,
-# using the given machine name.
 # The last one argument may also be omitted, in which case it device type is set
 # to machine name.
 # ------------------------------------------------------------------------------
@@ -289,7 +270,7 @@ add_to_build_list() {
     fi
 }
 
-build_and_test() {
+select_build_config() {
     local machine_to_build=
     local board_to_build=
     local image_to_build=
@@ -299,25 +280,9 @@ build_and_test() {
         local board=${CONFIG_BOARD_NAMES[$config]}
         local image=${CONFIG_IMAGE_NAMES[$config]}
         local device_type=${CONFIG_DEVICE_TYPES[$config]}
-        if [ -n "$board" ]; then
-            # Configuration with client.
-            if is_building_board $board; then
-                if [ -n "$board_to_build" ]; then
-                    echo "Configurations ($machine_to_build, $board_to_build, $image_to_build) and ($machine, $board, $image) both scheduled to build! This is an error!"
-                    exit 1
-                fi
-                machine_to_build=$machine
-                board_to_build=$board
-                image_to_build=$image
-                device_type_to_build=$device_type
-            fi
-        else
+        # Configuration with client.
+        if is_building_board $board; then
             if [ -n "$board_to_build" ]; then
-                # Some client build is selected. Skip server-only build.
-                continue
-            fi
-            # Configuration with just servers.
-            if [ -n "$machine_to_build" ]; then
                 echo "Configurations ($machine_to_build, $board_to_build, $image_to_build) and ($machine, $board, $image) both scheduled to build! This is an error!"
                 exit 1
             fi
@@ -328,14 +293,12 @@ build_and_test() {
         fi
     done
 
-    if [ -z "$machine_to_build" ]; then
+    if [ -z "$machine_to_build" -o -z "$board_to_build" -o -z "$image_to_build" -o -z "$device_type_to_build" ]; then
         echo "No build configuration selected!"
         exit 1
     fi
 
-    if [ -n "$board_to_build" ]; then
-        build_and_test_client $machine_to_build $board_to_build $image_to_build $device_type_to_build
-    fi
+    echo $machine_to_build $board_to_build $image_to_build $device_type_to_build
 }
 
 # ------------------------------------------------------------------------------
@@ -346,6 +309,7 @@ build_and_test() {
 #   - board name (usually the same or similar to machine name, but each machine
 #                 name can have several boards)
 #   - image name
+#   - device type
 # ------------------------------------------------------------------------------
 build_and_test_client() {
     # This makes the whole function run in a subshell. So no need for path
@@ -371,7 +335,6 @@ build_and_test_client() {
         cd ../
 
         prepare_build_config $machine_name $board_name
-        disable_mender_service
 
         cd $BUILDDIR
         bitbake $image_name
@@ -442,8 +405,8 @@ build_and_test_client() {
 
             # make it possible to run specific test
             local acceptance_test_to_run=""
-            if [ -n "$ACCEPTANCE_TEST" ]; then
-                acceptance_test_to_run=" -k $ACCEPTANCE_TEST"
+            if [ -n "$SPECIFIC_ACCEPTANCE_TEST" ]; then
+                acceptance_test_to_run=" -k $SPECIFIC_ACCEPTANCE_TEST"
             fi
 
             local pytest_args=
@@ -515,21 +478,18 @@ build_and_test_client() {
     )
 }
 
-# Arguments:
 # add_to_build_list        MACHINE_NAME              BOARD_NAME                     IMAGE_NAME               [DEVICE_TYPE]
-#
-# If DEVICE_TYPE is not given, MACHINE_NAME is assumed.
 add_to_build_list          qemux86-64                qemux86-64-uefi-grub           core-image-full-cmdline
 add_to_build_list          vexpress-qemu             vexpress-qemu                  core-image-full-cmdline
 add_to_build_list          vexpress-qemu-flash       vexpress-qemu-flash            core-image-minimal
 add_to_build_list          raspberrypi3              raspberrypi3                   core-image-full-cmdline
 add_to_build_list          raspberrypi4              raspberrypi4                   core-image-full-cmdline
-# Server build, without client build.
-add_to_build_list          mender_servers
-# Assuming thud or newer
 add_to_build_list          beaglebone-yocto          beagleboneblack                core-image-base          beaglebone-yocto-grub
 add_to_build_list          qemux86-64                qemux86-64-bios-grub-gpt       core-image-full-cmdline  qemux86-64-bios-grub-gpt
 add_to_build_list          qemux86-64                qemux86-64-bios-grub           core-image-full-cmdline  qemux86-64-bios
 add_to_build_list          vexpress-qemu             vexpress-qemu-uboot-uefi-grub  core-image-full-cmdline  vexpress-qemu-grub
 
-build_and_test
+# main
+init_environment
+build_config=$(select_build_config)
+build_and_test_client $build_config
