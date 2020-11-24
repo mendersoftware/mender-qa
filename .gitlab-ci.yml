@@ -383,8 +383,6 @@ build_servers:
     - docker:19.03-dind
   tags:
     - mender-qa-slave-highcpu
-  variables:
-    JOB_BASE_NAME: mender_servers
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt

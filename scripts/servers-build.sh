@@ -5,18 +5,10 @@ set -e -x -E
 
 echo "WORKSPACE=$WORKSPACE"
 
-# ---------------------------------------------------
-# Preliminary checks.
-# ---------------------------------------------------
-
 # Verify that version references are up to date.
 $WORKSPACE/integration/extra/release_tool.py --verify-integration-references
 
-# ---------------------------------------------------
-# Build server repositories.
-# ---------------------------------------------------
-
-if grep mender_servers <<<"$JOB_BASE_NAME"; then
+build_servers_repositories() {
     # Use release tool to query for available docker names.
     for docker in $($WORKSPACE/integration/extra/release_tool.py --list docker ); do (
 
@@ -97,4 +89,6 @@ if grep mender_servers <<<"$JOB_BASE_NAME"; then
                 ;;
         esac
     ); done
-fi
+}
+
+build_servers_repositories
