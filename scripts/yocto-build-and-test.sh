@@ -449,7 +449,8 @@ build_and_test_client() {
             fi
         fi
 
-        if is_building_dockerized_board; then
+        # Build Docker image on build only job
+        if is_building_dockerized_board && ! is_testing_board $board_name; then
             cd $WORKSPACE/meta-mender/meta-mender-qemu
             if [ -x docker/build-docker ]; then
                 # New style.
