@@ -49,11 +49,8 @@ variables:
   BUILD_VEXPRESS_QEMU_FLASH: "true"
   TEST_VEXPRESS_QEMU_FLASH: "true"
   BUILD_BEAGLEBONEBLACK: "true"
-  TEST_BEAGLEBONEBLACK: "false"
   BUILD_RASPBERRYPI3: "false"
-  TEST_RASPBERRYPI3: "false"
   BUILD_RASPBERRYPI4: "false"
-  TEST_RASPBERRYPI4: "false"
   SPECIFIC_ACCEPTANCE_TEST: ""
 
   # Integration and backend integration tests
