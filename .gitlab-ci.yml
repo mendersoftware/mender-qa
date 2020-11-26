@@ -163,17 +163,19 @@ init_workspace:
     - ssh-keyscan github.com >> ~/.ssh/known_hosts
 
     # Bash function to checkout repos
+    # The last parameter is optional. When omitted, master is checked out. This allow building
+    # old integration release branches which don't have all current repos in component-maps.yml
     - |
       function checkout_repo() {
-        if [ $# -ne 4 ]; then
-          echo "Usage: checkout_repo repo_id clone_url clone_path clone_rev"
+        if [ $# -lt 3 ]; then
+          echo "Usage: checkout_repo repo_id clone_url clone_path [clone_rev]"
           return 1
         fi
 
         repo_id=$1
         clone_url=$2
         clone_path=$3
-        clone_rev=$4
+        clone_rev=${4:-master}
 
         git clone $clone_url $clone_path || return 1
 
