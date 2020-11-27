@@ -5,7 +5,7 @@ build_client:
       - $BUILD_CLIENT == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   stage: build
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   services:
     - docker:19.03-dind
   variables:

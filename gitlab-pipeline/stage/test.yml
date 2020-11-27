@@ -7,7 +7,7 @@ test_accep_qemux86_64_uefi_grub:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
       - $TEST_QEMUX86_64_UEFI_GRUB == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
   after_script:
@@ -50,7 +50,7 @@ test_accep_vexpress_qemu:
       - $BUILD_VEXPRESS_QEMU == "true"
       - $TEST_VEXPRESS_QEMU == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu
   after_script:
@@ -93,7 +93,7 @@ test_accep_qemux86_64_bios_grub:
       - $BUILD_QEMUX86_64_BIOS_GRUB == "true"
       - $TEST_QEMUX86_64_BIOS_GRUB == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
   after_script:
@@ -136,7 +136,7 @@ test_accep_qemux86_64_bios_grub_gpt:
       - $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
       - $TEST_QEMUX86_64_BIOS_GRUB_GPT == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
   after_script:
@@ -179,7 +179,7 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
       - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
       - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
   after_script:
@@ -225,7 +225,7 @@ test_accep_vexpress_qemu_flash:
       - $BUILD_VEXPRESS_QEMU_FLASH == "true"
       - $TEST_VEXPRESS_QEMU_FLASH == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_flash
   after_script:
@@ -268,7 +268,7 @@ test_accep_beagleboneblack:
       - $BUILD_BEAGLEBONEBLACK == "true"
       - $TEST_BEAGLEBONEBLACK == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_beagleboneblack
   after_script:
@@ -307,7 +307,7 @@ test_accep_raspberrypi3:
       - $BUILD_RASPBERRYPI3 == "true"
       - $TEST_RASPBERRYPI3 == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_raspberrypi3
   after_script:
@@ -346,7 +346,7 @@ test_accep_raspberrypi4:
       - $BUILD_RASPBERRYPI4 == "true"
       - $TEST_RASPBERRYPI4 == "true"
   stage: test
-  <<: *build_and_test_acceptance
+  extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_raspberrypi4
   after_script:

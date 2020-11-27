@@ -1,5 +1,5 @@
 
-.template_build_test_acc: &build_and_test_acceptance
+.template_build_test_acc:
   image: mendersoftware/mender-test-containers:mender-client-acceptance-testing
   needs:
     - init_workspace
