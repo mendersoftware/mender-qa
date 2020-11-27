@@ -1,0 +1,9 @@
+
+mender-qa:start:
+  stage: .pre
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  before_script:
+    - apk --update add jq
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status pending "mender-qa pipeline running" $CI_PIPELINE_URL ci/mender-qa

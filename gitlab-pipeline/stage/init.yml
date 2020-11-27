@@ -1,0 +1,140 @@
+
+init_workspace:
+  stage: init
+  image: alpine:3.12
+  script:
+    # Traps only work if executed in a sub shell.
+    - "("
+
+    # Default value, will later be overwritten if successful
+    - echo "failure" > /JOB_RESULT.txt
+
+    - function handle_exit() {
+      ${CI_PROJECT_DIR}/scripts/maybe-wait-in-stage.sh WAIT_IN_STAGE_INIT ${CI_PROJECT_DIR}/WAIT_IN_STAGE_INIT;
+      };
+      trap handle_exit EXIT
+
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - apk --update add git openssh bash python3 curl py3-pip jq
+    - pip3 install --upgrade pyyaml
+
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
+    # Prepare SSH keys
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+    # Bash function to checkout repos
+    # The last parameter is optional. When omitted, master is checked out. This allow building
+    # old integration release branches which don't have all current repos in component-maps.yml
+    - |
+      function checkout_repo() {
+        if [ $# -lt 3 ]; then
+          echo "Usage: checkout_repo repo_id clone_url clone_path [clone_rev]"
+          return 1
+        fi
+
+        repo_id=$1
+        clone_url=$2
+        clone_path=$3
+        clone_rev=${4:-master}
+
+        git clone $clone_url $clone_path || return 1
+
+        (
+          cd $clone_path &&
+          git fetch -u -f origin ${clone_rev}:pr &&
+          git checkout pr ||
+          git checkout -f -b pr ${clone_rev}
+        ) || return 1
+
+        (
+          cd $clone_path
+          echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
+          echo "export ${repo_id}_REV=$clone_rev" >> ${CI_PROJECT_DIR}/build_revisions.env
+          echo "export ${repo_id}_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+        ) || return 1
+      }
+
+    # Clean WORKSPACE and clone poky in the root
+    - find ${WORKSPACE}
+      -mindepth 1
+      -maxdepth 1
+      -not -name $(basename ${CI_PROJECT_DIR})
+      -exec rm -rf '{}' ';'
+    - cd ${WORKSPACE}
+    - git init . && git remote add origin https://github.com/mendersoftware/poky
+    - git fetch && git checkout -f origin/${POKY_REV}
+    - (
+    -   echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "export POKY_REV=$POKY_REV" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "export POKY_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    - )
+
+    # Add MENDER_QA_REV, which is special, since it is this repository.
+    - if echo "$CI_BUILD_REF_NAME" | egrep '^pr_[0-9]+$'; then
+        export MENDER_QA_REV="pull/$(echo "$CI_BUILD_REF_NAME" | egrep -o '[0-9]+')/head";
+      else
+        export MENDER_QA_REV="$CI_BUILD_REF_NAME";
+      fi
+    - (
+    -   cd mender-qa
+    -   echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "export MENDER_QA_REV=$MENDER_QA_REV" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "export MENDER_QA_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    - )
+
+    # Add other repositories.
+    - checkout_repo INTEGRATION https://github.com/mendersoftware/integration integration $INTEGRATION_REV
+    - checkout_repo META_MENDER https://github.com/mendersoftware/meta-mender meta-mender $META_MENDER_REV
+    - checkout_repo MENDER https://github.com/mendersoftware/mender go/src/github.com/mendersoftware/mender $MENDER_REV
+    - checkout_repo DEPLOYMENTS https://github.com/mendersoftware/deployments go/src/github.com/mendersoftware/deployments $DEPLOYMENTS_REV
+    - checkout_repo DEPLOYMENTS_ENTERPRISE git@github.com:mendersoftware/deployments-enterprise go/src/github.com/mendersoftware/deployments-enterprise $DEPLOYMENTS_ENTERPRISE_REV
+    - checkout_repo DEVICEAUTH https://github.com/mendersoftware/deviceauth go/src/github.com/mendersoftware/deviceauth $DEVICEAUTH_REV
+    - checkout_repo GUI https://github.com/mendersoftware/gui gui $GUI_REV
+    - checkout_repo INVENTORY https://github.com/mendersoftware/inventory go/src/github.com/mendersoftware/inventory $INVENTORY_REV
+    - checkout_repo INVENTORY_ENTERPRISE git@github.com:mendersoftware/inventory-enterprise.git go/src/github.com/mendersoftware/inventory-enterprise $INVENTORY_ENTERPRISE_REV
+    - checkout_repo USERADM https://github.com/mendersoftware/useradm go/src/github.com/mendersoftware/useradm $USERADM_REV
+    - checkout_repo USERADM_ENTERPRISE git@github.com:mendersoftware/useradm-enterprise go/src/github.com/mendersoftware/useradm-enterprise $USERADM_ENTERPRISE_REV
+    - checkout_repo MENDER_API_GATEWAY_DOCKER https://github.com/mendersoftware/mender-api-gateway-docker mender-api-gateway-docker $MENDER_API_GATEWAY_DOCKER_REV
+    - checkout_repo MENDER_STRESS_TEST_CLIENT https://github.com/mendersoftware/mender-stress-test-client go/src/github.com/mendersoftware/mender-stress-test-client $MENDER_STRESS_TEST_CLIENT_REV
+    - checkout_repo MENDER_ARTIFACT https://github.com/mendersoftware/mender-artifact go/src/github.com/mendersoftware/mender-artifact $MENDER_ARTIFACT_REV
+    - checkout_repo TENANTADM git@github.com:mendersoftware/tenantadm go/src/github.com/mendersoftware/tenantadm $TENANTADM_REV
+    - checkout_repo WORKFLOWS git@github.com:mendersoftware/workflows go/src/github.com/mendersoftware/workflows $WORKFLOWS_REV
+    - checkout_repo WORKFLOWS_ENTERPRISE git@github.com:mendersoftware/workflows-enterprise go/src/github.com/mendersoftware/workflows-enterprise $WORKFLOWS_ENTERPRISE_REV
+    - checkout_repo CREATE_ARTIFACT_WORKER git@github.com:mendersoftware/create-artifact-worker go/src/github.com/mendersoftware/create-artifact-worker $CREATE_ARTIFACT_WORKER_REV
+    - checkout_repo META_OPENEMBEDDED git://git.openembedded.org/meta-openembedded.git meta-openembedded $META_OPENEMBEDDED_REV
+    - checkout_repo META_RASPBERRYPI git://github.com/agherzan/meta-raspberrypi.git meta-raspberrypi $META_RASPBERRYPI_REV
+    - checkout_repo MENDER_CONDUCTOR git://github.com/mendersoftware/mender-conductor.git go/src/github.com/mendersoftware/mender-conductor $MENDER_CONDUCTOR_REV
+    - checkout_repo MENDER_CONDUCTOR_ENTERPRISE git@github.com:mendersoftware/mender-conductor-enterprise.git go/src/github.com/mendersoftware/mender-conductor-enterprise $MENDER_CONDUCTOR_ENTERPRISE_REV
+    - checkout_repo MENDER_CLI https://github.com/mendersoftware/mender-cli.git go/src/github.com/mendersoftware/mender-cli $MENDER_CLI_REV
+    - checkout_repo AUDITLOGS git@github.com:mendersoftware/auditlogs go/src/github.com/mendersoftware/auditlogs $AUDITLOGS_REV
+    - checkout_repo MTLS_AMBASSADOR git@github.com:mendersoftware/mtls-ambassador go/src/github.com/mendersoftware/mtls-ambassador $MTLS_AMBASSADOR_REV
+    - checkout_repo DEVICECONNECT https://github.com/mendersoftware/deviceconnect go/src/github.com/mendersoftware/deviceconnect $DEVICECONNECT_REV
+    - checkout_repo MENDER_SHELL https://github.com/mendersoftware/mender-shell go/src/github.com/mendersoftware/mender-shell $MENDER_SHELL_REV
+
+    # Print for debug purposes
+    - cat ${CI_PROJECT_DIR}/build_revisions.env
+
+    # Save artifact the rest of the pipeline
+    - tar -czf /tmp/workspace.tar.gz .
+    - mv /tmp/workspace.tar.gz ${CI_PROJECT_DIR}/workspace.tar.gz
+
+    # Always keep this at the end of the script stage
+    - echo "success" > /JOB_RESULT.txt
+
+    - ")"
+
+  after_script:
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
+  artifacts:
+    expire_in: 2w
+    paths:
+      - workspace.tar.gz
+      - build_revisions.env
