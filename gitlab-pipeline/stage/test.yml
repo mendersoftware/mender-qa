@@ -32,11 +32,14 @@ test_accep_qemux86_64_uefi_grub:
       fi
 
     - if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results \
-          $MANTRA_ID_accep_qemux86_64_uefi_grub \
-          nightly-$(date +%Y-%m-%d) \
-          results_accep_qemux86_64_uefi_grub.xml
+    -   build_name=nightly-$(date +%Y-%m-%d)
+    - else
+    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
+    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+        $MANTRA_ID_accep_qemux86_64_uefi_grub
+        $build_name
+        results_accep_qemux86_64_uefi_grub.xml
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-uefi-grub/qemux86-64-uefi-grub_release_1_*.mender stage-artifacts/
@@ -78,11 +81,14 @@ test_accep_vexpress_qemu:
       fi
 
     - if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results \
-          $MANTRA_ID_accep_vexpress_qemu \
-          nightly-$(date +%Y-%m-%d) \
-          results_accep_vexpress_qemu.xml
+    -   build_name=nightly-$(date +%Y-%m-%d)
+    - else
+    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
+    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+        $MANTRA_ID_accep_vexpress_qemu
+        $build_name
+        results_accep_vexpress_qemu.xml
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu/vexpress-qemu_release_1_*.mender stage-artifacts/
@@ -124,11 +130,14 @@ test_accep_qemux86_64_bios_grub:
       fi
 
     - if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results \
-          $MANTRA_ID_accep_qemux86_64_bios_grub \
-          nightly-$(date +%Y-%m-%d) \
-          results_accep_qemux86_64_bios_grub.xml
+    -   build_name=nightly-$(date +%Y-%m-%d)
+    - else
+    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
+    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+        $MANTRA_ID_accep_qemux86_64_bios_grub
+        $build_name
+        results_accep_qemux86_64_bios_grub.xml
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-bios-grub/qemux86-64-bios-grub_release_1_*.mender stage-artifacts/
@@ -170,11 +179,14 @@ test_accep_qemux86_64_bios_grub_gpt:
       fi
 
     - if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results \
-          $MANTRA_ID_accep_qemux86_64_bios_grub_gpt \
-          nightly-$(date +%Y-%m-%d) \
-          results_accep_qemux86_64_bios_grub_gpt.xml
+    -   build_name=nightly-$(date +%Y-%m-%d)
+    - else
+    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
+    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+        $MANTRA_ID_accep_qemux86_64_bios_grub_gpt
+        $build_name
+        results_accep_qemux86_64_bios_grub_gpt.xml
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-bios-grub-gpt/qemux86-64-bios-grub-gpt_release_1_*.mender stage-artifacts/
@@ -216,11 +228,14 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
       fi
 
     - if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results \
-          $MANTRA_ID_accep_vexpress_qemu_uboot_uefi_grub \
-          nightly-$(date +%Y-%m-%d) \
-          results_accep_vexpress_qemu_uboot_uefi_grub.xml
+    -   build_name=nightly-$(date +%Y-%m-%d)
+    - else
+    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
+    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+        $MANTRA_ID_accep_vexpress_qemu_uboot_uefi_grub
+        $build_name
+        results_accep_vexpress_qemu_uboot_uefi_grub.xml
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu-uboot-uefi-grub/vexpress-qemu-uboot-uefi-grub_release_1_*.mender stage-artifacts/
@@ -265,11 +280,14 @@ test_accep_vexpress_qemu_flash:
       fi
 
     - if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results \
-          $MANTRA_ID_accep_vexpress_qemu_flash \
-          nightly-$(date +%Y-%m-%d) \
-          results_accep_vexpress_qemu_flash.xml
+    -   build_name=nightly-$(date +%Y-%m-%d)
+    - else
+    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
+    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+        $MANTRA_ID_accep_vexpress_qemu_flash
+        $build_name
+        results_accep_vexpress_qemu_flash.xml
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu-flash/core-image-minimal-vexpress-qemu-flash.ubifs stage-artifacts/
@@ -513,18 +531,21 @@ test_backend_integration_enterprise:
     -   ls ${CI_PROJECT_DIR}/../integration/backend-tests/report_*html | xargs -n 1 -i cp {} .
 
     -   if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -     if [ "$TEST_SUITE" = "open" ]; then
-    -       mantra_id=$MANTRA_ID_backend_integration_open_source
-    -       results_file=results_backend_integration_open.xml
-    -     elif [ "$TEST_SUITE" = "enterprise" ]; then
-    -       mantra_id=$MANTRA_ID_backend_integration_enterprise
-    -       results_file=results_backend_integration_enterprise.xml
-    -     fi
-    -     ${CI_PROJECT_DIR}/scripts/mantra_post_test_results \
-            $mantra_id \
-            nightly-$(date +%Y-%m-%d) \
-            $results_file
+    -     build_name=nightly-$(date +%Y-%m-%d)
+    -   else
+    -     build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     -   fi
+    -   if [ "$TEST_SUITE" = "open" ]; then
+    -     mantra_id=$MANTRA_ID_backend_integration_open_source
+    -     results_file=results_backend_integration_open.xml
+    -   elif [ "$TEST_SUITE" = "enterprise" ]; then
+    -     mantra_id=$MANTRA_ID_backend_integration_enterprise
+    -     results_file=results_backend_integration_enterprise.xml
+    -   fi
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+          $mantra_id
+          $build_name
+          $results_file
 
     -   cp /var/log/sysstat/sysstat.log .
     -   sadf sysstat.log -g -- -qurbS > sysstat.svg
@@ -676,16 +697,19 @@ test_full_integration_enterprise:
     -   cp ${CI_PROJECT_DIR}/../integration/tests/report.html report_full_integration.html
 
     -   if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -     if [ "$TEST_SUITE" = "open" ]; then
-    -       mantra_id=$MANTRA_ID_full_integration_open_source
-    -     elif [ "$TEST_SUITE" = "enterprise" ]; then
-    -       mantra_id=$MANTRA_ID_full_integration_enterprise
-    -     fi
-    -     ${CI_PROJECT_DIR}/scripts/mantra_post_test_results \
-            $mantra_id \
-            nightly-$(date +%Y-%m-%d) \
-            results_full_integration.xml
+    -     build_name=nightly-$(date +%Y-%m-%d)
+    -   else
+    -     build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     -   fi
+    -   if [ "$TEST_SUITE" = "open" ]; then
+    -     mantra_id=$MANTRA_ID_full_integration_open_source
+    -   elif [ "$TEST_SUITE" = "enterprise" ]; then
+    -     mantra_id=$MANTRA_ID_full_integration_enterprise
+    -   fi
+    -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+          $mantra_id
+          $build_name
+          results_full_integration.xml
 
     -   cp /var/log/sysstat/sysstat.log .
     -   sadf sysstat.log -g -- -qurbS > sysstat.svg
