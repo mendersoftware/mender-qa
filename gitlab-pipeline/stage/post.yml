@@ -1,0 +1,38 @@
+
+mender-qa:success:
+  stage: .post
+  when: on_success
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  before_script:
+    - apk --update add jq
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status success "mender-qa pipeline passed" $CI_PIPELINE_URL ci/mender-qa
+
+mender-qa:failure:
+  stage: .post
+  when: on_failure
+  # Keep overhead low by using a small image with curl preinstalled.
+  image: appropriate/curl
+  before_script:
+    - apk --update add jq
+  script:
+    - $CI_PROJECT_DIR/scripts/github_pull_request_status failure "mender-qa pipeline failed" $CI_PIPELINE_URL ci/mender-qa
+
+coveralls:finish-build:
+  stage: .post
+  # See https://docs.coveralls.io/parallel-build-webhook
+  variables:
+    COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
+  image: appropriate/curl
+  dependencies:
+    - init_workspace
+  before_script:
+    - apk --update add git
+    # Get mender source
+    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
+    - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
+    - cd ${CI_PROJECT_DIR}/mender
+  script:
+    - 'curl -k ${COVERALLS_WEBHOOK_URL}?repo_token=${MENDER_COVERALLS_TOKEN} -d "payload[build_num]=$(git rev-parse HEAD)&payload[status]=done"'
+
