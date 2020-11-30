@@ -447,25 +447,25 @@ test_backend_integration_enterprise:
     - INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
 
     - if [ "$INTEGRATION_TEST_SUITE" = "$TEST_SUITE" ] || [ "$INTEGRATION_TEST_SUITE" = "all" ]; then
-    -   # Post job status
+        # Post job status
     -   ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
     -   echo Running backend-tests suite $INTEGRATION_TEST_SUITE
     -   cd integration/backend-tests/
 
-    -   # From 2.4.x on, the script would download the requirements by default
+        # From 2.4.x on, the script would download the requirements by default
     -   if ./run --help | grep -e --no-download; then
     -     RUN_ARGS="--no-download";
     -   fi
 
-    -   # for pre 2.2.x releases, ignore test suite selection and just run open tests
+        # for pre 2.2.x releases, ignore test suite selection and just run open tests
     -   if ./run --help | grep -e --suite; then
     -     ./run --suite $TEST_SUITE $RUN_ARGS;
     -   else
     -     PYTEST_ARGS="-k 'not Multitenant'" ./run;
     -   fi
 
-    -   # Always keep this at the end of the script stage
+        # Always keep this at the end of the script stage
     -   echo "success" > /JOB_RESULT.txt
     - else
     -   echo "skipped" > /JOB_RESULT.txt
@@ -490,7 +490,7 @@ test_backend_integration_enterprise:
     -   cp /var/log/sysstat/sysstat.log .
     -   sadf sysstat.log -g -- -qurbS > sysstat.svg
 
-    -   # Post job status
+        # Post job status
     -   ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
     - fi
 
@@ -597,17 +597,17 @@ test_full_integration_enterprise:
 
     - INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
     - if [ "$INTEGRATION_TEST_SUITE" = "$TEST_SUITE" ] || [ "$INTEGRATION_TEST_SUITE" = "all" ]; then
-    -   # Post job status
+        # Post job status
     -   ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
     -   echo Running integration tests suite $INTEGRATION_TEST_SUITE
-    -   # only do automatic test suite selection if the user wasn't specific
-    -   # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
+        # only do automatic test suite selection if the user wasn't specific
+        # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
     -   if [ -z "$SPECIFIC_INTEGRATION_TEST" ]; then
     -     case $TEST_SUITE in
-    -       "enterprise")
+    - '     "enterprise")'
     -         export SPECIFIC_INTEGRATION_TEST="Enterprise";;
-    -       "open")
+    - '      "open")'
     -         export SPECIFIC_INTEGRATION_TEST="not Enterprise";;
     -     esac
     -   fi
@@ -615,7 +615,7 @@ test_full_integration_enterprise:
     -   cd integration/tests
     -   ./run.sh --no-download --machine-name qemux86-64
 
-    -   # Always keep this at the end of the script stage
+        # Always keep this at the end of the script stage
     -   echo "success" > /JOB_RESULT.txt
     - else
     -   echo "skipped" > /JOB_RESULT.txt
@@ -643,7 +643,7 @@ test_full_integration_enterprise:
     -   cp /var/log/sysstat/sysstat.log .
     -   sadf sysstat.log -g -- -qurbS > sysstat.svg
 
-    -   # Post job status
+        # Post job status
     -   ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
     - fi
 
