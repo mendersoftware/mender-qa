@@ -461,7 +461,7 @@ test_backend_integration_enterprise:
 
         # for pre 2.2.x releases, ignore test suite selection and just run open tests
         if ./run --help | grep -e --suite; then
-          ./run --suite $INTEGRATION_TEST_SUITE $RUN_ARGS;
+          ./run --suite $TEST_SUITE $RUN_ARGS;
         else
           PYTEST_ARGS="-k 'not Multitenant'" ./run;
         fi
@@ -597,7 +597,7 @@ test_full_integration_enterprise:
       };
       trap handle_exit EXIT
 
-    - export INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
+    - INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
     - >
       if [ "$INTEGRATION_TEST_SUITE" = "$TEST_SUITE" ] || [ "$INTEGRATION_TEST_SUITE" = "all" ]; then
         # Post job status
@@ -607,7 +607,7 @@ test_full_integration_enterprise:
         # only do automatic test suite selection if the user wasn't specific
         # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
         if [ -z "$SPECIFIC_INTEGRATION_TEST" ]; then
-          case $INTEGRATION_TEST_SUITE in
+          case $TEST_SUITE in
             "enterprise")
               export SPECIFIC_INTEGRATION_TEST="Enterprise";;
             "open")
