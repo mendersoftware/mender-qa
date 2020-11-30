@@ -604,13 +604,13 @@ test_full_integration_enterprise:
         # only do automatic test suite selection if the user wasn't specific
         # run.sh will pick up the SPECIFIC_INTEGRATION_TEST var
     -   if [ -z "$SPECIFIC_INTEGRATION_TEST" ]; then
-    -     case $TEST_SUITE in
-    - '     "enterprise")'
-    -         export SPECIFIC_INTEGRATION_TEST="Enterprise";;
-    - '      "open")'
-    -         export SPECIFIC_INTEGRATION_TEST="not Enterprise";;
-    -     esac
-    -   fi
+          case $TEST_SUITE in
+            "enterprise")
+              export SPECIFIC_INTEGRATION_TEST="Enterprise";;
+            "open")
+              export SPECIFIC_INTEGRATION_TEST="not Enterprise";;
+          esac
+        fi
     -   source ${CI_PROJECT_DIR}/build_revisions.env
     -   cd integration/tests
     -   ./run.sh --no-download --machine-name qemux86-64
