@@ -1,5 +1,8 @@
 #!/bin/sh
 
+set -e
+set -x
+
 if [ -z "$3" ]; then
     echo "Usage: $0 project-id build-name xml-file"
     exit 1
@@ -20,7 +23,7 @@ results_file=$3
 builds_endpoint=https://qastatus.mender.io/api/projects/${project_id}/builds
 
 rm -f output
-curl --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
+curl -f --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
         -H "Content-Type: application/json" \
         -d "$request_body" \
         -o output \
@@ -33,7 +36,7 @@ build_id=$(cat output | jq .id)
 
 results_endpoint=https://qastatus.mender.io/api/projects/${project_id}/builds/${build_id}/results
 
-curl --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
+curl -f --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
         -H "Content-Type: application/xml" \
         --data-binary @$results_file \
         "$results_endpoint"
