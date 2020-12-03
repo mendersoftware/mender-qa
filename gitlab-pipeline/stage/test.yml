@@ -39,7 +39,7 @@ test_accep_qemux86_64_uefi_grub:
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
         $MANTRA_ID_accep_qemux86_64_uefi_grub
         $build_name
-        results_accep_qemux86_64_uefi_grub.xml
+        results_accep_qemux86_64_uefi_grub.xml || true
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-uefi-grub/qemux86-64-uefi-grub_release_1_*.mender stage-artifacts/
@@ -88,7 +88,7 @@ test_accep_vexpress_qemu:
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
         $MANTRA_ID_accep_vexpress_qemu
         $build_name
-        results_accep_vexpress_qemu.xml
+        results_accep_vexpress_qemu.xml || true
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu/vexpress-qemu_release_1_*.mender stage-artifacts/
@@ -137,7 +137,7 @@ test_accep_qemux86_64_bios_grub:
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
         $MANTRA_ID_accep_qemux86_64_bios_grub
         $build_name
-        results_accep_qemux86_64_bios_grub.xml
+        results_accep_qemux86_64_bios_grub.xml || true
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-bios-grub/qemux86-64-bios-grub_release_1_*.mender stage-artifacts/
@@ -186,7 +186,7 @@ test_accep_qemux86_64_bios_grub_gpt:
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
         $MANTRA_ID_accep_qemux86_64_bios_grub_gpt
         $build_name
-        results_accep_qemux86_64_bios_grub_gpt.xml
+        results_accep_qemux86_64_bios_grub_gpt.xml || true
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/qemux86-64-bios-grub-gpt/qemux86-64-bios-grub-gpt_release_1_*.mender stage-artifacts/
@@ -235,7 +235,7 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
         $MANTRA_ID_accep_vexpress_qemu_uboot_uefi_grub
         $build_name
-        results_accep_vexpress_qemu_uboot_uefi_grub.xml
+        results_accep_vexpress_qemu_uboot_uefi_grub.xml || true
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu-uboot-uefi-grub/vexpress-qemu-uboot-uefi-grub_release_1_*.mender stage-artifacts/
@@ -287,7 +287,7 @@ test_accep_vexpress_qemu_flash:
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
         $MANTRA_ID_accep_vexpress_qemu_flash
         $build_name
-        results_accep_vexpress_qemu_flash.xml
+        results_accep_vexpress_qemu_flash.xml || true
 
     - mkdir -p stage-artifacts
     - cp $WORKSPACE/vexpress-qemu-flash/core-image-minimal-vexpress-qemu-flash.ubifs stage-artifacts/
@@ -545,7 +545,7 @@ test_backend_integration_enterprise:
     -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
           $mantra_id
           $build_name
-          $results_file
+          $results_file || true
 
     -   cp /var/log/sysstat/sysstat.log .
     -   sadf sysstat.log -g -- -qurbS > sysstat.svg
@@ -709,7 +709,7 @@ test_full_integration_enterprise:
     -   ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
           $mantra_id
           $build_name
-          results_full_integration.xml
+          results_full_integration.xml || true
 
     -   cp /var/log/sysstat/sysstat.log .
     -   sadf sysstat.log -g -- -qurbS > sysstat.svg
