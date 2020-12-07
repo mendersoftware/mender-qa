@@ -30,6 +30,7 @@
     - cd ${CI_PROJECT_DIR}/mender
   script:
     - goveralls
+      -debug
       -repotoken ${MENDER_COVERALLS_TOKEN}
       -service gitlab-ci
       -jobid $(git rev-parse HEAD)
