@@ -22,8 +22,12 @@
     #  many of these are not supported. Set CI_BRANCH, CI_PR_NUMBER,
     #  and pass few others as command line arguments.
     #  See also https://docs.coveralls.io/api-reference
-    - export CI_BRANCH=${CI_COMMIT_BRANCH}
-    - export CI_PR_NUMBER=${CI_COMMIT_BRANCH#pr_}
+    - if [ "${MENDER_REV}" = "master" ]; then
+    -   export CI_BRANCH=master
+    - else
+    -   export CI_PR_NUMBER=$(echo ${MENDER_REV} | sed -E 's|pull/([1-9]+)/head|\1|')
+    -   export CI_BRANCH=pr_${CI_PR_NUMBER}
+    - fi
     # Get mender source
     - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
     - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
