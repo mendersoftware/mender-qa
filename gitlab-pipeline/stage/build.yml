@@ -48,7 +48,7 @@ build_servers:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Dependencies
-    - apk --update add bash git make python3 py-pip curl
+    - apk --update add bash git make python3 py-pip curl jq
     - pip3 install pyyaml
     # Post job status
     - source ${CI_PROJECT_DIR}/build_revisions.env
