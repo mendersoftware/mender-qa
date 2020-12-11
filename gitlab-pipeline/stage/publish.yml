@@ -1,11 +1,11 @@
 
-# Publish acceptance test coverage into coveralls when either running tests for a
-# mender PR (MENDER_REV ~= /pull/XXX/head/) or new merge into mender/master that requires
-# Docker images publishing (PUBLISH_DOCKER_CLIENT_IMAGES == "true")
+# Publish acceptance test coverage into coveralls when either:
+# * running tests for a mender PR: MENDER_REV ~= /pull/XXX/head/
+# * new merge into master triggered a Docker images publishing: PUBLISH_DOCKER_CLIENT_IMAGES == "true"
 .template_publish_acceptance_coverage:
   only:
     variables:
-      - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
+      - $PUBLISH_DOCKER_CLIENT_IMAGES == "true" && $MENDER_REV == "master" && $META_MENDER_REV == "master"
       - $MENDER_REV =~ /pull\/.*\/head/
   stage: publish
   needs:
