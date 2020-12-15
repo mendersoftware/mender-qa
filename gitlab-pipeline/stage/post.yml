@@ -19,7 +19,14 @@ mender-qa:failure:
   script:
     - $CI_PROJECT_DIR/scripts/github_pull_request_status failure "mender-qa pipeline failed" $CI_PIPELINE_URL ci/mender-qa
 
+# Publish acceptance test coverage into coveralls when either:
+# * running tests for a mender PR: MENDER_REV ~= /pull/XXX/head/
+# * new merge into master triggered a Docker images publishing: PUBLISH_DOCKER_CLIENT_IMAGES == "true"
 coveralls:finish-build:
+  only:
+    variables:
+      - $PUBLISH_DOCKER_CLIENT_IMAGES == "true" && $MENDER_REV == "master" && $META_MENDER_REV == "master"
+      - $MENDER_REV =~ /pull\/.*\/head/
   stage: .post
   # See https://docs.coveralls.io/parallel-build-webhook
   variables:
