@@ -236,13 +236,14 @@ init_environment() {
     git submodule update --init --recursive
     cd $WORKSPACE
 
-    # Get mender-binary-delta
+    # Get mender-binary-delta and add it to the PATH
     if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
         RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
         mkdir -p $WORKSPACE/mender-binary-delta
         s3cmd get --recursive s3://$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
         chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta
         chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta-generator
+        export PATH=$PATH:$WORKSPACE/mender-binary-delta/x86_64
     fi
 }
 
