@@ -138,7 +138,7 @@ EXTERNALSRC_pn-mender = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-client = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go"
-EXTERNALSRC_pn-mender-shell= "$WORKSPACE/go"
+EXTERNALSRC_pn-mender-connect= "$WORKSPACE/go"
 EOF
 
     # Use network cache if present, if not, use local cache.
@@ -165,9 +165,9 @@ EOF
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_ARTIFACT_REV"$ ) || \
         mender_artifact_on_exact_tag=
-    local mender_shell_on_exact_tag=$(test "$MENDER_SHELL_REV" != "master" && \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-shell && \
-        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SHELL_REV"$ ) || \
+    local mender_shell_on_exact_tag=$(test "$MENDER_CONNECT_REV" != "master" && \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-connect && \
+        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONNECT_REV"$ ) || \
         mender_shell_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
@@ -205,11 +205,11 @@ EOF
 
     if [ -n "$mender_shell_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-shell = "$mender_shell_on_exact_tag"
+PREFERRED_VERSION_pn-mender-connect = "$mender_shell_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-shell = "$mender_shell_version-git%"
+PREFERRED_VERSION_pn-mender-connect = "$mender_shell_version-git%"
 EOF
     fi
 }

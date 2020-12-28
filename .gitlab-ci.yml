@@ -29,7 +29,7 @@ variables:
   AUDITLOGS_REV: "master"
   MTLS_AMBASSADOR_REV: "master"
   DEVICECONNECT_REV: "master"
-  MENDER_SHELL_REV: "master"
+  MENDER_CONNECT_REV: "master"
 
   # Build stage
   BUILD_CLIENT: "true"
