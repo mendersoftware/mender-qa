@@ -115,7 +115,7 @@ init_workspace:
     - checkout_repo AUDITLOGS git@github.com:mendersoftware/auditlogs go/src/github.com/mendersoftware/auditlogs $AUDITLOGS_REV
     - checkout_repo MTLS_AMBASSADOR git@github.com:mendersoftware/mtls-ambassador go/src/github.com/mendersoftware/mtls-ambassador $MTLS_AMBASSADOR_REV
     - checkout_repo DEVICECONNECT https://github.com/mendersoftware/deviceconnect go/src/github.com/mendersoftware/deviceconnect $DEVICECONNECT_REV
-    - checkout_repo MENDER_SHELL https://github.com/mendersoftware/mender-shell go/src/github.com/mendersoftware/mender-shell $MENDER_SHELL_REV
+    - checkout_repo MENDER_CONNECT https://github.com/mendersoftware/mender-connect go/src/github.com/mendersoftware/mender-connect $MENDER_CONNECT_REV
 
     # Print for debug purposes
     - cat ${CI_PROJECT_DIR}/build_revisions.env
