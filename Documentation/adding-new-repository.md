@@ -124,3 +124,7 @@ Please integrate depdendabot as much as possible:
 Add badge to `index.html`
 
 ref https://gitlab.com/Northern.tech/Mender/mender-build-status/-/blob/master/public/index.html
+
+## Peer review
+
+Once all the above is done, ping the team to get a full peer review of all the settings.
