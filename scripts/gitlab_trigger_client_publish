@@ -2,10 +2,20 @@
 
 set -ex
 
-mender_version=$1
+if [[ $# -eq 2 ]]; then
+  version_to_publish=$1
+  trigger_from_repo=$2
+elif [[ $# -eq 1 ]]; then
+  # Backwards compatibility
+  version_to_publish=$1
+  trigger_from_repo="mender"
+else
+  echo "Usage: $0 version repo" >&2
+  exit 1
+fi
 
-if [ -z "$mender_version" ]; then
-  echo "Usage: $0 mender-version"
+if ! grep "^${trigger_from_repo}\$" <<<$($WORKSPACE/integration/extra/release_tool.py --list git); then
+  echo "Unrecognized repository $trigger_from_repo" >&2
   exit 1
 fi
 
@@ -20,14 +30,14 @@ if [ ! -d $WORKSPACE/integration ]; then
 fi
 
 
-# For each integration version including mender version $mender_version:
+# For each integration version including trigger_from_repo/version_to_publish:
 # * construct a curl formatted string concatenating each repo and revision like:
 #   '-F variables[repoA_REV]=X.X.x -F variables[repoB_REV]=X.X.x ...'
 # * trigger a Mender QA pipeline to build/test/publish client
 
 integration_versions=$($WORKSPACE/integration/extra/release_tool.py \
-                       --integration-versions-including mender \
-                       --version $mender_version)
+                       --integration-versions-including $trigger_from_repo \
+                       --version $version_to_publish)
 
 for integ_version in $integration_versions; do
 
