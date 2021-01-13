@@ -2,6 +2,9 @@
 
 set -ex
 
+# Number of release branches to build when trigger comes from meta-mender
+NUMBER_OF_MINOR_VERSIONS=3
+
 if [[ $# -eq 2 ]]; then
   version_to_publish=$1
   trigger_from_repo=$2
@@ -14,7 +17,8 @@ else
   exit 1
 fi
 
-if ! grep "^${trigger_from_repo}\$" <<<$($WORKSPACE/integration/extra/release_tool.py --list git); then
+if ! grep "^${trigger_from_repo}\$" <<<$($WORKSPACE/integration/extra/release_tool.py --list git) \
+    && [ "$trigger_from_repo" != "meta-mender" ]; then
   echo "Unrecognized repository $trigger_from_repo" >&2
   exit 1
 fi
@@ -29,16 +33,29 @@ if [ ! -d $WORKSPACE/integration ]; then
   exit 1
 fi
 
+# Get the integration versions to publish
+if [ "$trigger_from_repo" == "meta-mender" ]; then
+  # Special handling on meta-mender: publish master + last three releases
+  cd $WORKSPACE/integration
+  remote=$(git config -l | \
+           sed -n -E 's|^remote\.([^.]+)\.url=.*github\.com[/:]mendersoftware/integration(\.git)?$|\1|p')
+  integration_versions=$(git for-each-ref --sort=-creatordate --format='%(refname:short)' 'refs/tags' | \
+                         sed -E '/(^[0-9]+\.[0-9]+)\.[0-9]+$/!d;s//\1.x/' | \
+                         uniq | \
+                         head -n $NUMBER_OF_MINOR_VERSIONS)
+  integration_versions="$remote/master $integration_versions"
+  cd -
+else
+  # Integration versions including trigger_from_repo/version_to_publish
+  integration_versions=$($WORKSPACE/integration/extra/release_tool.py \
+                        --integration-versions-including $trigger_from_repo \
+                        --version $version_to_publish)
+fi
 
-# For each integration version including trigger_from_repo/version_to_publish:
+# For each integration version to publish:
 # * construct a curl formatted string concatenating each repo and revision like:
 #   '-F variables[repoA_REV]=X.X.x -F variables[repoB_REV]=X.X.x ...'
 # * trigger a Mender QA pipeline to build/test/publish client
-
-integration_versions=$($WORKSPACE/integration/extra/release_tool.py \
-                       --integration-versions-including $trigger_from_repo \
-                       --version $version_to_publish)
-
 for integ_version in $integration_versions; do
 
   variables_revs=""
