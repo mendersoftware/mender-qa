@@ -7,7 +7,7 @@
   image: docker:19.03
   services:
     - docker:19.03-dind
-  needs:
+  dependencies:
     - init_workspace
     - build_servers
     - build_client
@@ -113,7 +113,7 @@ release_board_artifacts:automatic:
       - ($BUILD_SERVERS == "true" && $BUILD_CLIENT == "true") || $RUN_INTEGRATION_TESTS == "true"
   stage: release
   image: debian:buster
-  needs:
+  dependencies:
     - init_workspace
     - build_mender-cli
     - build_mender-artifact

@@ -154,7 +154,7 @@ publish_docker_client_images:
   image: docker
   services:
     - docker:19.03-dind
-  needs:
+  dependencies:
     - init_workspace
     - build_servers
     - build_client
