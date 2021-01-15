@@ -238,7 +238,11 @@ init_environment() {
 
     # Get mender-binary-delta and add it to the PATH
     if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
-        RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
+        if [ -z "$MENDER_BINARY_DELTA_VERSION" -o "$MENDER_BINARY_DELTA_VERSION" = "latest" ]; then
+            RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
+        else
+            RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*$MENDER_BINARY_DELTA_VERSION*.bb)
+        fi
         mkdir -p $WORKSPACE/mender-binary-delta
         s3cmd get --recursive s3://$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
         chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta
