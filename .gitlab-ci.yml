@@ -31,6 +31,7 @@ variables:
   DEVICECONNECT_REV: "master"
   MENDER_CONNECT_REV: "master"
   MENDER_BINARY_DELTA_VERSION: "latest"
+  DEVICECONFIG_REV: "master"
 
   # Build stage
   BUILD_CLIENT: "true"
