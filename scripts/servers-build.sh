@@ -50,8 +50,6 @@ build_servers_repositories() {
 
                 ./tests/build-docker -t $docker_url:pr
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
-
-                make prefix=$WORKSPACE/go bindir=/bin install-modules-gen
                 ;;
 
             mender-client-qemu*)
