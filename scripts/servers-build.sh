@@ -16,16 +16,15 @@ build_servers_repositories() {
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
 
         case "$docker" in
-            deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|workflows-worker|workflows-enterprise-worker|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig)
+            deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig)
                 cd go/src/github.com/mendersoftware/$git
-                # workflows repository builds two different Docker images:
-                # - workflows, from Dockerfile
-                # - workflows-worker, from Dockerfile.worker
-                if [ "$docker" = "workflows-worker" ] || [ "$docker" = "workflows-enterprise-worker" ]; then
-                    docker build -t $docker_url:pr -f Dockerfile.worker .
-                else
-                    docker build -t $docker_url:pr .
-                fi
+                docker build -t $docker_url:pr .
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                ;;
+
+            workflows-worker|workflows-enterprise-worker)
+                cd go/src/github.com/mendersoftware/$git
+                docker build -t $docker_url:pr -f Dockerfile.worker .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
