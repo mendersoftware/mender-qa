@@ -462,7 +462,7 @@ test_backend_integration_enterprise:
 
     # Load all docker images except client
     - for repo in `integration/extra/release_tool.py -l docker`; do
-        if ! echo $repo | grep -q mender-client-qemu; then
+        if ! echo $repo | grep -q mender-client; then
           docker load -i stage-artifacts/${repo}.tar;
         fi;
       done
@@ -589,6 +589,7 @@ test_full_integration_enterprise:
     - init_workspace
     - build_servers
     - build_client
+    - build_client_docker
     - build_mender-artifact
   before_script:
     # Default value, will later be overwritten if successful

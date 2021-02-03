@@ -41,18 +41,12 @@ build_servers_repositories() {
                 ;;
 
             mender-client-docker)
-                # We build the docker-client here, as well as some support
-                # tools, but the Yocto based image is too expensive to build
-                # here, since this section is run by pure server builds as
-                # well. See the build_and_test_client function for that.
-                cd go/src/github.com/mendersoftware/mender
-
-                ./tests/build-docker -t $docker_url:pr
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                # Built directly on an independent pipeline job
+                :
                 ;;
 
             mender-client-qemu*)
-                # Built in build_and_test_client.
+                # Built in yocto-build-and-test.sh::build_and_test_client
                 :
                 ;;
 
