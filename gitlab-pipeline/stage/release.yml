@@ -11,6 +11,7 @@
     - init_workspace
     - build_servers
     - build_client
+    - build_client_docker
   before_script:
     # Check correct dind setup
     - docker version
@@ -188,8 +189,8 @@ release_docker_images:automatic:client-only:
     - docker:19.03-dind
   dependencies:
     - init_workspace
-    - build_servers
     - build_client
+    - build_client_docker
   before_script:
     # Check correct dind setup
     - docker version

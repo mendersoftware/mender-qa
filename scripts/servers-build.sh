@@ -16,16 +16,15 @@ build_servers_repositories() {
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
 
         case "$docker" in
-            deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|workflows-worker|workflows-enterprise-worker|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig)
+            deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig)
                 cd go/src/github.com/mendersoftware/$git
-                # workflows repository builds two different Docker images:
-                # - workflows, from Dockerfile
-                # - workflows-worker, from Dockerfile.worker
-                if [ "$docker" = "workflows-worker" ] || [ "$docker" = "workflows-enterprise-worker" ]; then
-                    docker build -t $docker_url:pr -f Dockerfile.worker .
-                else
-                    docker build -t $docker_url:pr .
-                fi
+                docker build -t $docker_url:pr .
+                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                ;;
+
+            workflows-worker|workflows-enterprise-worker)
+                cd go/src/github.com/mendersoftware/$git
+                docker build -t $docker_url:pr -f Dockerfile.worker .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
@@ -42,20 +41,12 @@ build_servers_repositories() {
                 ;;
 
             mender-client-docker)
-                # We build the docker-client here, as well as some support
-                # tools, but the Yocto based image is too expensive to build
-                # here, since this section is run by pure server builds as
-                # well. See the build_and_test_client function for that.
-                cd go/src/github.com/mendersoftware/mender
-
-                ./tests/build-docker -t $docker_url:pr
-                $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
-
-                make prefix=$WORKSPACE/go bindir=/bin install-modules-gen
+                # Built directly on an independent pipeline job
+                :
                 ;;
 
             mender-client-qemu*)
-                # Built in build_and_test_client.
+                # Built in yocto-build-and-test.sh::build_and_test_client
                 :
                 ;;
 

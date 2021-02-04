@@ -77,7 +77,7 @@ for integ_version in $integration_versions; do
     -F ref=master \
     -F variables[PUBLISH_DOCKER_CLIENT_IMAGES]=true \
     -F variables[BUILD_CLIENT]=true \
-    -F variables[BUILD_SERVERS]=true \
+    -F variables[BUILD_SERVERS]=false \
     -F variables[BUILD_QEMUX86_64_UEFI_GRUB]=false \
     -F variables[TEST_QEMUX86_64_UEFI_GRUB]=false \
     -F variables[BUILD_QEMUX86_64_BIOS_GRUB]=false \
