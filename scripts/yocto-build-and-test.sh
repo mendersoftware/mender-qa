@@ -130,6 +130,12 @@ FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "${WORKSPACE}/mender-binary-de
 PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
 
+    if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION_pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
+EOF
+    fi
+
     # Assuming sumo or newer
     cat >> $BUILDDIR/conf/local.conf <<EOF
 # MEN-2948: Renamed mender recipe -> mender-client
