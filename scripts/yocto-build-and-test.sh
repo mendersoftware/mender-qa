@@ -120,6 +120,7 @@ prepare_build_config() {
 
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
     local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
+    local mender_connect_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-connect --in-integration-version HEAD)
 
 
     local mender_binary_delta_version=$($WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
@@ -128,6 +129,12 @@ LICENSE_FLAGS_WHITELIST = "commercial_mender-binary-delta"
 FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "${WORKSPACE}/mender-binary-delta:"
 PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
+
+    if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION_pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
+EOF
+    fi
 
     # Assuming sumo or newer
     cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -165,10 +172,10 @@ EOF
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_ARTIFACT_REV"$ ) || \
         mender_artifact_on_exact_tag=
-    local mender_shell_on_exact_tag=$(test "$MENDER_CONNECT_REV" != "master" && \
+    local mender_connect_on_exact_tag=$(test "$MENDER_CONNECT_REV" != "master" && \
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender-connect && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONNECT_REV"$ ) || \
-        mender_shell_on_exact_tag=
+        mender_connect_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
@@ -203,13 +210,13 @@ PREFERRED_VERSION_pn-mender-artifact-native = "$mender_artifact_version-git%"
 EOF
     fi
 
-    if [ -n "$mender_shell_on_exact_tag" ]; then
+    if [ -n "$mender_connect_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-connect = "$mender_shell_on_exact_tag"
+PREFERRED_VERSION_pn-mender-connect = "$mender_connect_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-connect = "$mender_shell_version-git%"
+PREFERRED_VERSION_pn-mender-connect = "$mender_connect_version-git%"
 EOF
     fi
 }

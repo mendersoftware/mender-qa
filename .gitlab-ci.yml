@@ -1,6 +1,6 @@
 
 variables:
-  # Versions
+  # Versions of components used for integration tests
   MENDER_REV: "master"
   META_MENDER_REV: "master"
   POKY_REV: "dunfell"
@@ -30,8 +30,11 @@ variables:
   MTLS_AMBASSADOR_REV: "master"
   DEVICECONNECT_REV: "master"
   MENDER_CONNECT_REV: "master"
-  MENDER_BINARY_DELTA_VERSION: "latest"
   DEVICECONFIG_REV: "master"
+
+  # Versions of independent components
+  MENDER_BINARY_DELTA_VERSION: "latest"
+  MENDER_CONFIGURE_MODULE_VERSION: "latest"
 
   # Build stage
   BUILD_CLIENT: "true"
