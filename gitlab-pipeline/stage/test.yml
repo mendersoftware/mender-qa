@@ -571,7 +571,7 @@ test_backend_integration_open_source:
   variables:
     TEST_SUITE: "open"
 
-test_full_integration_enterprise:
+test:integration:open_source:
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
@@ -582,7 +582,7 @@ test_full_integration_enterprise:
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300
-    TEST_SUITE: "enterprise"
+    TEST_SUITE: "open"
   tags:
     - mender-qa-slave-highmem
   needs:
@@ -731,7 +731,7 @@ test_full_integration_enterprise:
     reports:
       junit: results_full_integration.xml
 
-test_full_integration_open_source:
-  extends: test_full_integration_enterprise
+test:integration:enterprise:
+  extends: test:integration:open_source
   variables:
-    TEST_SUITE: "open"
+    TEST_SUITE: "enterprise"
