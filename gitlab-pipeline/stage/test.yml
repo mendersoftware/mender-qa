@@ -607,8 +607,8 @@ test_full_integration_enterprise:
     - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
-    # for Post job status
-    - apk --update add curl jq sysstat docker-compose hdparm
+    # Dependencies for post job status and io stats
+    - apk --update add curl jq sysstat hdparm
 
     # Start dockerd in the background
     - /usr/local/bin/dockerd &
@@ -623,10 +623,10 @@ test_full_integration_enterprise:
 
     # Output storage io stats
     - df -h . | tail -1 | awk '{system("hdparm -tT "$1);}'
+
     # Get and install the integration test requirements
     - apk add $(cat ${WORKSPACE}/integration/tests/requirements/apk-requirements.txt)
-    - pip install  -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
-    - pip3 install -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
+    - pip install -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
 
     # Load all docker images
     - for repo in `integration/extra/release_tool.py -l docker`; do
