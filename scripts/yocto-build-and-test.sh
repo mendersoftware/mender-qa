@@ -423,7 +423,7 @@ build_and_test_client() {
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
 
-            # check if can generate HTML report
+            # check if we can generate an HTML report
             local html_report_args="--html=report.html --self-contained-html"
             if ! $pip_cmd list|grep -e pytest-html >/dev/null 2>&1; then
                 html_report_args=""
