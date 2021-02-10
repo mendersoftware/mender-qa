@@ -427,14 +427,14 @@ test_accep_raspberrypi4:
     reports:
       junit: results_accep_raspberrypi4.xml
 
-test_backend_integration_enterprise:
+test:integration:open_source:backend:
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   stage: test
   image: docker/compose:alpine-1.27.4
   variables:
-    TEST_SUITE: "enterprise"
+    TEST_SUITE: "open"
   services:
     - docker:19.03-dind
   tags:
@@ -566,10 +566,10 @@ test_backend_integration_enterprise:
     reports:
       junit: results_backend_integration_*.xml
 
-test_backend_integration_open_source:
-  extends: test_backend_integration_enterprise
+test:integration:enterprise:backend:
+  extends: test:integration:open_source:backend
   variables:
-    TEST_SUITE: "open"
+    TEST_SUITE: "enterprise"
 
 test:integration:open_source:
   only:
