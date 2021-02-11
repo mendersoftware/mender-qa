@@ -48,7 +48,7 @@ build_client_docker:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Dependencies
-    - apk --update add python3 py-pip curl jq
+    - apk --update add python3 py-pip curl jq bash
     - pip3 install pyyaml
     # Post job status
     - source ${CI_PROJECT_DIR}/build_revisions.env
