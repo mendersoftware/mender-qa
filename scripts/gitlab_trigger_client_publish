@@ -17,10 +17,16 @@ else
   exit 1
 fi
 
-if ! grep "^${trigger_from_repo}\$" <<<$($WORKSPACE/integration/extra/release_tool.py --list git) \
-    && [ "$trigger_from_repo" != "meta-mender" ]; then
-  echo "Unrecognized repository $trigger_from_repo" >&2
-  exit 1
+INTEGRATION_COMPONENT="true"
+if [ "$trigger_from_repo" = "meta-mender" ] || [ "$trigger_from_repo" = "mender-configure-module" ]; then
+  INTEGRATION_COMPONENT="false"
+fi
+
+if [ "$INTEGRATION_COMPONENT" = "true" ]; then
+  if ! grep -q "^${trigger_from_repo}\$" <<<$($WORKSPACE/integration/extra/release_tool.py --list git); then
+    echo "Unrecognized repository $trigger_from_repo" >&2
+    exit 1
+  fi
 fi
 
 if [ -z "$MENDER_QA_TRIGGER_TOKEN" ]; then
@@ -34,17 +40,23 @@ if [ ! -d $WORKSPACE/integration ]; then
 fi
 
 # Get the integration versions to publish
-if [ "$trigger_from_repo" == "meta-mender" ]; then
-  # Special handling on meta-mender: publish master + last three releases
+if [ "$INTEGRATION_COMPONENT" = "false" ]; then
   cd $WORKSPACE/integration
   remote=$(git config -l | \
            sed -n -E 's|^remote\.([^.]+)\.url=.*github\.com[/:]mendersoftware/integration(\.git)?$|\1|p')
-  integration_versions=$(git for-each-ref --sort=-creatordate --format='%(refname:short)' 'refs/tags' | \
-                         sed -E '/(^[0-9]+\.[0-9]+)\.[0-9]+$/!d;s//\1.x/' | \
-                         uniq | \
-                         head -n $NUMBER_OF_MINOR_VERSIONS)
-  integration_versions="$remote/master $integration_versions"
-  cd -
+
+  if [ "$trigger_from_repo" = "meta-mender" ]; then
+    # Special handling on meta-mender: publish master + last three releases
+    integration_versions=$(git for-each-ref --sort=-creatordate --format='%(refname:short)' 'refs/tags' | \
+                          sed -E '/(^[0-9]+\.[0-9]+)\.[0-9]+$/!d;s//\1.x/' | \
+                          uniq | \
+                          head -n $NUMBER_OF_MINOR_VERSIONS)
+    integration_versions="$remote/master $integration_versions"
+  else
+    # For the rest: publish only master
+    integration_versions="$remote/master"
+  fi
+  cd - >/dev/null
 else
   # Integration versions including trigger_from_repo/version_to_publish
   integration_versions=$($WORKSPACE/integration/extra/release_tool.py \
