@@ -427,14 +427,14 @@ test_accep_raspberrypi4:
     reports:
       junit: results_accep_raspberrypi4.xml
 
-test_backend_integration_enterprise:
+test:backend-integration:open_source:
   only:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   stage: test
   image: docker/compose:alpine-1.27.4
   variables:
-    TEST_SUITE: "enterprise"
+    TEST_SUITE: "open"
   services:
     - docker:19.03-dind
   tags:
@@ -566,15 +566,12 @@ test_backend_integration_enterprise:
     reports:
       junit: results_backend_integration_*.xml
 
-test_backend_integration_open_source:
-  extends: test_backend_integration_enterprise
+test:backend-integration:enterprise:
+  extends: test:backend-integration:open_source
   variables:
-    TEST_SUITE: "open"
+    TEST_SUITE: "enterprise"
 
-test_full_integration_enterprise:
-  only:
-    variables:
-      - $RUN_INTEGRATION_TESTS == "true"
+.integration_setup_template:
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
   # run dockerd on the same host.
@@ -582,15 +579,9 @@ test_full_integration_enterprise:
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300
-    TEST_SUITE: "enterprise"
+    TEST_SUITE: "open"
   tags:
     - mender-qa-slave-highmem
-  needs:
-    - init_workspace
-    - build_servers
-    - build_client
-    - build_client_docker
-    - build_mender-artifact
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -628,17 +619,32 @@ test_full_integration_enterprise:
     - apk add $(cat ${WORKSPACE}/integration/tests/requirements/apk-requirements.txt)
     - pip install -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
 
-    # Load all docker images
+    # Load all docker images, and the client images depending on $BUILD_CLIENT
     - for repo in `integration/extra/release_tool.py -l docker`; do
-        docker load -i stage-artifacts/${repo}.tar;
-      done
+    -   if echo $repo | grep -q mender-client; then
+    -     if [ "${BUILD_CLIENT}" = "true" ]; then
+    -       docker load -i stage-artifacts/${repo}.tar;
+    -     else
+    -       continue
+    -     fi
+    -   fi
+    -   docker load -i stage-artifacts/${repo}.tar;
+    - done
+
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker`; do
-        integration/extra/release_tool.py --set-version-of $repo --version pr;
-      done
+    -   if echo $repo | grep -q mender-client; then
+    -       if [ "${BUILD_CLIENT}" = "true" ]; then
+    -         integration/extra/release_tool.py --set-version-of $repo --version pr;
+    -       else
+    -         continue
+    -       fi
+    -   fi
+    -   integration/extra/release_tool.py --set-version-of $repo --version pr;
+    - done
     # Other dependencies
     - install stage-artifacts/mender-artifact-linux /usr/local/bin/mender-artifact
     - make -C ${WORKSPACE}/go/src/github.com/mendersoftware/mender install-modules-gen
@@ -731,7 +737,41 @@ test_full_integration_enterprise:
     reports:
       junit: results_full_integration.xml
 
-test_full_integration_open_source:
-  extends: test_full_integration_enterprise
+
+test:integration:source_client:open_source:
+  extends: .integration_setup_template
+  only:
+    variables:
+      - ( $RUN_INTEGRATION_TESTS == "true" && $BUILD_CLIENT == "true" )
+  needs:
+    - init_workspace
+    - build_servers
+    - build_client
+    - build_client_docker
+    - build_mender-artifact
+
+
+test:integration:source_client:enterprise:
+  extends: test:integration:source_client:open_source
   variables:
-    TEST_SUITE: "open"
+    TEST_SUITE: "enterprise"
+
+
+test:integration:prebuilt_client:open_source:
+  extends: .integration_setup_template
+  only:
+    variables:
+      - $RUN_INTEGRATION_TESTS == "true"
+  except:
+    variables:
+      - $BUILD_CLIENT == "true"
+  needs:
+    - init_workspace
+    - build_servers
+    - build_mender-artifact
+
+
+test:integration:prebuilt_client:enterprise:
+  extends: test:integration:prebuilt_client:open_source
+  variables:
+    TEST_SUITE: "enterprise"

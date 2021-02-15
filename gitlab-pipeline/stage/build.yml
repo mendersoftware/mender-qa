@@ -3,7 +3,6 @@ build_client:
   only:
     variables:
       - $BUILD_CLIENT == "true"
-      - $RUN_INTEGRATION_TESTS == "true"
   stage: build
   extends: .template_build_test_acc
   services:
@@ -36,7 +35,6 @@ build_client_docker:
   only:
     variables:
       - $BUILD_CLIENT == "true"
-      - $RUN_INTEGRATION_TESTS == "true"
   needs:
     - init_workspace
   image: docker:19.03
