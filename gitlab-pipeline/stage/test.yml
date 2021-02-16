@@ -13,7 +13,7 @@ variables:
 
 test:acceptance:qemux86_64:uefi_grub:
   only:
-    # Even though the build for this configuration is done unconditionally in build_client job,
+    # Even though the build for this configuration is done unconditionally in build:client job,
     # we will still trigger this one for BUILD_QEMUX86_64_UEFI_GRUB to be able to collect artifacts
     variables:
       - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
@@ -441,8 +441,8 @@ test:backend-integration:open_source:
     - mender-qa-slave-highcpu
   needs:
     - init_workspace
-    - build_servers
-    - build_mender-artifact
+    - build:servers
+    - build:mender-artifact
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -745,10 +745,10 @@ test:integration:source_client:open_source:
       - ( $RUN_INTEGRATION_TESTS == "true" && $BUILD_CLIENT == "true" )
   needs:
     - init_workspace
-    - build_servers
-    - build_client
-    - build_client_docker
-    - build_mender-artifact
+    - build:servers
+    - build:client
+    - build:client:docker
+    - build:mender-artifact
 
 
 test:integration:source_client:enterprise:
@@ -767,8 +767,8 @@ test:integration:prebuilt_client:open_source:
       - $BUILD_CLIENT == "true"
   needs:
     - init_workspace
-    - build_servers
-    - build_mender-artifact
+    - build:servers
+    - build:mender-artifact
 
 
 test:integration:prebuilt_client:enterprise:

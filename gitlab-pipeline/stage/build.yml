@@ -1,5 +1,5 @@
 
-build_client:
+build:client:
   only:
     variables:
       - $BUILD_CLIENT == "true"
@@ -30,7 +30,7 @@ build_client:
       - sysstat.log
       - sysstat.svg
 
-build_client_docker:
+build:client:docker:
   stage: build
   only:
     variables:
@@ -73,7 +73,7 @@ build_client_docker:
     paths:
       - stage-artifacts/
 
-build_servers:
+build:servers:
   stage: build
   only:
     variables:
@@ -125,7 +125,7 @@ build_servers:
     paths:
       - stage-artifacts/
 
-build_mender-cli:
+build:mender-cli:
   stage: build
   only:
     variables:
@@ -177,7 +177,7 @@ build_mender-cli:
     paths:
       - stage-artifacts/
 
-build_mender-artifact:
+build:mender-artifact:
   stage: build
   only:
     variables:
