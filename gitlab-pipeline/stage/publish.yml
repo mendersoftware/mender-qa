@@ -50,7 +50,7 @@ publish_accep_qemux86_64_uefi_grub:
       - $TEST_QEMUX86_64_UEFI_GRUB != "true"
   needs:
     - init_workspace
-    - test_accep_qemux86_64_uefi_grub
+    - test:acceptance:qemux86_64:uefi_grub
   variables:
     JOB_BASE_NAME: qemux86_64_uefi_grub
 
@@ -61,7 +61,7 @@ publish_accep_vexpress_qemu:
       - $TEST_VEXPRESS_QEMU != "true"
   needs:
     - init_workspace
-    - test_accep_vexpress_qemu
+    - test:acceptance:vexpress_qemu
   variables:
     JOB_BASE_NAME: vexpress_qemu
 
@@ -72,7 +72,7 @@ publish_accep_qemux86_64_bios_grub:
       - $TEST_QEMUX86_64_BIOS_GRUB != "true"
   needs:
     - init_workspace
-    - test_accep_qemux86_64_bios_grub
+    - test:acceptance:qemux86_64:bios_grub
   variables:
     JOB_BASE_NAME: qemux86_64_bios_grub
 
@@ -83,7 +83,7 @@ publish_accep_qemux86_64_bios_grub_gpt:
       - $TEST_QEMUX86_64_BIOS_GRUB_GPT != "true"
   needs:
     - init_workspace
-    - test_accep_qemux86_64_bios_grub_gpt
+    - test:acceptance:qemux86_64:bios_grub_gpt
   variables:
     JOB_BASE_NAME: qemux86_64_bios_grub_gpt
 
@@ -94,7 +94,7 @@ publish_accep_vexpress_qemu_uboot_uefi_grub:
       - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB != "true"
   needs:
     - init_workspace
-    - test_accep_vexpress_qemu_uboot_uefi_grub
+    - test:acceptance:vexpress_qemu:uboot_uefi_grub
   variables:
     JOB_BASE_NAME: vexpress_qemu_uboot_uefi_grub
 
@@ -105,7 +105,7 @@ publish_accep_vexpress_qemu_flash:
       - $TEST_VEXPRESS_QEMU_FLASH != "true"
   needs:
     - init_workspace
-    - test_accep_vexpress_qemu_flash
+    - test:acceptance:vexpress_qemu_flash
   variables:
     JOB_BASE_NAME: vexpress_qemu_flash
 
@@ -116,7 +116,7 @@ publish_accep_beagleboneblack:
       - $TEST_BEAGLEBONEBLACK != "true"
   needs:
     - init_workspace
-    - test_accep_beagleboneblack
+    - test:acceptance:beagleboneblack
   variables:
     JOB_BASE_NAME: beagleboneblack
 
@@ -127,7 +127,7 @@ publish_accep_raspberrypi3:
       - $TEST_RASPBERRYPI3 != "true"
   needs:
     - init_workspace
-    - test_accep_raspberrypi3
+    - test:acceptance:raspberrypi3
   variables:
     JOB_BASE_NAME: raspberrypi3
 
@@ -138,6 +138,6 @@ publish_accep_raspberrypi4:
       - $TEST_RASPBERRYPI4 != "true"
   needs:
     - init_workspace
-    - test_accep_raspberrypi4
+    - test:acceptance:raspberrypi4
   variables:
     JOB_BASE_NAME: raspberrypi4

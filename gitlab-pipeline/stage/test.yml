@@ -11,7 +11,7 @@ variables:
   MANTRA_ID_full_integration_open_source: "9"
   MANTRA_ID_full_integration_enterprise: "10"
 
-test_accep_qemux86_64_uefi_grub:
+test:acceptance:qemux86_64:uefi_grub:
   only:
     # Even though the build for this configuration is done unconditionally in build_client job,
     # we will still trigger this one for BUILD_QEMUX86_64_UEFI_GRUB to be able to collect artifacts
@@ -62,7 +62,7 @@ test_accep_qemux86_64_uefi_grub:
     reports:
       junit: results_accep_qemux86_64_uefi_grub.xml
 
-test_accep_vexpress_qemu:
+test:acceptance:vexpress_qemu:
   only:
     variables:
       - $BUILD_VEXPRESS_QEMU == "true"
@@ -111,7 +111,7 @@ test_accep_vexpress_qemu:
     reports:
       junit: results_accep_vexpress_qemu.xml
 
-test_accep_qemux86_64_bios_grub:
+test:acceptance:qemux86_64:bios_grub:
   only:
     variables:
       - $BUILD_QEMUX86_64_BIOS_GRUB == "true"
@@ -160,7 +160,7 @@ test_accep_qemux86_64_bios_grub:
     reports:
       junit: results_accep_qemux86_64_bios_grub.xml
 
-test_accep_qemux86_64_bios_grub_gpt:
+test:acceptance:qemux86_64:bios_grub_gpt:
   only:
     variables:
       - $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
@@ -209,7 +209,7 @@ test_accep_qemux86_64_bios_grub_gpt:
     reports:
       junit: results_accep_qemux86_64_bios_grub_gpt.xml
 
-test_accep_vexpress_qemu_uboot_uefi_grub:
+test:acceptance:vexpress_qemu:uboot_uefi_grub:
   only:
     variables:
       - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
@@ -261,7 +261,7 @@ test_accep_vexpress_qemu_uboot_uefi_grub:
 # Note that vexpress-qemu-flash configuration does not generate a ext4 image so
 # the build script does not generate the Mender Artifact neither.
 # This job collects the .ubifs for debugging but not for release publishing
-test_accep_vexpress_qemu_flash:
+test:acceptance:vexpress_qemu_flash:
   only:
     variables:
       - $BUILD_VEXPRESS_QEMU_FLASH == "true"
@@ -310,7 +310,7 @@ test_accep_vexpress_qemu_flash:
     reports:
       junit: results_accep_vexpress_qemu_flash.xml
 
-test_accep_beagleboneblack:
+test:acceptance:beagleboneblack:
   only:
     variables:
       - $BUILD_BEAGLEBONEBLACK == "true"
@@ -349,7 +349,7 @@ test_accep_beagleboneblack:
     reports:
       junit: results_accep_beagleboneblack.xml
 
-test_accep_raspberrypi3:
+test:acceptance:raspberrypi3:
   only:
     variables:
       - $BUILD_RASPBERRYPI3 == "true"
@@ -388,7 +388,7 @@ test_accep_raspberrypi3:
     reports:
       junit: results_accep_raspberrypi3.xml
 
-test_accep_raspberrypi4:
+test:acceptance:raspberrypi4:
   only:
     variables:
       - $BUILD_RASPBERRYPI4 == "true"

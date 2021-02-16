@@ -64,8 +64,8 @@ variables:
 
 Next add a new build and test job for this platform. These jobs all
 extend `build_and_test_acceptance`. Take one of them as a base, for
-example `test_accep_qemux86_64_uefi_grub`, and modify it for the new
-platform (namely: search and replace on `qemux86_64_uefi_grub`).
+example `test:acceptance:qemux86_64:uefi_grub`, and modify it for the new
+platform (namely: search and replace on `qemux86_64:uefi_grub`).
 
 ### Pipeline job: Publish acceptance tests coverage reports
 

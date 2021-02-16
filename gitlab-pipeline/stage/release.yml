@@ -59,15 +59,15 @@ release_docker_images:automatic:
   image: debian:buster
   dependencies:
     - init_workspace
-    - test_accep_qemux86_64_uefi_grub
-    - test_accep_vexpress_qemu
-    - test_accep_qemux86_64_bios_grub
-    - test_accep_qemux86_64_bios_grub_gpt
-    - test_accep_vexpress_qemu_uboot_uefi_grub
-    - test_accep_vexpress_qemu_flash
-    - test_accep_beagleboneblack
-    - test_accep_raspberrypi3
-    - test_accep_raspberrypi4
+    - test:acceptance:qemux86_64:uefi_grub
+    - test:acceptance:vexpress_qemu
+    - test:acceptance:qemux86_64:bios_grub
+    - test:acceptance:qemux86_64:bios_grub_gpt
+    - test:acceptance:vexpress_qemu:uboot_uefi_grub
+    - test:acceptance:vexpress_qemu_flash
+    - test:acceptance:beagleboneblack
+    - test:acceptance:raspberrypi3
+    - test:acceptance:raspberrypi4
   before_script:
     # Install dependencies
     - apt update && apt install -yyq awscli git python3 python3-pip
