@@ -258,9 +258,9 @@ test:acceptance:vexpress_qemu:uboot_uefi_grub:
     reports:
       junit: results_accep_vexpress_qemu_uboot_uefi_grub.xml
 
-# Note that vexpress-qemu-flash configuration does not generate a ext4 image so
-# the build script does not generate the Mender Artifact neither.
-# This job collects the .ubifs for debugging but not for release publishing
+# Note that vexpress-qemu-flash configuration does not generate an ext4 image so
+# the build script does not generate the Mender Artifact neither. This job
+# collects the .ubifs for debugging but not for release publishing
 test:acceptance:vexpress_qemu_flash:
   only:
     variables:
