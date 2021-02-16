@@ -70,7 +70,7 @@ platform (namely: search and replace on `qemux86_64:uefi_grub`).
 ### Pipeline job: Publish acceptance tests coverage reports
 
 Similarly, add a job that extends `.template_publish_acceptance_coverage` to
-publish acceptance tests coverage. Use `publish_accep_qemux86_64_uefi_grub`
+publish acceptance tests coverage. Use `publish:acceptance:qemux86_64:uefi_grub`
 as an example.
 
 ### Pipeline job: Publish release artifacts
