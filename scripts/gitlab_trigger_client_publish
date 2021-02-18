@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 # Number of release branches to build when trigger comes from meta-mender
 NUMBER_OF_MINOR_VERSIONS=3
@@ -72,6 +72,7 @@ for integ_version in $integration_versions; do
                     echo _REV]=${repo_version})";
   done
 
+  set -x
   curl -v -f -X POST \
     -F token=$MENDER_QA_TRIGGER_TOKEN \
     -F ref=master \
@@ -97,5 +98,6 @@ for integ_version in $integration_versions; do
     -F variables[RUN_INTEGRATION_TESTS]=false \
     $variables_revs \
     https://gitlab.com/api/v4/projects/12501706/trigger/pipeline
+    set +x
 
 done
