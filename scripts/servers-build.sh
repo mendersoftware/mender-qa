@@ -40,7 +40,7 @@ build_servers_repositories() {
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
-            mender-client-docker)
+            mender-client-docker*)
                 # Built directly on an independent pipeline job
                 :
                 ;;

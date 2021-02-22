@@ -10,7 +10,7 @@
   dependencies:
     - init_workspace
     - build:servers
-    - build:client
+    - build:client:qemu
     - build:client:docker
   before_script:
     # Check correct dind setup
@@ -189,7 +189,7 @@ release_docker_images:automatic:client-only:
     - docker:19.03-dind
   dependencies:
     - init_workspace
-    - build:client
+    - build:client:qemu
     - build:client:docker
   before_script:
     # Check correct dind setup

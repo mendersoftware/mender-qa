@@ -746,7 +746,7 @@ test:integration:source_client:open_source:
   needs:
     - init_workspace
     - build:servers
-    - build:client
+    - build:client:qemu
     - build:client:docker
     - build:mender-artifact
 
