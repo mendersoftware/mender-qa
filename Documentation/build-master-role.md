@@ -26,6 +26,17 @@ The general advise is to do a short investigation before asking for help from
 others in the team. For obvious test infra errors we can just re-run the jobs;
 for actual test failures we need to asses if it might be a regression or not.
 
+### Weekly Mender integration tests on staging
+
+Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipeline_schedules
+
+Every Monday evening, at 9 PM UTC, we run the Mender integration tests targeting
+the Mender staging environment.
+
+On Tuesday morning, the Build Master must check the status of the pipeline and
+do a short investigation before asking for help from others in the team in
+case of failures.
+
 ### SaaS deploy pipeline(s)
 
 Link: https://gitlab.com/Northern.tech/MenderSaaS/saas/pipelines
