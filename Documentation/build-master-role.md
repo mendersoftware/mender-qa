@@ -51,3 +51,6 @@ where a new Hosted Mender release is planned.
 Link: https://northern.tech.gitlab.io/Mender/mender-build-status/
 
 All should be green. If a pipeline is broken, ping the corresponding team.
+
+They get build after every merge to master on the corresponding repository, and
+on weekly basis every Tuesday evening, at 9 PM UTC.

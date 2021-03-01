@@ -45,6 +45,14 @@ When applicable, prepare Docker image repositories for the new component.
 
 Please use templates as much as possible. The standard is a bit different depending on the repository: backend repositories can be built using only templates, client repositories rely on `Makefile` and custom jobs to build and publish.
 
+## GitLab: weekly schedule
+
+Set a weekly schedule to build master pipeline for every Tuesday evening, at 9 PM UTC:
+
+1. Log into GitHub as `mender-test-bot`, credentials are in `mystiko`
+2. Log into GitLab, using OAuth from GitHub.
+3. Set an CI/CD schedule with description `Weekly` and interval `0 21 * * 2`.
+
 ## integration
 
 *NOTE*: needs to be done together with [mender-qa](mender-qa).
