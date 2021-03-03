@@ -70,8 +70,8 @@ build:client:docker:
     -   docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker mender-client-docker-addons docker_url)
     -   cd $WORKSPACE/integration/extra/mender-client-docker-addons
     -   docker build
-        --build-arg MENDER_CLIENT_REV=$MENDER_REV
-        --build-arg MENDER_CONNECT_REV=$MENDER_CONNECT_REV
+        --build-arg MENDER_CLIENT_VERSION=$MENDER_REV
+        --build-arg MENDER_CONNECT_VERSION=$MENDER_CONNECT_REV
         --tag $docker_url:pr
         .
     -   mkdir -p ${CI_PROJECT_DIR}/stage-artifacts
