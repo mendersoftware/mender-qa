@@ -41,6 +41,31 @@ When applicable, prepare Docker image repositories for the new component.
   * robots: Read & Write
 * For closed source repository, create a new private repository in registry.mender.io
 
+## Makefile
+
+Consider adding a Makefile to the repository. This will serve both developers on their
+local environment and automated templated jobs on CI.
+
+A Makefile in a Mender repository is expected to contain at least the following targets:
+
+* `build`: Build the repository and output all binaries into `./bin`. This is the default target.
+* `fmt`: Format the code. Typically with `gofmt` for golang, `Black` for Python, and `clang-format` for C.
+* `lint`: Lint the code. On new golang repositories, we are trying to use `golangci-lint` tool.
+* `test`: Run unit tests and generate code coverage metrics in file `coverage.txt`.
+* `check`: Alias to `test`.
+
+Other useful targets are:
+
+* `docs`: Auto-generate Python test classes for tests
+* `docker`: Build Docker production image
+* `build-test`: Build binary with code coverage instrumentation
+* `docker-test`: Build Docker image containing software under test. Typically using `build-test` target
+  for code coverage metrics.
+* `docker-acceptance`: Build Docker tester image.
+* `acceptance-tests`: Run acceptance tests. Typically bringing up a docker composition
+* `acceptance-tests-logs`: Get logs from acceptance tests Docker composition
+* `acceptance-tests-down`: Bring down acceptance tests Docker composition
+
 ## GitLab: CI/CD pipeline
 
 Please use templates as much as possible. The standard is a bit different depending on the repository: backend repositories can be built using only templates, client repositories rely on `Makefile` and custom jobs to build and publish.
