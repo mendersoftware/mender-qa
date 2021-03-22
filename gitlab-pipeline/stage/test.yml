@@ -647,6 +647,7 @@ test:backend-integration:enterprise:
     - done
     # Other dependencies
     - install stage-artifacts/mender-artifact-linux /usr/local/bin/mender-artifact
+    - install stage-artifacts/mender-cli.linux.amd64 /usr/local/bin/mender-cli
     - make -C ${WORKSPACE}/go/src/github.com/mendersoftware/mender install-modules-gen
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
@@ -749,6 +750,7 @@ test:integration:source_client:open_source:
     - build:client:qemu
     - build:client:docker
     - build:mender-artifact
+    - build:mender-cli
 
 
 test:integration:source_client:enterprise:
@@ -769,6 +771,7 @@ test:integration:prebuilt_client:open_source:
     - init_workspace
     - build:servers
     - build:mender-artifact
+    - build:mender-cli
 
 
 test:integration:prebuilt_client:enterprise:
