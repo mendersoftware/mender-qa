@@ -212,7 +212,7 @@ release_docker_images:automatic:client-only:
     - if $WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
     -   VERSION_TYPE_PARAMS="--version-type docker"
     - fi
-    # Load, tag and push mender-client-docker, mender-client-qemu, mender-client-qemu-rofs
+    # Load, tag and push mender-client-* images
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep mender-client); do
         version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version HEAD);
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
