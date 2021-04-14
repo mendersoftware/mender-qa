@@ -88,8 +88,25 @@ init_workspace:
     -   echo "export MENDER_QA_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
     - )
 
-    # Add other repositories.
     - checkout_repo INTEGRATION https://github.com/mendersoftware/integration integration $INTEGRATION_REV
+
+    # Fetch all branches for integration. This is needed during the publish
+    # stage when we query versions using the release_tool. Other repositories
+    # should not need it.
+    - (
+    -   cd integration
+    #   Rename the branch we're on, so that it's not in the way for the
+    #   subsequent fetch. It's ok if this fails, it just means we're not on any
+    #   branch.
+    -   git branch -m temp-branch || true
+    #   Git trick: Fetch directly into our local branches instead of remote
+    #   branches.
+    -   git fetch -f origin 'refs/heads/*:refs/heads/*'
+    #   Get last remaining tags, if any.
+    -   git fetch --tags origin
+    - )
+
+    # Add other repositories.
     - checkout_repo META_MENDER https://github.com/mendersoftware/meta-mender meta-mender $META_MENDER_REV
     - checkout_repo MENDER https://github.com/mendersoftware/mender go/src/github.com/mendersoftware/mender $MENDER_REV
     - checkout_repo DEPLOYMENTS https://github.com/mendersoftware/deployments go/src/github.com/mendersoftware/deployments $DEPLOYMENTS_REV
