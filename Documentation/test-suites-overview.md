@@ -84,7 +84,7 @@ cp mender-integration/extra/travis-testing/* tests/
 cp docs/* tests/
 # Build and copy the binary
 go build
-cp deviceauth /tests
+cp deviceauth tests/
 # Get and copy mender-artifact
 wget https://downloads.mender.io/mender-artifact/master/linux/mender-artifact
 chmod +x mender-artifact
