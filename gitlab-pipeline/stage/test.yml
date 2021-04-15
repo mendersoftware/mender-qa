@@ -450,7 +450,7 @@ test:backend-integration:open_source:
     - docker version
     - apk --update add bash git py-pip gcc make python2-dev
       libc-dev libffi-dev openssl-dev python3 curl jq sysstat
-    - pip3 install pyyaml
+    - pip3 install pyyaml==5.3.1
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
