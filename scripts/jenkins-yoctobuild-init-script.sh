@@ -71,5 +71,5 @@ pip3 install pyyaml --upgrade
 # use sar from sysstat to render the result file (~/sysstat.log) manually
 apt_get -qy --force-yes install sysstat
 sudo sed -i 's/false/true/g' /etc/default/sysstat
-sudo service sysstat start 
+sudo service sysstat start
 sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
