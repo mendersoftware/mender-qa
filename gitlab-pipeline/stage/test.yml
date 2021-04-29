@@ -450,7 +450,8 @@ test:backend-integration:open_source:
     - docker version
     - apk --update add bash git py-pip gcc make python2-dev
       libc-dev libffi-dev openssl-dev python3 curl jq sysstat
-    - pip3 install pyyaml==5.3.1
+    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
+    - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp

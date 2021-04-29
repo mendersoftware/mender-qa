@@ -17,7 +17,8 @@
     - docker version
     # Install dependencies
     - apk --update add git python3 py3-pip
-    - pip3 install pyyaml==5.3.1
+    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
+    - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -71,7 +72,8 @@ release_docker_images:automatic:
   before_script:
     # Install dependencies
     - apt update && apt install -yyq awscli git python3 python3-pip
-    - pip3 install pyyaml==5.3.1
+    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
+    - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -121,7 +123,8 @@ release_board_artifacts:automatic:
   before_script:
     # Install dependencies
     - apt update && apt install -yyq awscli git python3 python3-pip
-    - pip3 install pyyaml==5.3.1
+    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
+    - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -196,7 +199,8 @@ release_docker_images:automatic:client-only:
     - docker version
     # Install dependencies
     - apk --update add git python3 py3-pip
-    - pip3 install pyyaml==5.3.1
+    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
+    - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
