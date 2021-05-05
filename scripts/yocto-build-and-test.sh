@@ -136,6 +136,7 @@ EOF
 # with 2.1.x, 2.2.x, and 2.3.x
 EXTERNALSRC_pn-mender = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-client = "$WORKSPACE/go"
+EXTERNALSRC_pn-mender-client-native = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go"
 EXTERNALSRC_pn-mender-connect= "$WORKSPACE/go"
@@ -180,6 +181,7 @@ EOF
 # with 2.1.x, 2.2.x, and 2.3.x
 PREFERRED_VERSION_pn-mender = "$mender_on_exact_tag"
 PREFERRED_VERSION_pn-mender-client = "$mender_on_exact_tag"
+PREFERRED_VERSION_pn-mender-client-native = "$mender_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -187,7 +189,8 @@ EOF
 # But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
 PREFERRED_VERSION_pn-mender = "$client_version-git%"
-PREFERRED_VERSION_pn-mender-client= "$client_version-git%"
+PREFERRED_VERSION_pn-mender-client = "$client_version-git%"
+PREFERRED_VERSION_pn-mender-client-native = "$client_version-git%"
 EOF
     fi
 
