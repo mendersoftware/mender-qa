@@ -16,7 +16,7 @@ build_servers_repositories() {
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
 
         case "$docker" in
-            deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig)
+            deployments|deployments-enterprise|deviceauth|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig|devicemonitor)
                 cd go/src/github.com/mendersoftware/$git
                 docker build -t $docker_url:pr .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
