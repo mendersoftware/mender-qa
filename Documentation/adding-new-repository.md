@@ -20,6 +20,7 @@ Create an empty repository in GitHub and push the OS version of it. Notable chan
 2. Update the `.gitlab-cy.yml` file to set the `FIRST_ENT_COMMIT` in the `test:check-license` job to the commit sha from point 1 (see [example](https://github.com/mendersoftware/deployments-enterprise/blob/master/.gitlab-ci.yml#L35))
 3. Modify references in README
 4. Modify variables in pipeline
+5. Create repository, see Docker image(s) below
 
 ## GitLab: project
 
@@ -39,7 +40,8 @@ When applicable, prepare Docker image repositories for the new component.
   * developers: Read-only
   * openrnd: Read-only
   * robots: Read & Write
-* For closed source repository, create a new private repository in registry.mender.io
+* For closed source repository, create a new private repository in registry.mender.io, that is
+ create the `mendersoftware/name-of-service` ECR repository in the AWS Account with ID `175683096866` to be served by `registry.mender.io`
 
 ## Makefile
 
@@ -129,11 +131,11 @@ ref https://github.com/mendersoftware/integration-test-runner/blob/master/main.g
 3. Set `Coverage Decrease Threshold for failure` to `0.1%`.
   * ref https://coveralls.io/github/mendersoftware/REPOSITORY/settings
 
-## GitHub: branch protections
+## Branch protections
 
 *NOTE:* depends on coveralls, GitLab, mender-qa, and integration-test-runner integration
 
-By default, we add the following protections for `master`, `*.*.x` and `staging` (where applicable) branches:
+By default, and both in GitHub and GitLab, we add the following protections for `master`, `*.*.x` and `staging` (where applicable) branches:
 
 * Require pull request reviews before merging 
 * Require status checks to pass before merging 
@@ -142,6 +144,11 @@ By default, we add the following protections for `master`, `*.*.x` and `staging`
   * coverage/coveralls 
 
 ref https://github.com/mendersoftware/REPOSITORY/settings/branches
+
+ref https://gitlab.com/Northern.tech/Mender/REPOSITORY/-/settings/repository
+
+![branch-protections](gitlab-branch-protections.png)
+
 
 ## dependabot
 
