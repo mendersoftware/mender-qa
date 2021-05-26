@@ -68,6 +68,9 @@ variables:
   PUBLISH_DOCKER_CLIENT_IMAGES: "false"
   PUBLISH_RELEASE_AUTOMATIC: "false"
 
+  # Nightly build marker
+  NIGHTLY_BUILD: "false"
+
   # Debugging options
   WAIT_IN_STAGE_INIT: ""
   WAIT_IN_STAGE_BUILD: ""
