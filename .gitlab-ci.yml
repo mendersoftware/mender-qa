@@ -112,9 +112,9 @@ stages:
   # regardless of where they are defined.
   - .pre
   - init
+  - build_prep
   - build
   - test
   - publish
   - release
   - .post
-
