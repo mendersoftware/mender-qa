@@ -43,7 +43,7 @@ if [ "$trigger_from_repo" == "meta-mender" ]; then
                          sed -E '/(^[0-9]+\.[0-9]+)\.[0-9]+$/!d;s//\1.x/' | \
                          uniq | \
                          head -n $NUMBER_OF_MINOR_VERSIONS)
-  integration_versions="$remote/master $integration_versions"
+  integration_versions="$remote/master $(printf "$remote/%s " $integration_versions)"
   cd -
 else
   # Integration versions including trigger_from_repo/version_to_publish
