@@ -103,6 +103,7 @@ include:
   - local: '/gitlab-pipeline/stage/build.yml'
   - local: '/gitlab-pipeline/stage/test.yml'
   - local: '/gitlab-pipeline/stage/publish.yml'
+  - local: '/gitlab-pipeline/stage/trigger.yml'
   - local: '/gitlab-pipeline/stage/release.yml'
   - local: '/gitlab-pipeline/stage/post.yml'
 
@@ -115,6 +116,6 @@ stages:
   - build
   - test
   - publish
+  - trigger
   - release
   - .post
-

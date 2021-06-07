@@ -1,0 +1,19 @@
+.trigger_template:
+  stage: trigger
+  rules:
+    - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
+    # the following is to prevent an endless loop of qa pipelines caused by downstream pipelines
+    - if: '$CI_PIPELINE_SOURCE == "pipeline"'
+      when: never
+
+trigger:mender-convert:
+  extends: .trigger_template
+  variables:
+    MENDER_ARTIFACT_VERSION: $MENDER_ARTIFACT_REV
+    MENDER_CLIENT_VERSION: $MENDER_REV
+    MENDER_ADDON_CONNECT_VERSION: $MENDER_CONNECT_REV
+    MENDER_ADDON_CONFIGURE_VERSION: $DEVICECONFIG_REV
+  trigger:
+    project: Northern.tech/Mender/mender-convert
+    branch: master
+    strategy: depend
