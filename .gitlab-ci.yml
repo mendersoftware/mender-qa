@@ -32,6 +32,7 @@ variables:
   MENDER_CONNECT_REV: "master"
   DEVICECONFIG_REV: "master"
   DEVICEMONITOR_REV: "master"
+  MONITOR_CLIENT_REV: "master"
 
   # Versions of independent components
   MENDER_BINARY_DELTA_VERSION: "latest"

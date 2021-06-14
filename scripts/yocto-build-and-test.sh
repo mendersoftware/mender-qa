@@ -119,8 +119,15 @@ prepare_build_config() {
     local mender_binary_delta_version=$($WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST = "commercial_mender-binary-delta"
-FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "${WORKSPACE}/mender-binary-delta:"
+FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "$WORKSPACE/mender-binary-delta:"
 PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
+EOF
+
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+LICENSE_FLAGS_WHITELIST += "commercial_mender-monitor"
+FILESEXTRAPATHS_prepend_pn-mender-monitor := "$WORKSPACE:"
+SRC_URI_pn-mender-monitor = "file://monitor-client/"
+PREFERRED_VERSION_pn-mender-monitor = "master-git"
 EOF
 
     if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then
@@ -369,6 +376,14 @@ build_and_test_client() {
             bitbake mender-image-full-cmdline-rofs
         fi
 
+        # Check if there is a mender-monitor image recipe available.
+        if [[ $image_name == core-image-full-cmdline ]] \
+               && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
+            bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
+            bitbake mender-monitor-image-full-cmdline
+            bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-commercial
+        fi
+
         mkdir -p $WORKSPACE/$board_name
         cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/$image_name-$device_type.* $WORKSPACE/$board_name
         if [ -e $BUILDDIR/tmp/deploy/images/$machine_name/u-boot.elf ]; then
@@ -487,6 +502,17 @@ build_and_test_client() {
                     # testing a version of integration that neither has a rofs
                     # image, nor any tests for it.
                     $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu-rofs --version pr || true
+                fi
+
+                # Check if there is a Monitor recipe available.
+                if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
+                    ( cd $BUILDDIR && bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial )
+                    ./build-docker -i mender-monitor-image-full-cmdline $machine_name -t mendersoftware/mender-monitor-qemu-commercial:pr
+                    ( cd $BUILDDIR && bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-commercial )
+                    # It's ok if the next step fails, it just means we are
+                    # testing a version of integration that neither has a monitor
+                    # image, nor any tests for it.
+                    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-monitor-qemu-commercial --version pr || true
                 fi
 
             elif is_building_board vexpress-qemu; then

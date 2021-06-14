@@ -217,7 +217,7 @@ release_docker_images:automatic:client-only:
     -   VERSION_TYPE_PARAMS="--version-type docker"
     - fi
     # Load, tag and push mender-client-* images
-    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep mender-client); do
+    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | egrep 'mender-client|mender-monitor'); do
         version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV);
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
         docker load -i stage-artifacts/${image}.tar;
