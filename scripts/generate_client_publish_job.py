@@ -100,10 +100,14 @@ def generate(integration_repo, args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--trigger", required=True)
+    parser.add_argument("--workspace", default=None)
     parser.add_argument("--version", default="master")
     parser.add_argument("--meta-mender-version", default="master")
     parser.add_argument("--filename", default="gitlab-ci-client-qemu-publish-job.yml")
     args = parser.parse_args()
-    integration_repo = initWorkspace()
-    generate(integration_repo, args)
-    shutil.rmtree(integration_repo)
+    if args.workspace:
+        generate(args.workspace, args)
+    else:
+        integration_repo = initWorkspace()
+        generate(integration_repo, args)
+        shutil.rmtree(integration_repo)
