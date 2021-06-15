@@ -15,15 +15,15 @@ def initWorkspace():
     return path
 
 
-def generate(integration_repo, trigger_from_repo, version_to_publish, filename):
+def generate(integration_repo, args):
     release_tool = os.path.join(integration_repo, "extra", "release_tool.py")
     integration_versions = subprocess.run(
         [
             release_tool,
             "--integration-versions-including",
-            trigger_from_repo,
+            args.trigger,
             "--version",
-            version_to_publish,
+            args.version,
         ],
         capture_output=True,
         check=True,
@@ -88,10 +88,12 @@ def generate(integration_repo, trigger_from_repo, version_to_publish, filename):
                 repo_version.stdout.decode("utf-8") or "master"
             )
 
+        repos["META_MENDER"] = args.meta_mender_version
+
         for repo, version in repos.items():
             document["trigger:mender-qa"]["variables"][f"{repo}_REV"] = version
 
-    with open(filename, "w") as f:
+    with open(args.filename, "w") as f:
         yaml.dump(document, f)
 
 
@@ -99,8 +101,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--trigger", required=True)
     parser.add_argument("--version", default="master")
+    parser.add_argument("--meta-mender-version", default="master")
     parser.add_argument("--filename", default="gitlab-ci-client-qemu-publish-job.yml")
     args = parser.parse_args()
     integration_repo = initWorkspace()
-    generate(integration_repo, args.trigger, args.version, args.filename)
+    generate(integration_repo, args)
     shutil.rmtree(integration_repo)
