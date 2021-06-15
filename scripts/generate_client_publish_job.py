@@ -97,7 +97,7 @@ def generate(integration_repo, trigger_from_repo, version_to_publish, filename):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--trigger")
+    parser.add_argument("--trigger", required=True)
     parser.add_argument("--version", default="master")
     parser.add_argument("--filename", default="gitlab-ci-client-qemu-publish-job.yml")
     args = parser.parse_args()
