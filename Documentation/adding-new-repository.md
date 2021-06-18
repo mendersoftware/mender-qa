@@ -24,12 +24,18 @@ Create an empty repository in GitHub and push the OS version of it. Notable chan
 
 ## GitLab: project
 
+> NOTE: It may happen that the mender-test-bot has already created the GitLab
+> project for you. In this case, you can move straight to point 5 below.
+> **However**, if the repository should be public, make sure you reconfigure
+> the project visibility in GitLab.
+
 To create the project in GitLab:
 
 1. Open an incognito window in your browser
 2. Log into GitHub as `mender-test-bot`, credentials are in `mystiko`
 3. Log into GitLab, using OAuth from GitHub. If asked for the token, use the one in `mystiko`
-4. New project >  Run CI/CD for external repository
+4. New project > Create blank GitLab project
+5. Configure branches, permissions, etc, but let the bot do the syncing.
 
 ## Docker image(s)
 
@@ -137,11 +143,11 @@ ref https://github.com/mendersoftware/integration-test-runner/blob/master/main.g
 
 By default, and both in GitHub and GitLab, we add the following protections for `master`, `*.*.x` and `staging` (where applicable) branches:
 
-* Require pull request reviews before merging 
-* Require status checks to pass before merging 
-  * ci/gitlab 
-  * ci/mender-qa 
-  * coverage/coveralls 
+* Require pull request reviews before merging
+* Require status checks to pass before merging
+  * ci/gitlab
+  * ci/mender-qa
+  * coverage/coveralls
 
 ref https://github.com/mendersoftware/REPOSITORY/settings/branches
 
