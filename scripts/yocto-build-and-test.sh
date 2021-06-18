@@ -119,8 +119,15 @@ prepare_build_config() {
     local mender_binary_delta_version=$($WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST = "commercial_mender-binary-delta"
-FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "${WORKSPACE}/mender-binary-delta:"
+FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "$WORKSPACE/mender-binary-delta:"
 PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
+EOF
+
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+LICENSE_FLAGS_WHITELIST += "commercial_mender-monitor"
+FILESEXTRAPATHS_prepend_pn-mender-monitor := "$WORKSPACE:"
+SRC_URI_pn-mender-monitor = "file://monitor-client/"
+PREFERRED_VERSION_pn-mender-monitor = "master-git"
 EOF
 
     if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then
@@ -360,13 +367,54 @@ build_and_test_client() {
         prepare_build_config $machine_name $board_name
 
         cd $BUILDDIR
+
+        # Base image
         bitbake $image_name
+        if ${BUILD_DOCKER_IMAGES:-false}; then
+            $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                $machine_name \
+                -t mendersoftware/mender-client-qemu:pr
+            $WORKSPACE/integration/extra/release_tool.py \
+                --set-version-of mender-client-qemu \
+                --version pr
+        fi
 
         # Check if there is a R/O rootfs recipe available.
         if [[ $image_name == core-image-full-cmdline ]] \
                && [[ -f $WORKSPACE/meta-mender/meta-mender-demo/recipes-extended/images/mender-image-full-cmdline-rofs.bb ]]; then
-
             bitbake mender-image-full-cmdline-rofs
+            if ${BUILD_DOCKER_IMAGES:-false}; then
+                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                    -i mender-image-full-cmdline-rofs \
+                    $machine_name \
+                    -t mendersoftware/mender-client-qemu-rofs:pr
+                # It's ok if the next step fails, it just means we are
+                # testing a version of integration that neither has a rofs
+                # image, nor any tests for it.
+                $WORKSPACE/integration/extra/release_tool.py \
+                    --set-version-of mender-client-qemu-rofs \
+                    --version pr || true
+            fi
+        fi
+
+        # Check if there is a mender-monitor image recipe available.
+        if [[ $image_name == core-image-full-cmdline ]] \
+               && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
+            bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
+            bitbake mender-monitor-image-full-cmdline
+            if ${BUILD_DOCKER_IMAGES:-false}; then
+                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                    -i mender-monitor-image-full-cmdline \
+                    $machine_name \
+                    -t mendersoftware/mender-monitor-qemu-commercial:pr
+                # It's ok if the next step fails, it just means we are
+                # testing a version of integration that neither has a monitor
+                # image, nor any tests for it.
+                $WORKSPACE/integration/extra/release_tool.py \
+                    --set-version-of mender-monitor-qemu-commercial \
+                    --version pr || true
+            fi
+            bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-commercial
         fi
 
         mkdir -p $WORKSPACE/$board_name
@@ -470,34 +518,6 @@ build_and_test_client() {
             if is_hardware_board $board_name; then
                 gzip -c $WORKSPACE/$board_name/$image_name-$device_type.sdimg > $WORKSPACE/$board_name/mender-${board_name}_${client_version}.sdimg.gz
             fi
-        fi
-
-        # Build Docker image on build only job
-        if ${BUILD_DOCKER_IMAGES:-false}; then
-            cd $WORKSPACE/meta-mender/meta-mender-qemu
-            if [ -x docker/build-docker ]; then
-                # New style.
-                cd docker
-                ./build-docker $machine_name -t mendersoftware/mender-client-qemu:pr
-
-                # Check if there is a R/O rootfs recipe available.
-                if [[ -f $WORKSPACE/meta-mender/meta-mender-demo/recipes-extended/images/mender-image-full-cmdline-rofs.bb ]]; then
-                    ./build-docker -i mender-image-full-cmdline-rofs $machine_name -t mendersoftware/mender-client-qemu-rofs:pr
-                    # It's ok if the next step fails, it just means we are
-                    # testing a version of integration that neither has a rofs
-                    # image, nor any tests for it.
-                    $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu-rofs --version pr || true
-                fi
-
-            elif is_building_board vexpress-qemu; then
-                # Old style.
-                cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/core-image-full-cmdline-vexpress-qemu.{ext4,sdimg} .
-                cp $BUILDDIR/tmp/deploy/images/vexpress-qemu/u-boot.elf .
-
-                docker build -t mendersoftware/mender-client-qemu:pr --build-arg VEXPRESS_IMAGE=core-image-full-cmdline-vexpress-qemu.sdimg --build-arg UBOOT_ELF=u-boot.elf .
-            fi
-
-            $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-client-qemu --version pr
         fi
     )
 }

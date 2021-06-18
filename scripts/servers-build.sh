@@ -50,6 +50,11 @@ build_servers_repositories() {
                 :
                 ;;
 
+            mender-monitor-qemu-commercial)
+                # Built in yocto-build-and-test.sh::build_and_test_client
+                :
+                ;;
+
             api-gateway)
                 cd $git
                 docker build -t $docker_url:pr .

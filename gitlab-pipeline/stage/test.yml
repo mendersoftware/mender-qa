@@ -462,11 +462,11 @@ test:backend-integration:open_source:
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
     # Load all docker images except client
-    - for repo in `integration/extra/release_tool.py -l docker`; do
-        if ! echo $repo | grep -q mender-client; then
-          docker load -i stage-artifacts/${repo}.tar;
-        fi;
-      done
+    - for image in $(integration/extra/release_tool.py -l docker); do
+    -   if ! echo $image | egrep -q 'mender-client|mender-monitor'; then
+    -     docker load -i stage-artifacts/${image}.tar
+    -   fi
+    - done
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
@@ -621,30 +621,30 @@ test:backend-integration:enterprise:
     - pip install -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
 
     # Load all docker images, and the client images depending on $BUILD_CLIENT
-    - for repo in `integration/extra/release_tool.py -l docker`; do
-    -   if echo $repo | grep -q mender-client; then
+    - for image in $(integration/extra/release_tool.py -l docker); do
+    -   if echo $image | egrep -q 'mender-client|mender-monitor'; then
     -     if [ "${BUILD_CLIENT}" = "true" ]; then
-    -       docker load -i stage-artifacts/${repo}.tar;
+    -       docker load -i stage-artifacts/${image}.tar
     -     else
     -       continue
     -     fi
     -   fi
-    -   docker load -i stage-artifacts/${repo}.tar;
+    -   docker load -i stage-artifacts/${image}.tar
     - done
 
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
-    - for repo in `integration/extra/release_tool.py -l docker`; do
-    -   if echo $repo | grep -q mender-client; then
-    -       if [ "${BUILD_CLIENT}" = "true" ]; then
-    -         integration/extra/release_tool.py --set-version-of $repo --version pr;
-    -       else
-    -         continue
-    -       fi
+    - for image in $(integration/extra/release_tool.py -l docker); do
+    -   if echo $image | egrep -q 'mender-client|mender-monitor'; then
+    -     if [ "${BUILD_CLIENT}" = "true" ]; then
+    -       integration/extra/release_tool.py --set-version-of $image --version pr
+    -     else
+    -       continue
+    -     fi
     -   fi
-    -   integration/extra/release_tool.py --set-version-of $repo --version pr;
+    -   integration/extra/release_tool.py --set-version-of $image --version pr
     - done
     # Other dependencies
     - install stage-artifacts/mender-artifact-linux /usr/local/bin/mender-artifact
