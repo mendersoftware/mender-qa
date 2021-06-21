@@ -19,7 +19,7 @@ build:client:qemu:
     - docker save mendersoftware/mender-client-qemu:pr -o stage-artifacts/mender-client-qemu.tar
     - docker save mendersoftware/mender-client-qemu-rofs:pr -o stage-artifacts/mender-client-qemu-rofs.tar
     - if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
-    -   docker save mendersoftware/mender-monitor-qemu-commercial:pr -o stage-artifacts/mender-monitor-qemu-commercial.tar
+    -   docker save registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr -o stage-artifacts/mender-monitor-qemu-commercial.tar
     - fi
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg

@@ -406,7 +406,7 @@ build_and_test_client() {
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -i mender-monitor-image-full-cmdline \
                     $machine_name \
-                    -t mendersoftware/mender-monitor-qemu-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr
                 # It's ok if the next step fails, it just means we are
                 # testing a version of integration that neither has a monitor
                 # image, nor any tests for it.
