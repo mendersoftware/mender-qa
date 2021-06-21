@@ -29,6 +29,15 @@ def generate(integration_repo, args):
         check=True,
     )
 
+    # Filter out saas-* versions
+    # Historically, there have been some saas- releases using "master" of independent components
+    # (namely: mender-connect), but we certainly don't wont these versions in the generated jobs
+    integration_versions_list = [
+        ver
+        for ver in integration_versions.stdout.decode("utf-8").splitlines()
+        if not ver.startswith("saas-")
+    ]
+
     stage_name = "trigger"
     document = {
         "stages": [stage_name],
@@ -65,7 +74,7 @@ def generate(integration_repo, args):
     }
 
     repos = {}
-    for integ_version in integration_versions.stdout.decode("utf-8").splitlines():
+    for integ_version in integration_versions_list:
         all_repos = subprocess.run(
             [release_tool, "--list", "git"], capture_output=True, check=True
         )
