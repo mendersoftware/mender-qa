@@ -17,17 +17,27 @@ def initWorkspace():
 
 def generate(integration_repo, args):
     release_tool = os.path.join(integration_repo, "extra", "release_tool.py")
+    release_tool_args = [
+        release_tool,
+        "--integration-versions-including",
+        args.trigger,
+        "--version",
+        args.version,
+    ]
+    if args.feature_branches:
+        release_tool_args.append("--feature-branches")
     integration_versions = subprocess.run(
-        [
-            release_tool,
-            "--integration-versions-including",
-            args.trigger,
-            "--version",
-            args.version,
-        ],
-        capture_output=True,
-        check=True,
+        release_tool_args, capture_output=True, check=True,
     )
+
+    # Filter out saas-* versions
+    # Historically, there have been some saas- releases using "master" of independent components
+    # (namely: mender-connect), but we certainly don't wont these versions in the generated jobs
+    integration_versions_list = [
+        ver
+        for ver in integration_versions.stdout.decode("utf-8").splitlines()
+        if not ver.startswith("saas-")
+    ]
 
     stage_name = "trigger"
     document = {
@@ -65,7 +75,7 @@ def generate(integration_repo, args):
     }
 
     repos = {}
-    for integ_version in integration_versions.stdout.decode("utf-8").splitlines():
+    for integ_version in integration_versions_list:
         all_repos = subprocess.run(
             [release_tool, "--list", "git"], capture_output=True, check=True
         )
@@ -77,15 +87,12 @@ def generate(integration_repo, args):
                     repo,
                     "--in-integration-version",
                     integ_version,
-                    "|",
-                    "cut",
-                    "-d/",
-                    "-f2",
                 ],
                 capture_output=True,
+                check=True,
             )
             repos[repo.replace("-", "_").upper()] = (
-                repo_version.stdout.decode("utf-8") or "master"
+                repo_version.stdout.decode("utf-8").rstrip().split("/")[1]
             )
 
         repos["META_MENDER"] = args.meta_mender_version
@@ -103,6 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--workspace", default=None)
     parser.add_argument("--version", default="master")
     parser.add_argument("--meta-mender-version", default="master")
+    parser.add_argument("--feature-branches", action="store_true")
     parser.add_argument("--filename", default="gitlab-ci-client-qemu-publish-job.yml")
     args = parser.parse_args()
     if args.workspace:
