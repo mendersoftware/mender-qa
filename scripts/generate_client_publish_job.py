@@ -17,16 +17,17 @@ def initWorkspace():
 
 def generate(integration_repo, args):
     release_tool = os.path.join(integration_repo, "extra", "release_tool.py")
+    release_tool_args = [
+        release_tool,
+        "--integration-versions-including",
+        args.trigger,
+        "--version",
+        args.version,
+    ]
+    if args.feature_branches:
+        release_tool_args.append("--feature-branches")
     integration_versions = subprocess.run(
-        [
-            release_tool,
-            "--integration-versions-including",
-            args.trigger,
-            "--version",
-            args.version,
-        ],
-        capture_output=True,
-        check=True,
+        release_tool_args, capture_output=True, check=True,
     )
 
     # Filter out saas-* versions
@@ -109,6 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--workspace", default=None)
     parser.add_argument("--version", default="master")
     parser.add_argument("--meta-mender-version", default="master")
+    parser.add_argument("--feature-branches", action="store_true")
     parser.add_argument("--filename", default="gitlab-ci-client-qemu-publish-job.yml")
     args = parser.parse_args()
     if args.workspace:
