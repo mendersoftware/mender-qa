@@ -77,15 +77,12 @@ def generate(integration_repo, args):
                     repo,
                     "--in-integration-version",
                     integ_version,
-                    "|",
-                    "cut",
-                    "-d/",
-                    "-f2",
                 ],
                 capture_output=True,
+                check=True,
             )
             repos[repo.replace("-", "_").upper()] = (
-                repo_version.stdout.decode("utf-8") or "master"
+                repo_version.stdout.decode("utf-8").rstrip().split("/")[1]
             )
 
         repos["META_MENDER"] = args.meta_mender_version
