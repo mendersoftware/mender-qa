@@ -39,16 +39,24 @@ def generate(integration_repo, args):
         if not ver.startswith("saas-")
     ]
 
-    all_repos = subprocess.run(
-        [release_tool, "--list", "git"], capture_output=True, check=True
-    )
-
     stage_name = "trigger"
     document = {
         "stages": [stage_name],
     }
 
     for integ_version in integration_versions_list:
+
+        subprocess.run(
+            ["git", "checkout", integ_version],
+            capture_output=True,
+            check=True,
+            cwd=integration_repo,
+        )
+
+        all_repos = subprocess.run(
+            [release_tool, "--list", "git"], capture_output=True, check=True
+        )
+
         job_key = "trigger:mender-qa:" + integ_version.split("/")[1]
         document[job_key] = {
             "stage": stage_name,
