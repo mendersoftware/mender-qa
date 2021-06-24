@@ -42,7 +42,23 @@ def generate(integration_repo, args):
     stage_name = "trigger"
     document = {
         "stages": [stage_name],
-        "trigger:mender-qa": {
+    }
+
+    for integ_version in integration_versions_list:
+
+        subprocess.run(
+            ["git", "checkout", integ_version],
+            capture_output=True,
+            check=True,
+            cwd=integration_repo,
+        )
+
+        all_repos = subprocess.run(
+            [release_tool, "--list", "git"], capture_output=True, check=True
+        )
+
+        job_key = "trigger:mender-qa:" + integ_version.split("/")[1]
+        document[job_key] = {
             "stage": stage_name,
             "trigger": {
                 "project": "Northern.tech/Mender/mender-qa",
@@ -71,14 +87,9 @@ def generate(integration_repo, args):
                 "TEST_RASPBERRYPI3": "false",
                 "RUN_INTEGRATION_TESTS": "false",
             },
-        },
-    }
+        }
 
-    repos = {}
-    for integ_version in integration_versions_list:
-        all_repos = subprocess.run(
-            [release_tool, "--list", "git"], capture_output=True, check=True
-        )
+        repos = {}
         for repo in all_repos.stdout.decode("utf-8").splitlines():
             repo_version = subprocess.run(
                 [
@@ -91,14 +102,19 @@ def generate(integration_repo, args):
                 capture_output=True,
                 check=True,
             )
-            repos[repo.replace("-", "_").upper()] = (
-                repo_version.stdout.decode("utf-8").rstrip().split("/")[1]
-            )
+
+            # For origin/master, the tool returns origin/master, but for
+            # releases like origin/2.7.x, the tool returns 2.7.x (?)
+            repo_version = repo_version.stdout.decode("utf-8").rstrip()
+            if len(repo_version.split("/")) > 1:
+                repo_version = repo_version.split("/")[1]
+
+            repos[repo.replace("-", "_").upper()] = repo_version
 
         repos["META_MENDER"] = args.meta_mender_version
 
         for repo, version in repos.items():
-            document["trigger:mender-qa"]["variables"][f"{repo}_REV"] = version
+            document[job_key]["variables"][f"{repo}_REV"] = version
 
     with open(args.filename, "w") as f:
         yaml.dump(document, f)
