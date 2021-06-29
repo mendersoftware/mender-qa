@@ -71,7 +71,7 @@ release_docker_images:automatic:
     - test:acceptance:raspberrypi4
   before_script:
     # Install dependencies
-    - apt update && apt install -yyq awscli git python3 python3-pip
+    - apt update && apt install -yyq awscli git wget python3 python3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
@@ -122,7 +122,7 @@ release_board_artifacts:automatic:
     - build:mender-artifact
   before_script:
     # Install dependencies
-    - apt update && apt install -yyq awscli git python3 python3-pip
+    - apt update && apt install -yyq awscli git wget python3 python3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
