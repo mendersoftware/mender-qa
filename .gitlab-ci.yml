@@ -102,9 +102,9 @@ include:
   - local: '/gitlab-pipeline/stage/pre.yml'
   - local: '/gitlab-pipeline/stage/init.yml'
   - local: '/gitlab-pipeline/stage/build.yml'
+  - local: '/gitlab-pipeline/stage/build-mender-convert.yml'
   - local: '/gitlab-pipeline/stage/test.yml'
   - local: '/gitlab-pipeline/stage/publish.yml'
-  - local: '/gitlab-pipeline/stage/trigger.yml'
   - local: '/gitlab-pipeline/stage/release.yml'
   - local: '/gitlab-pipeline/stage/post.yml'
 
@@ -115,8 +115,8 @@ stages:
   - .pre
   - init
   - build
+  - build:mender-convert
   - test
   - publish
-  - trigger
   - release
   - .post
