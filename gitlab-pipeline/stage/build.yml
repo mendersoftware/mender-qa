@@ -252,7 +252,7 @@ build:mender-artifact:
 build:mender-dist-packages:
   stage: build
   rules:
-    - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
+    - if: '$PUBLISH_RELEASE_AUTOMATIC == "true"'
   variables:
     # Unset DOCKER_ variables, the pipeline will execute on shared runners
     DOCKER_HOST: "tcp://docker:2375"

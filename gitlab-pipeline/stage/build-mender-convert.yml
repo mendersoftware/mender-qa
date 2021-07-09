@@ -1,7 +1,7 @@
 build:mender-convert:
   stage: build:mender-convert
   rules:
-    - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
+    - if: '$PUBLISH_RELEASE_AUTOMATIC == "true"'
     # the following is to prevent an endless loop of qa pipelines caused by downstream pipelines
     - if: '$CI_PIPELINE_SOURCE == "pipeline"'
       when: never
