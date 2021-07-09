@@ -38,6 +38,9 @@ variables:
   MENDER_BINARY_DELTA_VERSION: "latest"
   MENDER_CONFIGURE_MODULE_VERSION: "latest"
 
+  # Other versions
+  MENDER_CONVERT_REV: "master"
+
   # Build stage
   BUILD_CLIENT: "true"
   BUILD_SERVERS: "true"

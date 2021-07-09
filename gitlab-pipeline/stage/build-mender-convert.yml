@@ -15,5 +15,5 @@ build:mender-convert:
     #MENDER_ADDON_CONFIGURE_VERSION
   trigger:
     project: Northern.tech/Mender/mender-convert
-    branch: master
+    branch: $MENDER_CONVERT_REV
     strategy: depend
