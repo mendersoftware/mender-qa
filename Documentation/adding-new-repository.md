@@ -104,6 +104,8 @@ Set a weekly schedule to build master pipeline for every Tuesday evening, at 9 P
   * Add repo to `GIT_TO_BUILDPARAM_MAP`
   * For backend repositories, add repo to `BACKEND_SERVICES_OPEN`, `BACKEND_SERVICES_ENT` or `BACKEND_SERVICES_OPEN_ENT`.
   * If new docker-compose file was added, add the file accordingly in `filter_docker_compose_files_list`.
+4. Modify `backend-tests/tests/test_api_endpoints.py`
+  * Add the repo to the `REPOS` class variables for the open source and/or enterprise flavors
 
 ## mender-qa
 
