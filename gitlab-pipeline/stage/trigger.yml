@@ -12,7 +12,10 @@ trigger:mender-convert:
     MENDER_ARTIFACT_VERSION: $MENDER_ARTIFACT_REV
     MENDER_CLIENT_VERSION: $MENDER_REV
     MENDER_ADDON_CONNECT_VERSION: $MENDER_CONNECT_REV
-    MENDER_ADDON_CONFIGURE_VERSION: $DEVICECONFIG_REV
+    # Obs! mender-configure-module is not part of the release (from release_tool eyes)
+    # so it cannot be passed downstream to mender-convert.
+    # It is not installed in our pre-converted images, so it doesn't really matter
+    #MENDER_ADDON_CONFIGURE_VERSION
   trigger:
     project: Northern.tech/Mender/mender-convert
     branch: master
