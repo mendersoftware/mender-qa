@@ -6,7 +6,7 @@ build:mender-convert:
     - if: '$CI_PIPELINE_SOURCE == "pipeline"'
       when: never
   variables:
-    MENDER_ARTIFACT_VERSION: $MENDER_ARTIFACT_REV
+    MENDER_ARTIFACT_VERSION: $MENDER_CONVERT_MENDER_ARTIFACT_REV
     MENDER_CLIENT_VERSION: $MENDER_REV
     MENDER_ADDON_CONNECT_VERSION: $MENDER_CONNECT_REV
     # Obs! mender-configure-module is not part of the release (from release_tool eyes)

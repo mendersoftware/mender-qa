@@ -40,6 +40,7 @@ variables:
 
   # Other versions
   MENDER_CONVERT_REV: "master"
+  MENDER_CONVERT_MENDER_ARTIFACT_REV: "master"
 
   # Build stage
   BUILD_CLIENT: "true"
