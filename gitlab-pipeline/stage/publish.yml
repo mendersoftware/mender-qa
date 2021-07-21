@@ -145,7 +145,9 @@ publish:acceptance:raspberrypi4:
 publish:mender-dist-packages:
   stage: publish
   rules:
-    - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
+    # Disabled for the time being. See QA-322
+    - when: never
+    # - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
   variables:
     # Unset DOCKER_ variables, the pipeline will execute on shared runners
     DOCKER_HOST: "tcp://docker:2375"
