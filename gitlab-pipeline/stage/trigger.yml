@@ -1,10 +1,12 @@
 .trigger_template:
   stage: trigger
   rules:
-    - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
-    # the following is to prevent an endless loop of qa pipelines caused by downstream pipelines
-    - if: '$CI_PIPELINE_SOURCE == "pipeline"'
-      when: never
+    # Disabled for the time being. See QA-322
+    - when: never
+    # - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
+    # # the following is to prevent an endless loop of qa pipelines caused by downstream pipelines
+    # - if: '$CI_PIPELINE_SOURCE == "pipeline"'
+    #   when: never
 
 trigger:mender-convert:
   extends: .trigger_template
