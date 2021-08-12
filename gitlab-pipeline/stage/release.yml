@@ -178,6 +178,44 @@ release_binary_tools:automatic:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
   extends: .template_release_binary_tools
 
+.template_release_mender-monitor:
+  stage: release
+  image: debian:buster
+  variables:
+    S3_BUCKET_NAME: "mender-binaries"
+    S3_BUCKET_PATH: "mender-monitor/yocto"
+  dependencies:
+    - init:workspace
+    - init:mender-monitor-package
+  before_script:
+    # Install dependencies
+    - apt update && apt install -yyq awscli git wget python3 python3-pip
+    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
+    - pip3 install -r requirements.txt
+    # Restore workspace from init stage
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz stage-artifacts /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/stage-artifacts .
+  script:
+    - mender_monitor_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-monitor --in-integration-version $INTEGRATION_REV)
+    - echo "=== mender-monitor $mender_monitor_version ==="
+    - echo "Publishing $mender_monitor_version version to s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_monitor_version/"
+    - aws s3 cp stage-artifacts/monitor-client-*.tar.gz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_monitor_version/
+
+release_mender-monitor:manual:
+  when: manual
+  extends: .template_release_mender-monitor
+
+release_mender-monitor:automatic:
+  only:
+    variables:
+      - $PUBLISH_RELEASE_AUTOMATIC == "true"
+  extends: .template_release_mender-monitor
+
 # This job allows mender repo to publish the related Docker client images on
 # merges to master or release branches.
 # Do not confuse with release_docker_images which publishes all images

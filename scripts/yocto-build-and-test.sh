@@ -123,11 +123,14 @@ FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "$WORKSPACE/mender-binary-delt
 PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
 
+    local mender_monitor_version=$(tar -xf $WORKSPACE/stage-artifacts/mender-monitor-*.tar.gz ./mender-monitor/.version -O | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
+    if [ -z "$mender_monitor_version" ]; then
+        mender_monitor_version="master-git"
+    fi
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST += "commercial_mender-monitor"
-FILESEXTRAPATHS_prepend_pn-mender-monitor := "$WORKSPACE:"
-SRC_URI_pn-mender-monitor = "file://monitor-client/"
-PREFERRED_VERSION_pn-mender-monitor = "master-git"
+SRC_URI_pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/mender-monitor-*.tar.gz"
+PREFERRED_VERSION_pn-mender-monitor = "$mender_monitor_version"
 EOF
 
     if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then

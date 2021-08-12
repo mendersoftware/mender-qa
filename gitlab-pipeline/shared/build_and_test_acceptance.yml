@@ -3,6 +3,7 @@
   image: mendersoftware/mender-test-containers:mender-client-acceptance-testing
   needs:
     - init:workspace
+    - init:mender-monitor-package
   tags:
     - mender-qa-slave-highcpu
   before_script:
@@ -28,11 +29,12 @@
   script:
     # Traps only work if executed in a sub shell.
     - "("
-    - mv workspace.tar.gz /tmp
+    - mv workspace.tar.gz stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
     - tar -xf /tmp/workspace.tar.gz
+    - mv /tmp/stage-artifacts .
 
     - function handle_exit() {
       if test -n "$ONLY_BUILD"; then
