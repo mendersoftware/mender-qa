@@ -33,7 +33,7 @@ coveralls:finish-build:
     COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
   image: appropriate/curl
   dependencies:
-    - init_workspace
+    - init:workspace
   before_script:
     - apk --update add git
     # Get mender source

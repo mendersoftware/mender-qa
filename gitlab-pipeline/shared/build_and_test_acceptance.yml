@@ -2,7 +2,7 @@
 .template_build_test_acc:
   image: mendersoftware/mender-test-containers:mender-client-acceptance-testing
   needs:
-    - init_workspace
+    - init:workspace
   tags:
     - mender-qa-slave-highcpu
   before_script:

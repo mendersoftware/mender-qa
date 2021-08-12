@@ -8,7 +8,7 @@
   services:
     - docker:19.03-dind
   dependencies:
-    - init_workspace
+    - init:workspace
     - build:servers
     - build:client:qemu
     - build:client:docker
@@ -59,7 +59,7 @@ release_docker_images:automatic:
   stage: release
   image: debian:buster
   dependencies:
-    - init_workspace
+    - init:workspace
     - test:acceptance:qemux86_64:uefi_grub
     - test:acceptance:vexpress_qemu
     - test:acceptance:qemux86_64:bios_grub
@@ -117,7 +117,7 @@ release_board_artifacts:automatic:
   stage: release
   image: debian:buster
   dependencies:
-    - init_workspace
+    - init:workspace
     - build:mender-cli
     - build:mender-artifact
   before_script:
@@ -191,7 +191,7 @@ release_docker_images:automatic:client-only:
   services:
     - docker:19.03-dind
   dependencies:
-    - init_workspace
+    - init:workspace
     - build:client:qemu
     - build:client:docker
   before_script:

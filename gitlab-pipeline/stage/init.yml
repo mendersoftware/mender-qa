@@ -1,5 +1,5 @@
 
-init_workspace:
+init:workspace:
   stage: init
   image: alpine:3.12
   script:
