@@ -173,6 +173,11 @@ Add badge to `index.html`
 
 ref https://gitlab.com/Northern.tech/Mender/mender-build-status/-/blob/master/public/index.html
 
+## ME-proxy setup
+
+Update regex in [nginx config](https://github.com/mendersoftware/sre-tools/blob/41e00a1d37a772ebfb3ef3e21345184fae712c19/me-proxy/nginx.conf#L15) by adding a new image name.
+
 ## Peer review
 
 Once all the above is done, ping the team to get a full peer review of all the settings.
+
