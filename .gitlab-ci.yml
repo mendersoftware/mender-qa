@@ -102,6 +102,7 @@ include:
   - local: '/gitlab-pipeline/shared/build_and_test_acceptance.yml'
   - local: '/gitlab-pipeline/stage/pre.yml'
   - local: '/gitlab-pipeline/stage/init.yml'
+  - local: '/gitlab-pipeline/stage/init-mender-monitor-package.yml'
   - local: '/gitlab-pipeline/stage/build.yml'
   - local: '/gitlab-pipeline/stage/test.yml'
   - local: '/gitlab-pipeline/stage/publish.yml'

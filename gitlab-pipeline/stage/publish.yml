@@ -9,7 +9,7 @@
       - $NIGHTLY_BUILD == "true"
   stage: publish
   needs:
-    - init_workspace
+    - init:workspace
   image: golang:1.15-alpine3.12
   before_script:
     - apk --update add git
@@ -49,7 +49,7 @@ publish:acceptance:qemux86_64:uefi_grub:
     variables:
       - $TEST_QEMUX86_64_UEFI_GRUB != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:qemux86_64:uefi_grub
   variables:
     JOB_BASE_NAME: qemux86_64_uefi_grub
@@ -60,7 +60,7 @@ publish:acceptance:vexpress_qemu:
     variables:
       - $TEST_VEXPRESS_QEMU != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:vexpress_qemu
   variables:
     JOB_BASE_NAME: vexpress_qemu
@@ -71,7 +71,7 @@ publish:acceptance:qemux86_64:bios_grub:
     variables:
       - $TEST_QEMUX86_64_BIOS_GRUB != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:qemux86_64:bios_grub
   variables:
     JOB_BASE_NAME: qemux86_64_bios_grub
@@ -82,7 +82,7 @@ publish:acceptance:qemux86_64:bios_grub_gpt:
     variables:
       - $TEST_QEMUX86_64_BIOS_GRUB_GPT != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:qemux86_64:bios_grub_gpt
   variables:
     JOB_BASE_NAME: qemux86_64_bios_grub_gpt
@@ -93,7 +93,7 @@ publish:acceptance:vexpress_qemu:uboot_uefi_grub:
     variables:
       - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:vexpress_qemu:uboot_uefi_grub
   variables:
     JOB_BASE_NAME: vexpress_qemu_uboot_uefi_grub
@@ -104,7 +104,7 @@ publish:acceptance:vexpress_qemu_flash:
     variables:
       - $TEST_VEXPRESS_QEMU_FLASH != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:vexpress_qemu_flash
   variables:
     JOB_BASE_NAME: vexpress_qemu_flash
@@ -115,7 +115,7 @@ publish:acceptance:beagleboneblack:
     variables:
       - $TEST_BEAGLEBONEBLACK != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:beagleboneblack
   variables:
     JOB_BASE_NAME: beagleboneblack
@@ -126,7 +126,7 @@ publish:acceptance:raspberrypi3:
     variables:
       - $TEST_RASPBERRYPI3 != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:raspberrypi3
   variables:
     JOB_BASE_NAME: raspberrypi3
@@ -137,7 +137,7 @@ publish:acceptance:raspberrypi4:
     variables:
       - $TEST_RASPBERRYPI4 != "true"
   needs:
-    - init_workspace
+    - init:workspace
     - test:acceptance:raspberrypi4
   variables:
     JOB_BASE_NAME: raspberrypi4

@@ -440,7 +440,7 @@ test:backend-integration:open_source:
   tags:
     - mender-qa-slave-highcpu
   needs:
-    - init_workspace
+    - init:workspace
     - build:servers
     - build:mender-artifact
   before_script:
@@ -746,7 +746,7 @@ test:integration:source_client:open_source:
     variables:
       - ( $RUN_INTEGRATION_TESTS == "true" && $BUILD_CLIENT == "true" )
   needs:
-    - init_workspace
+    - init:workspace
     - build:servers
     - build:client:qemu
     - build:client:docker
@@ -769,7 +769,7 @@ test:integration:prebuilt_client:open_source:
     variables:
       - $BUILD_CLIENT == "true"
   needs:
-    - init_workspace
+    - init:workspace
     - build:servers
     - build:mender-artifact
     - build:mender-cli

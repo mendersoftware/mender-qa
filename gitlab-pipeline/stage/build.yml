@@ -40,7 +40,7 @@ build:client:docker:
     variables:
       - $BUILD_CLIENT == "true"
   needs:
-    - init_workspace
+    - init:workspace
   image: docker:19.03
   services:
     - docker:dind
@@ -98,7 +98,7 @@ build:servers:
       - $BUILD_SERVERS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   needs:
-    - init_workspace
+    - init:workspace
   image: docker
   services:
     - docker:19.03-dind
@@ -152,7 +152,7 @@ build:mender-cli:
       - $RUN_INTEGRATION_TESTS == "true"
   image: golang:1.15-alpine3.12
   needs:
-    - init_workspace
+    - init:workspace
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -208,7 +208,7 @@ build:mender-artifact:
   tags:
     - docker
   needs:
-    - init_workspace
+    - init:workspace
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
