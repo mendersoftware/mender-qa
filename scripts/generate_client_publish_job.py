@@ -7,10 +7,8 @@ import yaml
 
 def initWorkspace():
     path = tempfile.mkdtemp()
-    subprocess.run(
+    subprocess.check_output(
         ["git", "clone", "https://github.com/mendersoftware/integration.git", path],
-        capture_output=True,
-        check=True,
     )
     return path
 
@@ -26,8 +24,8 @@ def generate(integration_repo, args):
     ]
     if args.feature_branches:
         release_tool_args.append("--feature-branches")
-    integration_versions = subprocess.run(
-        release_tool_args, capture_output=True, check=True,
+    integration_versions = subprocess.check_output(
+        release_tool_args,
     )
 
     # Filter out saas-* versions
@@ -35,7 +33,7 @@ def generate(integration_repo, args):
     # (namely: mender-connect), but we certainly don't wont these versions in the generated jobs
     integration_versions_list = [
         ver
-        for ver in integration_versions.stdout.decode("utf-8").splitlines()
+        for ver in integration_versions.decode("utf-8").splitlines()
         if not ver.startswith("saas-")
     ]
 
@@ -46,15 +44,13 @@ def generate(integration_repo, args):
 
     for integ_version in integration_versions_list:
 
-        subprocess.run(
+        subprocess.check_output(
             ["git", "checkout", integ_version],
-            capture_output=True,
-            check=True,
             cwd=integration_repo,
         )
 
-        all_repos = subprocess.run(
-            [release_tool, "--list", "git"], capture_output=True, check=True
+        all_repos = subprocess.check_output(
+            [release_tool, "--list", "git"]
         )
 
         job_key = "trigger:mender-qa:" + integ_version.split("/")[1]
@@ -90,8 +86,8 @@ def generate(integration_repo, args):
         }
 
         repos = {}
-        for repo in all_repos.stdout.decode("utf-8").splitlines():
-            repo_version = subprocess.run(
+        for repo in all_repos.decode("utf-8").splitlines():
+            repo_version = subprocess.check_output(
                 [
                     release_tool,
                     "--version-of",
@@ -99,13 +95,11 @@ def generate(integration_repo, args):
                     "--in-integration-version",
                     integ_version,
                 ],
-                capture_output=True,
-                check=True,
             )
 
             # For origin/master, the tool returns origin/master, but for
             # releases like origin/2.7.x, the tool returns 2.7.x (?)
-            repo_version = repo_version.stdout.decode("utf-8").rstrip()
+            repo_version = repo_version.decode("utf-8").rstrip()
             if len(repo_version.split("/")) > 1:
                 repo_version = repo_version.split("/")[1]
 
