@@ -2,6 +2,7 @@
 
 set -e -x -E
 
+export S3_BUCKET_NAME=${S3_BUCKET_NAME:-"mender-binaries"}
 
 echo "WORKSPACE=$WORKSPACE"
 
@@ -257,7 +258,7 @@ init_environment() {
             RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*$MENDER_BINARY_DELTA_VERSION*.bb)
         fi
         mkdir -p $WORKSPACE/mender-binary-delta
-        s3cmd get --recursive s3://$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
+        s3cmd get --recursive s3://${S3_BUCKET_NAME}/$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
         chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta
         chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta-generator
         export PATH=$PATH:$WORKSPACE/mender-binary-delta/x86_64
