@@ -1,5 +1,21 @@
+#!/usr/bin/python3
+# Copyright 2021 Northern.tech AS
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
 import argparse
 import os, subprocess
+import re
 import tempfile
 import shutil
 import yaml
@@ -7,10 +23,8 @@ import yaml
 
 def initWorkspace():
     path = tempfile.mkdtemp()
-    subprocess.run(
+    subprocess.check_output(
         ["git", "clone", "https://github.com/mendersoftware/integration.git", path],
-        capture_output=True,
-        check=True,
     )
     return path
 
@@ -26,8 +40,8 @@ def generate(integration_repo, args):
     ]
     if args.feature_branches:
         release_tool_args.append("--feature-branches")
-    integration_versions = subprocess.run(
-        release_tool_args, capture_output=True, check=True,
+    integration_versions = subprocess.check_output(
+        release_tool_args,
     )
 
     # Filter out saas-* versions
@@ -35,7 +49,7 @@ def generate(integration_repo, args):
     # (namely: mender-connect), but we certainly don't wont these versions in the generated jobs
     integration_versions_list = [
         ver
-        for ver in integration_versions.stdout.decode("utf-8").splitlines()
+        for ver in integration_versions.decode("utf-8").splitlines()
         if not ver.startswith("saas-")
     ]
 
@@ -46,18 +60,49 @@ def generate(integration_repo, args):
 
     for integ_version in integration_versions_list:
 
-        subprocess.run(
+        subprocess.check_output(
             ["git", "checkout", integ_version],
-            capture_output=True,
-            check=True,
             cwd=integration_repo,
         )
 
-        all_repos = subprocess.run(
-            [release_tool, "--list", "git"], capture_output=True, check=True
+        all_repos = subprocess.check_output(
+            [release_tool, "--list", "git"]
         )
 
         job_key = "trigger:mender-qa:" + integ_version.split("/")[1]
+
+        repos = {}
+        any_tag = False
+        for repo in all_repos.decode("utf-8").splitlines():
+            repo_version = subprocess.check_output(
+                [
+                    release_tool,
+                    "--version-of",
+                    repo,
+                    "--in-integration-version",
+                    integ_version,
+                ],
+            )
+
+            # For origin/master, the tool returns origin/master, but for
+            # releases like origin/2.7.x, the tool returns 2.7.x (?)
+            repo_version = repo_version.decode("utf-8").rstrip()
+            if len(repo_version.split("/")) > 1:
+                repo_version = repo_version.split("/")[1]
+
+            repos[repo.replace("-", "_").upper()] = repo_version
+
+            # Do not allow any job which will push build or final tags. These
+            # should never be done outside of manual releases.
+            if re.match("^[0-9]+\.[0-9]+\.[0-9]+(-build[0-9]+)?$", repo_version) is not None:
+                any_tag = True
+                break
+
+        if any_tag:
+            continue
+
+        repos["META_MENDER"] = args.meta_mender_version
+
         document[job_key] = {
             "stage": stage_name,
             "trigger": {
@@ -88,31 +133,6 @@ def generate(integration_repo, args):
                 "RUN_INTEGRATION_TESTS": "false",
             },
         }
-
-        repos = {}
-        for repo in all_repos.stdout.decode("utf-8").splitlines():
-            repo_version = subprocess.run(
-                [
-                    release_tool,
-                    "--version-of",
-                    repo,
-                    "--in-integration-version",
-                    integ_version,
-                ],
-                capture_output=True,
-                check=True,
-            )
-
-            # For origin/master, the tool returns origin/master, but for
-            # releases like origin/2.7.x, the tool returns 2.7.x (?)
-            repo_version = repo_version.stdout.decode("utf-8").rstrip()
-            if len(repo_version.split("/")) > 1:
-                repo_version = repo_version.split("/")[1]
-
-            repos[repo.replace("-", "_").upper()] = repo_version
-
-        repos["META_MENDER"] = args.meta_mender_version
-
         for repo, version in repos.items():
             document[job_key]["variables"][f"{repo}_REV"] = version
 
