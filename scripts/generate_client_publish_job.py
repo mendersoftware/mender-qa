@@ -15,6 +15,7 @@
 
 import argparse
 import os, subprocess
+import re
 import tempfile
 import shutil
 import yaml
@@ -69,6 +70,39 @@ def generate(integration_repo, args):
         )
 
         job_key = "trigger:mender-qa:" + integ_version.split("/")[1]
+
+        repos = {}
+        any_tag = False
+        for repo in all_repos.decode("utf-8").splitlines():
+            repo_version = subprocess.check_output(
+                [
+                    release_tool,
+                    "--version-of",
+                    repo,
+                    "--in-integration-version",
+                    integ_version,
+                ],
+            )
+
+            # For origin/master, the tool returns origin/master, but for
+            # releases like origin/2.7.x, the tool returns 2.7.x (?)
+            repo_version = repo_version.decode("utf-8").rstrip()
+            if len(repo_version.split("/")) > 1:
+                repo_version = repo_version.split("/")[1]
+
+            repos[repo.replace("-", "_").upper()] = repo_version
+
+            # Do not allow any job which will push build or final tags. These
+            # should never be done outside of manual releases.
+            if re.match("^[0-9]+\.[0-9]+\.[0-9]+(-build[0-9]+)?$", repo_version) is not None:
+                any_tag = True
+                break
+
+        if any_tag:
+            continue
+
+        repos["META_MENDER"] = args.meta_mender_version
+
         document[job_key] = {
             "stage": stage_name,
             "trigger": {
@@ -99,29 +133,6 @@ def generate(integration_repo, args):
                 "RUN_INTEGRATION_TESTS": "false",
             },
         }
-
-        repos = {}
-        for repo in all_repos.decode("utf-8").splitlines():
-            repo_version = subprocess.check_output(
-                [
-                    release_tool,
-                    "--version-of",
-                    repo,
-                    "--in-integration-version",
-                    integ_version,
-                ],
-            )
-
-            # For origin/master, the tool returns origin/master, but for
-            # releases like origin/2.7.x, the tool returns 2.7.x (?)
-            repo_version = repo_version.decode("utf-8").rstrip()
-            if len(repo_version.split("/")) > 1:
-                repo_version = repo_version.split("/")[1]
-
-            repos[repo.replace("-", "_").upper()] = repo_version
-
-        repos["META_MENDER"] = args.meta_mender_version
-
         for repo, version in repos.items():
             document[job_key]["variables"][f"{repo}_REV"] = version
 
