@@ -201,7 +201,7 @@ release_binary_tools:automatic:
     - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/stage-artifacts .
   script:
-    - mender_monitor_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-monitor --in-integration-version $INTEGRATION_REV)
+    - mender_monitor_version=$($WORKSPACE/integration/extra/release_tool.py --version-of monitor-client --in-integration-version $INTEGRATION_REV)
     - echo "=== mender-monitor $mender_monitor_version ==="
     - echo "Publishing $mender_monitor_version version to s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_monitor_version/"
     - aws s3 cp stage-artifacts/monitor-client-*.tar.gz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_monitor_version/
