@@ -96,7 +96,6 @@ copy_build_conf() {
 }
 
 prepare_build_config() {
-    local i
     local machine
     machine=$1
     local board
@@ -126,16 +125,12 @@ PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
 
     local mender_monitor_version=$(tar -Oxf $WORKSPACE/stage-artifacts/mender-monitor-*.tar.gz ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
-    for i in $WORKSPACE/stage-artifacts/mender-monitor-*.tar.gz; do
-        tar -C $WORKSPACE/stage-artifacts -xvzf $i
-    done
     if [ -z "$mender_monitor_version" ]; then
-        mender_monitor_version="master-git"
+        mender_monitor_version="master-git%"
     fi
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST += "commercial_mender-monitor"
-FILESEXTRAPATHS_prepend_pn-mender-monitor := "/$WORKSPACE/stage-artifacts/:"
-SRC_URI_pn-mender-monitor = "file://mender-monitor/"
+SRC_URI_pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/mender-monitor-*.tar.gz"
 PREFERRED_VERSION_pn-mender-monitor = "$mender_monitor_version"
 EOF
 
