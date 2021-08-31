@@ -5,9 +5,6 @@ set -e -x -E
 
 echo "WORKSPACE=$WORKSPACE"
 
-# Verify that version references are up to date.
-$WORKSPACE/integration/extra/release_tool.py --verify-integration-references
-
 build_servers_repositories() {
     # Use release tool to query for available docker names.
     for docker in $($WORKSPACE/integration/extra/release_tool.py --list docker ); do (

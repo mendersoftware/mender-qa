@@ -229,9 +229,6 @@ EOF
 }
 
 init_environment() {
-    # Verify that version references are up to date.
-    $WORKSPACE/integration/extra/release_tool.py --verify-integration-references
-
     # Verify mender-qa directory exists
     if [ ! -d mender-qa ]
     then
