@@ -134,7 +134,6 @@ init:workspace:
     - checkout_repo MENDER_CONNECT https://github.com/mendersoftware/mender-connect go/src/github.com/mendersoftware/mender-connect $MENDER_CONNECT_REV
     - checkout_repo DEVICECONFIG https://github.com/mendersoftware/deviceconfig go/src/github.com/mendersoftware/deviceconfig $DEVICECONFIG_REV
     - checkout_repo DEVICEMONITOR git@github.com:mendersoftware/devicemonitor go/src/github.com/mendersoftware/devicemonitor $DEVICEMONITOR_REV
-    - checkout_repo MONITOR_CLIENT git@github.com:mendersoftware/monitor-client monitor-client $MONITOR_CLIENT_REV
     - checkout_repo REPORTING https://github.com/mendersoftware/reporting go/src/github.com/mendersoftware/reporting $REPORTING_REV
 
     # Print for debug purposes
