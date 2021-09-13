@@ -7,7 +7,7 @@
     variables:
       - $MENDER_REV =~ /pull\/.*\/head/
       - $NIGHTLY_BUILD == "true"
-  stage: publish
+  stage: publish:tests
   needs:
     - init:workspace
   image: golang:1.15-alpine3.12
@@ -43,7 +43,7 @@
       -parallel
       -coverprofile $(find ${CI_PROJECT_DIR}/acceptance-tests-coverage -name 'coverage*.out' | tr '\n' ',' | sed 's/,$//')
 
-publish:acceptance:qemux86_64:uefi_grub:
+publish:tests:acceptance:qemux86_64:uefi_grub:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -54,7 +54,7 @@ publish:acceptance:qemux86_64:uefi_grub:
   variables:
     JOB_BASE_NAME: qemux86_64_uefi_grub
 
-publish:acceptance:vexpress_qemu:
+publish:tests:acceptance:vexpress_qemu:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -65,7 +65,7 @@ publish:acceptance:vexpress_qemu:
   variables:
     JOB_BASE_NAME: vexpress_qemu
 
-publish:acceptance:qemux86_64:bios_grub:
+publish:tests:acceptance:qemux86_64:bios_grub:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -76,7 +76,7 @@ publish:acceptance:qemux86_64:bios_grub:
   variables:
     JOB_BASE_NAME: qemux86_64_bios_grub
 
-publish:acceptance:qemux86_64:bios_grub_gpt:
+publish:tests:acceptance:qemux86_64:bios_grub_gpt:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -87,7 +87,7 @@ publish:acceptance:qemux86_64:bios_grub_gpt:
   variables:
     JOB_BASE_NAME: qemux86_64_bios_grub_gpt
 
-publish:acceptance:vexpress_qemu:uboot_uefi_grub:
+publish:tests:acceptance:vexpress_qemu:uboot_uefi_grub:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -98,7 +98,7 @@ publish:acceptance:vexpress_qemu:uboot_uefi_grub:
   variables:
     JOB_BASE_NAME: vexpress_qemu_uboot_uefi_grub
 
-publish:acceptance:vexpress_qemu_flash:
+publish:tests:acceptance:vexpress_qemu_flash:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -109,7 +109,7 @@ publish:acceptance:vexpress_qemu_flash:
   variables:
     JOB_BASE_NAME: vexpress_qemu_flash
 
-publish:acceptance:beagleboneblack:
+publish:tests:acceptance:beagleboneblack:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -120,7 +120,7 @@ publish:acceptance:beagleboneblack:
   variables:
     JOB_BASE_NAME: beagleboneblack
 
-publish:acceptance:raspberrypi3:
+publish:tests:acceptance:raspberrypi3:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -131,7 +131,7 @@ publish:acceptance:raspberrypi3:
   variables:
     JOB_BASE_NAME: raspberrypi3
 
-publish:acceptance:raspberrypi4:
+publish:tests:acceptance:raspberrypi4:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
@@ -142,6 +142,7 @@ publish:acceptance:raspberrypi4:
   variables:
     JOB_BASE_NAME: raspberrypi4
 
+# TODO: move to other stage...
 publish:mender-dist-packages:
   stage: publish
   rules:

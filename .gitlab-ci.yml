@@ -105,7 +105,7 @@ include:
   - local: '/gitlab-pipeline/stage/init-mender-monitor-package.yml'
   - local: '/gitlab-pipeline/stage/build.yml'
   - local: '/gitlab-pipeline/stage/test.yml'
-  - local: '/gitlab-pipeline/stage/publish.yml'
+  - local: '/gitlab-pipeline/stage/publish-tests.yml'
   - local: '/gitlab-pipeline/stage/trigger.yml'
   - local: '/gitlab-pipeline/stage/release.yml'
   - local: '/gitlab-pipeline/stage/post.yml'
@@ -118,7 +118,7 @@ stages:
   - init
   - build
   - test
-  - publish
+  - publish:tests
   - trigger
   - release
   - .post
