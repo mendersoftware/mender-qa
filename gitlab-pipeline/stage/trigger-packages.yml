@@ -24,5 +24,5 @@ trigger:mender-dist-packages:
     PUBLISH_MENDER_DIST_PACKAGES_AUTOMATIC: $PUBLISH_RELEASE_AUTOMATIC
   trigger:
     project: Northern.tech/Mender/mender-dist-packages
-    branch: master
+    branch: QA-322-align-with-release-process
     strategy: depend
