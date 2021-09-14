@@ -1,15 +1,15 @@
-.trigger_template:
-  stage: trigger
-  rules:
-    # Disabled for the time being. See QA-322
-    - when: never
-    # - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
-    # # the following is to prevent an endless loop of qa pipelines caused by downstream pipelines
-    # - if: '$CI_PIPELINE_SOURCE == "pipeline"'
-    #   when: never
-
 trigger:mender-convert:
-  extends: .trigger_template
+  stage: trigger:images
+  needs:
+    - job: trigger:mender-dist-packages
+      artifacts: false
+    # Needs either manual or automatic release
+    - job: release_binary_tools:manual
+      artifacts: false
+    - job: release_binary_tools:automatic
+      artifacts: false
+  rules:
+    - if: $BUILD_MENDER_CONVERT == "true"
   variables:
     MENDER_ARTIFACT_VERSION: $MENDER_ARTIFACT_REV
     MENDER_CLIENT_VERSION: $MENDER_REV
@@ -18,7 +18,11 @@ trigger:mender-convert:
     # so it cannot be passed downstream to mender-convert.
     # It is not installed in our pre-converted images, so it doesn't really matter
     #MENDER_ADDON_CONFIGURE_VERSION
+
+    # Mode: "build and publish" or "build and test"
+    TEST_MENDER_CONVERT: $TEST_MENDER_CONVERT
+    PUBLISH_MENDER_CONVERT_AUTOMATIC: $PUBLISH_RELEASE_AUTOMATIC
   trigger:
     project: Northern.tech/Mender/mender-convert
-    branch: master
+    branch: $MENDER_CONVERT_REV
     strategy: depend

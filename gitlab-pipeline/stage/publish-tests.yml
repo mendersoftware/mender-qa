@@ -141,28 +141,3 @@ publish:tests:acceptance:raspberrypi4:
     - test:acceptance:raspberrypi4
   variables:
     JOB_BASE_NAME: raspberrypi4
-
-# TODO: move to other stage...
-publish:mender-dist-packages:
-  stage: publish
-  rules:
-    # Disabled for the time being. See QA-322
-    - when: never
-    # - if: '$INTEGRATION_REV =~ /^[0-9]+\.[0-9]+\.[0-9]+(-build\d+)?$/'
-  variables:
-    # Unset DOCKER_ variables, the pipeline will execute on shared runners
-    DOCKER_HOST: "tcp://docker:2375"
-    DOCKER_CERT_PATH: ""
-    DOCKER_TLS_VERIFY: ""
-    DOCKER_TLS_CERTDIR: ""
-    # Mender release tagged versions:
-    MENDER_VERSION: $MENDER_REV
-    MENDER_CONNECT_VERSION: $MENDER_CONNECT_REV
-    # Obs! mender-configure-module is not part of the release (from release_tool eyes)
-    # so it cannot be passed downstream to mender-dist-packages.
-    # For this repo, we use the old flow of tag in repo -> trigger in mender-dist-packages
-    #MENDER_CONFIGURE_VERSION
-  trigger:
-    project: Northern.tech/Mender/mender-dist-packages
-    branch: master
-    strategy: depend

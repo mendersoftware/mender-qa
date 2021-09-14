@@ -66,6 +66,13 @@ variables:
   SPECIFIC_INTEGRATION_TEST: ""
   TESTS_IN_PARALLEL: "4"
 
+  # Child pipelines build and test
+  MENDER_CONVERT_REV: "master"
+  BUILD_MENDER_DIST_PACKAGES: "false"
+  BUILD_MENDER_CONVERT: "false"
+  TEST_MENDER_DIST_PACKAGES: "false"
+  TEST_MENDER_CONVERT: "false"
+
   # Publication
   PUBLISH_DOCKER_CLIENT_IMAGES: "false"
   PUBLISH_RELEASE_AUTOMATIC: "false"
@@ -106,7 +113,8 @@ include:
   - local: '/gitlab-pipeline/stage/build.yml'
   - local: '/gitlab-pipeline/stage/test.yml'
   - local: '/gitlab-pipeline/stage/publish-tests.yml'
-  - local: '/gitlab-pipeline/stage/trigger.yml'
+  - local: '/gitlab-pipeline/stage/trigger-packages.yml'
+  - local: '/gitlab-pipeline/stage/trigger-images.yml'
   - local: '/gitlab-pipeline/stage/release.yml'
   - local: '/gitlab-pipeline/stage/post.yml'
 
@@ -119,6 +127,7 @@ stages:
   - build
   - test
   - publish:tests
-  - trigger
   - release
+  - trigger:packages
+  - trigger:images
   - .post
