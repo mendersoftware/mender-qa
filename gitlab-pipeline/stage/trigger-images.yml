@@ -1,15 +1,5 @@
-trigger:mender-convert:
+.template:trigger:mender-convert:
   stage: trigger:images
-  needs:
-    - job: trigger:mender-dist-packages
-      artifacts: false
-    # Needs either manual or automatic release
-    - job: release_binary_tools:manual
-      artifacts: false
-    - job: release_binary_tools:automatic
-      artifacts: false
-  rules:
-    - if: $BUILD_MENDER_CONVERT == "true"
   variables:
     MENDER_ARTIFACT_VERSION: $MENDER_ARTIFACT_REV
     MENDER_CLIENT_VERSION: $MENDER_REV
@@ -26,3 +16,26 @@ trigger:mender-convert:
     project: Northern.tech/Mender/mender-convert
     branch: $MENDER_CONVERT_REV
     strategy: depend
+
+
+# mender-convert downloads mender-artifact from upstream, so the trigger(s) either
+# need release_binary_tools:manual or release_binary_tools:automatic.
+trigger:mender-convert:manual:
+  needs:
+    - job: trigger:mender-dist-packages
+      artifacts: false
+    - job: release_binary_tools:manual
+      artifacts: false
+  rules:
+    - if: '$BUILD_MENDER_CONVERT == "true" && $PUBLISH_RELEASE_AUTOMATIC == "false"'
+  extends: .template:trigger:mender-convert
+
+trigger:mender-convert:automatic:
+  needs:
+    - job: trigger:mender-dist-packages
+      artifacts: false
+    - job: release_binary_tools:automatic
+      artifacts: false
+  rules:
+    - if: '$BUILD_MENDER_CONVERT == "true" && $PUBLISH_RELEASE_AUTOMATIC == "true"'
+  extends: .template:trigger:mender-convert
