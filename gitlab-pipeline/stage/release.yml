@@ -168,8 +168,15 @@ release_board_artifacts:automatic:
           --key mender-artifact/${mender_artifact_version}/${platform}/mender-artifact;
       done
 
+# Switch to needs for :manual to unlock mender-convert build in advance
+# or to trigger it despite mender-qa tests errors
 release_binary_tools:manual:
   when: manual
+  dependencies: []
+  needs:
+    - init:workspace
+    - build:mender-cli
+    - build:mender-artifact
   extends: .template_release_binary_tools
 
 release_binary_tools:automatic:
