@@ -22,6 +22,7 @@ init:mender-monitor-package:
     - make package
     - mkdir -p ${CI_PROJECT_DIR}/stage-artifacts
     - mv mender-monitor-*.tar.gz ${CI_PROJECT_DIR}/stage-artifacts
+    - ls -lh ${CI_PROJECT_DIR}/stage-artifacts/
   artifacts:
     paths:
       - stage-artifacts
