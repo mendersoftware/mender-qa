@@ -1,4 +1,6 @@
 #!/bin/bash
+# We cannot allow any commands to fail and break the configuration.
+set -e
 # Script for checking and updating the KVM-enabled Ubuntu image used for
 # provisioning build slaves with upstream from ubuntu-os-cloud.
 
@@ -6,12 +8,14 @@
 # -- it might be a good idea to keep at least one backup
 IMAGES_TO_KEEP=2
 
-# Get current and newest available ubuntu-1804-lts image
+# Get current and newest available ubuntu-2004-lts image
 CUR_IMAGES=$(gcloud compute images list --filter="name~'nested-virt.*'" \
                 --sort-by="~creationTimestamp" --format="value(name)" | \
-             awk '{print $1}') # Still need to awk-filter timestamp
+             cut -f1)
 CUR_IMAGE=$(echo $CUR_IMAGES | awk '{print $1}')
-IMAGE=$(gcloud compute images list --filter="family~'ubuntu-1804-lts'" --format="value(name)")
+IMAGE=$(gcloud compute images list --filter="family~'ubuntu-2004-lts'" \
+        --sort-by="~creationTimestamp" --format="value(name)" --limit 1 | \
+             cut -f1)
 
 if [ ! -z "${CUR_IMAGE}" ] && [ "${CUR_IMAGE}" != "nested-virt-${IMAGE}" ]
 then
@@ -19,8 +23,8 @@ then
     # Create new image with vmx enabled
     gcloud compute images create nested-virt-$IMAGE \
         --source-image-project=ubuntu-os-cloud \
-       	--source-image-family=ubuntu-1804-lts \
-	--licenses="https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        --source-image=$IMAGE \
+        --licenses="https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
 
     # Get url to new image and update gitlab-runner config
     NEW_IMAGE_URL=$(gcloud compute images list --uri \
