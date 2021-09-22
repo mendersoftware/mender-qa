@@ -8,12 +8,12 @@ set -e
 # -- it might be a good idea to keep at least one backup
 IMAGES_TO_KEEP=2
 
-# Get current and newest available ubuntu-1804-lts image
+# Get current and newest available ubuntu-2004-lts image
 CUR_IMAGES=$(gcloud compute images list --filter="name~'nested-virt.*'" \
                 --sort-by="~creationTimestamp" --format="value(name)" | \
              cut -f1)
 CUR_IMAGE=$(echo $CUR_IMAGES | awk '{print $1}')
-IMAGE=$(gcloud compute images list --filter="family~'ubuntu-1804-lts'" \
+IMAGE=$(gcloud compute images list --filter="family~'ubuntu-2004-lts'" \
         --sort-by="~creationTimestamp" --format="value(name)" --limit 1 | \
              cut -f1)
 
