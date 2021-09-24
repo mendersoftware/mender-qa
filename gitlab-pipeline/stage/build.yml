@@ -209,7 +209,7 @@ build:mender-artifact:
   services:
     - docker:dind
   tags:
-    - docker
+    - mender-qa-slave-highcpu
   needs:
     - init:workspace
   before_script:
