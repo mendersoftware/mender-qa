@@ -11,6 +11,7 @@ variables:
   DEPLOYMENTS_REV: "master"
   DEPLOYMENTS_ENTERPRISE_REV: "master"
   DEVICEAUTH_REV: "master"
+  DEVICEAUTH_ENTERPRISE_REV: "master"
   GUI_REV: "master"
   INVENTORY_REV: "master"
   INVENTORY_ENTERPRISE_REV: "master"
