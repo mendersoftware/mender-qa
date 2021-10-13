@@ -111,6 +111,7 @@ init:workspace:
     - checkout_repo DEPLOYMENTS https://github.com/mendersoftware/deployments go/src/github.com/mendersoftware/deployments $DEPLOYMENTS_REV
     - checkout_repo DEPLOYMENTS_ENTERPRISE git@github.com:mendersoftware/deployments-enterprise go/src/github.com/mendersoftware/deployments-enterprise $DEPLOYMENTS_ENTERPRISE_REV
     - checkout_repo DEVICEAUTH https://github.com/mendersoftware/deviceauth go/src/github.com/mendersoftware/deviceauth $DEVICEAUTH_REV
+    - checkout_repo DEVICEAUTH_ENTERPRISE git@github.com:mendersoftware/deviceauth-enterprise go/src/github.com/mendersoftware/deviceauth-enterprise $DEVICEAUTH_ENTERPRISE_REV
     - checkout_repo GUI https://github.com/mendersoftware/gui gui $GUI_REV
     - checkout_repo INVENTORY https://github.com/mendersoftware/inventory go/src/github.com/mendersoftware/inventory $INVENTORY_REV
     - checkout_repo INVENTORY_ENTERPRISE git@github.com:mendersoftware/inventory-enterprise.git go/src/github.com/mendersoftware/inventory-enterprise $INVENTORY_ENTERPRISE_REV
