@@ -37,6 +37,15 @@ To create the project in GitLab:
 4. New project > Create blank GitLab project
 5. Configure branches, permissions, etc, but let the bot do the syncing.
 
+## Fork GitHub project for mender-test-bot
+
+`mender-test-bot` has functionality to automatically create PRs to update enterprise repositories on any merge to open source repository. To make it possible, `mender-test-bot` needs to fork enterprise repository.
+
+To fork the project in GitHub:
+
+1. Log into GitHub as `mender-test-bot`, credentials are in `mystiko`
+2. Navigate to enterprise repository, then fork it for `mender-test-bot` user.
+
 ## Docker image(s)
 
 When applicable, prepare Docker image repositories for the new component.
