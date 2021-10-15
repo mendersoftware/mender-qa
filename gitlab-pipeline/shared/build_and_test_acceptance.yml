@@ -51,8 +51,10 @@
     - sudo -E -u mender ${WORKSPACE}/mender-qa/scripts/yocto-build-and-test.sh
 
     - if [ -d $WORKSPACE/meta-mender/tests/acceptance/coverage ]; then
-        mkdir -p ${CI_PROJECT_DIR}/acceptance-tests-coverage;
-        cp -r $WORKSPACE/meta-mender/tests/acceptance/coverage/* ${CI_PROJECT_DIR}/acceptance-tests-coverage;
+        mkdir -p ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-client;
+        mkdir -p ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-artifact;
+        cp -r $WORKSPACE/meta-mender/tests/acceptance/coverage/* ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-client;
+        cp -r /tmp/coverage*-artifact* ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-artifact;
       fi
 
     # Always keep this at the end of the script stage
