@@ -108,6 +108,7 @@ init:workspace:
     # Add other repositories.
     - checkout_repo META_MENDER https://github.com/mendersoftware/meta-mender meta-mender $META_MENDER_REV
     - checkout_repo MENDER https://github.com/mendersoftware/mender go/src/github.com/mendersoftware/mender $MENDER_REV
+    - checkout_repo AZURE_IOT_MANAGER https://github.com/mendersoftware/azure-iot-manager go/src/github.com/mendersoftware/azure-iot-manager $AZURE_IOT_MANAGER_REV
     - checkout_repo DEPLOYMENTS https://github.com/mendersoftware/deployments go/src/github.com/mendersoftware/deployments $DEPLOYMENTS_REV
     - checkout_repo DEPLOYMENTS_ENTERPRISE git@github.com:mendersoftware/deployments-enterprise go/src/github.com/mendersoftware/deployments-enterprise $DEPLOYMENTS_ENTERPRISE_REV
     - checkout_repo DEVICEAUTH https://github.com/mendersoftware/deviceauth go/src/github.com/mendersoftware/deviceauth $DEVICEAUTH_REV
