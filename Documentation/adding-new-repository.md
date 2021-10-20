@@ -58,6 +58,12 @@ When applicable, prepare Docker image repositories for the new component.
 * For closed source repository, create a new private repository in registry.mender.io, that is
  create the `mendersoftware/name-of-service` ECR repository in the AWS Account with ID `175683096866` to be served by `registry.mender.io`
 
+_Remember_: if you added a new Docker component to the production installation, which
+results in a new Docker container running,
+check if you have adjusted the `EXPECTED_COUNT_OPENSOURCE` and/or `EXPECTED_COUNT_ENTERPRISE` in:
+* [03.Installation-with-docker-compose](https://raw.githubusercontent.com/mendersoftware/mender-docs/master/07.Server-installation/03.Installation-with-docker-compose/docs.md)
+* [02.Upgrading-from-OS-to-Enterprise](https://raw.githubusercontent.com/mendersoftware/mender-docs/master/07.Server-installation/03.Installation-with-docker-compose/02.Upgrading-from-OS-to-Enterprise/docs.md)
+
 ## Makefile
 
 Consider adding a Makefile to the repository. This will serve both developers on their
@@ -79,7 +85,7 @@ Other useful targets are:
 * `docker-test`: Build Docker image containing software under test. Typically using `build-test` target
   for code coverage metrics.
 * `docker-acceptance`: Build Docker tester image.
-* `acceptance-tests`: Run acceptance tests. Typically bringing up a docker composition
+* `acceptance-tests`: Run acceptance tests. Typically bringing up a Docker composition
 * `acceptance-tests-logs`: Get logs from acceptance tests Docker composition
 * `acceptance-tests-down`: Bring down acceptance tests Docker composition
 
@@ -101,7 +107,7 @@ Set a weekly schedule to build master pipeline for every Tuesday evening, at 9 P
 
 *Important*: changes in release_tool and yaml files need to go to integration/master, even when the repository is meant to be used only in a release branch while developing it.
 
-1. Add repo, image, and docker container to `component-maps.yml`
+1. Add repo, image, and Docker container to `component-maps.yml`
   * ref https://github.com/mendersoftware/integration/blob/master/component-maps.yml
   * While the repository is in development, set `release_component: false`
   * For non-backend repositories, set `independent_component: true`
