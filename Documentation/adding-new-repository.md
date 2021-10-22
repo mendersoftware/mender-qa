@@ -17,7 +17,9 @@ ref https://github.com/mendersoftware/REPOSITORY/settings/access
 Create an empty repository in GitHub and push the OS version of it. Notable changes to be made:
 
 1. Change the license to All Rights Reserved and commit
-2. Update the `.gitlab-cy.yml` file to set the `FIRST_ENT_COMMIT` in the `test:check-license` job to the commit sha from point 1 (see [example](https://github.com/mendersoftware/deployments-enterprise/blob/master/.gitlab-ci.yml#L35))
+2. Update the `.gitlab-ci.yml` file: 
+  * update the `DOCKER_REPOSITORY` in `variables` section to the following value: `registry.mender.io/mendersoftware/<SERVICENAME>-enterprise` - see [example](https://github.com/mendersoftware/deployments-enterprise/blob/master/.gitlab-ci.yml#L2)
+  * set the `FIRST_ENT_COMMIT` in the `test:check-license` job to the commit sha from point 1 (see [example](https://github.com/mendersoftware/deployments-enterprise/blob/master/.gitlab-ci.yml#L35))
 3. Modify references in README
 4. Modify variables in pipeline
 5. Create repository, see Docker image(s) below
