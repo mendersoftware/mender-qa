@@ -6,6 +6,7 @@
   only:
     variables:
       - $MENDER_REV =~ /pull\/.*\/head/
+      - $MENDER_ARTIFACT_REV =~ /pull\/.*\/head/
       - $NIGHTLY_BUILD == "true"
   stage: publish:tests
   needs:
@@ -28,11 +29,11 @@
     -   export CI_PR_NUMBER=$(echo ${MENDER_REV} | sed -E 's|pull/([1-9]+)/head|\1|')
     -   export CI_BRANCH=pr_${CI_PR_NUMBER}
     - fi
+  script:
     # Get mender source
     - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
     - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
     - cd ${CI_PROJECT_DIR}/mender
-  script:
     - goveralls
       -debug
       -repotoken ${MENDER_COVERALLS_TOKEN}
@@ -41,7 +42,28 @@
       -covermode set
       -flagname acceptance-${JOB_BASE_NAME}
       -parallel
-      -coverprofile $(find ${CI_PROJECT_DIR}/acceptance-tests-coverage -name 'coverage*.out' | tr '\n' ',' | sed 's/,$//')
+      -coverprofile $(find ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-client -name 'coverage*.out' | tr '\n' ',' | sed 's/,$//')
+
+    - if [ "${MENDER_ARTIFACT_REV}" = "master" ]; then
+    -   export CI_BRANCH=master
+    - else
+    -   export CI_PR_NUMBER=$(echo ${MENDER_ARTIFACT_REV} | sed -E 's|pull/([1-9]+)/head|\1|')
+    -   export CI_BRANCH=pr_${CI_PR_NUMBER}
+    - fi
+
+    # Get mender-artifact source
+    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender-artifact
+    - mv go/src/github.com/mendersoftware/mender-artifact ${CI_PROJECT_DIR}/mender-artifact
+    - cd ${CI_PROJECT_DIR}/mender-artifact
+    - goveralls
+      -debug
+      -repotoken ${MENDER_ARTIFACT_COVERALLS_TOKEN}
+      -service gitlab-ci
+      -jobid $(git rev-parse HEAD)
+      -covermode set
+      -flagname acceptance-${JOB_BASE_NAME}
+      -parallel
+      -coverprofile $(find ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-artifact -name 'coverage*.out' | tr '\n' ',' | sed 's/,$//')
 
 publish:tests:acceptance:qemux86_64:uefi_grub:
   extends: .template_publish_acceptance_coverage

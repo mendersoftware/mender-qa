@@ -19,14 +19,8 @@ mender-qa:failure:
   script:
     - $CI_PROJECT_DIR/scripts/github_pull_request_status failure "mender-qa pipeline failed" $CI_PIPELINE_URL ci/mender-qa
 
-# Publish acceptance test coverage into coveralls when either:
-# * running tests for a mender PR: MENDER_REV ~= /pull/XXX/head/
-# * running nightly build: $NIGHTLY_BUILD == "true"
-coveralls:finish-build:
-  only:
-    variables:
-      - $MENDER_REV =~ /pull\/.*\/head/
-      - $NIGHTLY_BUILD == "true"
+
+.coveralls:finish-build:
   stage: .post
   # See https://docs.coveralls.io/parallel-build-webhook
   variables:
@@ -37,9 +31,35 @@ coveralls:finish-build:
   before_script:
     - apk --update add git
     # Get mender source
-    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender
-    - mv go/src/github.com/mendersoftware/mender ${CI_PROJECT_DIR}/mender
-    - cd ${CI_PROJECT_DIR}/mender
+    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/${REPO_NAME}
+    - mv go/src/github.com/mendersoftware/${REPO_NAME} ${CI_PROJECT_DIR}/${REPO_NAME}
+    - cd ${CI_PROJECT_DIR}/${REPO_NAME}
   script:
-    - 'curl -k ${COVERALLS_WEBHOOK_URL}?repo_token=${MENDER_COVERALLS_TOKEN} -d "payload[build_num]=$(git rev-parse HEAD)&payload[status]=done"'
+    # Mark coverage report as done (mender-client).
+    - 'curl -k ${COVERALLS_WEBHOOK_URL}?repo_token=${COVERALLS_TOKEN} -d "payload[build_num]=$(git rev-parse HEAD)&payload[status]=done"'
 
+# Publish acceptance test coverage into coveralls when either:
+# * running tests for a mender PR: MENDER_REV ~= /pull/XXX/head/
+# * running nightly build: $NIGHTLY_BUILD == "true"
+coverage:finish-build:mender-client:
+  extends: .coveralls:finish-build
+  only:
+    variables:
+      - $MENDER_REV =~ /pull\/.*\/head/
+      - $NIGHTLY_BUILD == "true"
+  variables:
+      COVERALLS_TOKEN: ${MENDER_COVERAGE_TOKEN}
+      REPO_NAME: "mender"
+
+# Publish acceptance test coverage into coveralls when either:
+# * running tests for a mender PR: MENDER_ARTIFACT_REV ~= /pull/XXX/head/
+# * running nightly build: $NIGHTLY_BUILD == "true"
+coverage:finish-build:mender-artifact:
+  extends: .coveralls:finish-build
+  only:
+    variables:
+      - $MENDER_ARTIFACT_REV =~ /pull\/.*\/head/
+      - $NIGHTLY_BUILD == "true"
+  variables:
+      COVERALLS_TOKEN: ${MENDER_ARTIFACT_COVERALLS_TOKEN}
+      REPO_NAME: "mender-artifact"
