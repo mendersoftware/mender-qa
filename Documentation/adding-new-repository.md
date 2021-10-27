@@ -147,6 +147,9 @@ Modify source code:
 
 ref https://github.com/mendersoftware/integration-test-runner/blob/master/main.go
 
+Verify if the integration-test-runner tests are passing and update if needed (after `integration` PRs have been merged):
+  * Ref https://github.com/mendersoftware/integration-test-runner/pull/132/files
+
 ## coveralls
 
 1. Import project in coveralls.
