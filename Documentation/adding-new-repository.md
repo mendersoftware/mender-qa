@@ -8,7 +8,7 @@ It is recommended to take a repository in the same domain (backend, client, etc.
 
 Create the new repository. Consult with the team, epic owner or product owner if the repository is to be open or private
 
-By default, we give write access for `developers` and `rndity` groups. Remove any individual user.
+By default, we give write access for the `developers` group. Remove any individual user.
 
 ref https://github.com/mendersoftware/REPOSITORY/settings/access
 
