@@ -127,8 +127,8 @@ init:workspace:
     - checkout_repo WORKFLOWS_ENTERPRISE git@github.com:mendersoftware/workflows-enterprise go/src/github.com/mendersoftware/workflows-enterprise $WORKFLOWS_ENTERPRISE_REV
     - checkout_repo CREATE_ARTIFACT_WORKER git@github.com:mendersoftware/create-artifact-worker go/src/github.com/mendersoftware/create-artifact-worker $CREATE_ARTIFACT_WORKER_REV
     - checkout_repo META_OPENEMBEDDED git://git.openembedded.org/meta-openembedded.git meta-openembedded $META_OPENEMBEDDED_REV
-    - checkout_repo META_RASPBERRYPI git://github.com/agherzan/meta-raspberrypi.git meta-raspberrypi $META_RASPBERRYPI_REV
-    - checkout_repo MENDER_CONDUCTOR git://github.com/mendersoftware/mender-conductor.git go/src/github.com/mendersoftware/mender-conductor $MENDER_CONDUCTOR_REV
+    - checkout_repo META_RASPBERRYPI https://github.com/agherzan/meta-raspberrypi.git meta-raspberrypi $META_RASPBERRYPI_REV
+    - checkout_repo MENDER_CONDUCTOR https://github.com/mendersoftware/mender-conductor.git go/src/github.com/mendersoftware/mender-conductor $MENDER_CONDUCTOR_REV
     - checkout_repo MENDER_CONDUCTOR_ENTERPRISE git@github.com:mendersoftware/mender-conductor-enterprise.git go/src/github.com/mendersoftware/mender-conductor-enterprise $MENDER_CONDUCTOR_ENTERPRISE_REV
     - checkout_repo MENDER_CLI https://github.com/mendersoftware/mender-cli.git go/src/github.com/mendersoftware/mender-cli $MENDER_CLI_REV
     - checkout_repo AUDITLOGS git@github.com:mendersoftware/auditlogs go/src/github.com/mendersoftware/auditlogs $AUDITLOGS_REV
