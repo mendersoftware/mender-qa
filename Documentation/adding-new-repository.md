@@ -140,10 +140,7 @@ Set a weekly schedule to build master pipeline for every Tuesday evening, at 9 P
 
 Modify source code:
 
-* Add repository to `defaultWatchRepositories`
-* If closed source repo, add it to `enterpriseRepositories`
 * If client repository build with yocto, add it to `qemuBuildRepositories`
-* If backend repository with enterprise fork, add it to list in `syncIfOSHasEnterpriseRepo`
 
 ref https://github.com/mendersoftware/integration-test-runner/blob/master/main.go
 
