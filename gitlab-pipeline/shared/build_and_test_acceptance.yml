@@ -26,7 +26,6 @@
     - modprobe -r kvm_intel && modprobe kvm_intel nested=Y
     # Enable NFS cache for yocto
     - mount.nfs4 ${SSTATE_CACHE_INTRNL_ADDR}:/sstate-cache /mnt/sstate-cache
-  script:
     # Traps only work if executed in a sub shell.
     - "("
     - mv workspace.tar.gz stage-artifacts /tmp
