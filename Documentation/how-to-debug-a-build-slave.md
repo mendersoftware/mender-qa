@@ -15,8 +15,8 @@ Important! When selecting the region/zone, you select `northamerica-northeast1-b
 
 ### Preparing
 
-1. There are three phases where the Pipeline can be stoped: init, build and test.
-   Enable the correspoinding WAIT_IN_STAGE_XXX parameter when starting the build
+1. There are three phases where the Pipeline can be stopped: init, build and test.
+   Enable the corresponding WAIT_IN_STAGE_XXX parameter when starting the build
 
 2. Unselect any platforms you don't need, because **all of them will hang after
    the job is complete**, collecting cloud fees. The job will eventually time
@@ -53,7 +53,7 @@ At this point you are ready to log in.
 4. Now we need to go deeper. List the running container with:
    `sudo docker ps`
 
-5. You will get two runnig containers, one with suffix `-docker-0` and other with
+5. You will get two running containers, one with suffix `-docker-0` and other with
    suffix `-build-X`. The later is the one we are interested. To open a shell:
    `sudo docker exec -it runner-1spsyiXR-project-12501706-concurrent-0-build-4 /bin/bash`
 
@@ -62,8 +62,8 @@ At this point you are ready to log in.
 
 6. The workspace is at `/builds/Northern.tech/Mender`.
 
-7. (for yoctobuilds only). You need to open a new sheel as `mender` user
-   to be able to build with bitbake or run accceptance tests:
+7. (for yoctobuilds only). You need to open a new shell as `mender` user
+   to be able to build with bitbake or run acceptance tests:
    `sudo -u mender /bin/bash`
 
 Enjoy your debugging session.
@@ -97,7 +97,7 @@ For post mortem analysis, you can find the raw sysstat.log file
 and a processed sysstat.svg file in the Artifacts section of
 each build and test job.
 
-However, if you need to retreive it while running or in a
+However, if you need to retrieve it while running or in a
 situation where the job does not complete, you need to grab
 the file via scp:
 
@@ -117,7 +117,7 @@ is to dump all charts to svg:
 
 !['sar' output from a test run](images/sysstat-chart.png)
 
-See `man sadf` for othe tips (exporting to other formats, slicing by time and metric, etc.)
+See `man sadf` for other tips (exporting to other formats, slicing by time and metric, etc.)
 
 ## Tips and tricks
 
