@@ -12,21 +12,20 @@ build_servers_repositories() {
         git=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker git)
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $docker docker_url)
 
+        cd go/src/github.com/mendersoftware/$git
+
         case "$docker" in
             azure-iot-manager|deployments|deployments-enterprise|deviceauth|deviceauth-enterprise|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig|devicemonitor|reporting)
-                cd go/src/github.com/mendersoftware/$git
                 docker build -t $docker_url:pr .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
             workflows-worker|workflows-enterprise-worker)
-                cd go/src/github.com/mendersoftware/$git
                 docker build -t $docker_url:pr -f Dockerfile.worker .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
             gui)
-                cd gui
                 # GIT_REF + GIT_COMMIT for 2.3 or older, GIT_COMMIT_TAG for newer
                 docker build \
                     -t $docker_url:pr \
@@ -53,25 +52,21 @@ build_servers_repositories() {
                 ;;
 
             api-gateway)
-                cd $git
                 docker build -t $docker_url:pr .
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
             mender-conductor|mender-conductor-enterprise)
-                cd go/src/github.com/mendersoftware/$git
                 docker build --build-arg REVISION=pr -t $docker_url:pr ./server
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
             email-sender)
-                cd go/src/github.com/mendersoftware/$git
                 docker build -t $docker_url:pr ./workers/send_email
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
 
             org-welcome-email-preparer)
-                cd go/src/github.com/mendersoftware/$git
                 docker build --build-arg REVISION=pr -t $docker_url:pr ./workers/prepare_org_welcome_email
                 $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                 ;;
