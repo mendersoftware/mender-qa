@@ -51,19 +51,21 @@
     -   export CI_BRANCH=pr_${CI_PR_NUMBER}
     - fi
 
+    - if [ -d ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-artifact ]; then
     # Get mender-artifact source
-    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender-artifact
-    - mv go/src/github.com/mendersoftware/mender-artifact ${CI_PROJECT_DIR}/mender-artifact
-    - cd ${CI_PROJECT_DIR}/mender-artifact
-    - goveralls
-      -debug
-      -repotoken ${MENDER_ARTIFACT_COVERALLS_TOKEN}
-      -service gitlab-ci
-      -jobid $(git rev-parse HEAD)
-      -covermode set
-      -flagname acceptance-${JOB_BASE_NAME}
-      -parallel
-      -coverprofile $(find ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-artifact -name 'coverage*.out' | tr '\n' ',' | sed 's/,$//')
+    -   tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/mender-artifact
+    -   mv go/src/github.com/mendersoftware/mender-artifact ${CI_PROJECT_DIR}/mender-artifact
+    -   cd ${CI_PROJECT_DIR}/mender-artifact
+    -   goveralls
+        -debug
+        -repotoken ${MENDER_ARTIFACT_COVERALLS_TOKEN}
+        -service gitlab-ci
+        -jobid $(git rev-parse HEAD)
+        -covermode set
+        -flagname acceptance-${JOB_BASE_NAME}
+        -parallel
+        -coverprofile $(find ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-artifact -name 'coverage*.out' | tr '\n' ',' | sed 's/,$//')
+    - fi
 
 publish:tests:acceptance:qemux86_64:uefi_grub:
   extends: .template_publish_acceptance_coverage
