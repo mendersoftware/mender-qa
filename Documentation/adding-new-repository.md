@@ -118,7 +118,6 @@ Set a weekly schedule to build master pipeline for every Tuesday evening, at 9 P
   * https://github.com/mendersoftware/integration/blob/master/git-versions-enterprise.yml
 3. Modify `release_tool.py`
   * ref https://github.com/mendersoftware/integration/blob/master/extra/release_tool.py
-  * Add repo to `GIT_TO_BUILDPARAM_MAP`
   * For backend repositories, add repo to `BACKEND_SERVICES_OPEN`, `BACKEND_SERVICES_ENT` or `BACKEND_SERVICES_OPEN_ENT`.
   * If new docker-compose file was added, add the file accordingly in `filter_docker_compose_files_list`.
 4. Modify `backend-tests/tests/test_api_endpoints.py`
