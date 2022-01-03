@@ -36,7 +36,7 @@ mender-qa:failure:
     - cd ${CI_PROJECT_DIR}/${REPO_NAME}
   script:
     # Mark coverage report as done (mender-client).
-    - 'curl -k ${COVERALLS_WEBHOOK_URL}?repo_token=${COVERALLS_TOKEN} -d "payload[build_num]=$(git rev-parse HEAD)&payload[status]=done"'
+    - 'curl -f ${COVERALLS_WEBHOOK_URL}?repo_token=${COVERALLS_TOKEN} -d "payload[build_num]=$(git rev-parse HEAD)&payload[status]=done"'
 
 # Publish acceptance test coverage into coveralls when either:
 # * running tests for a mender PR: MENDER_REV ~= /pull/XXX/head/
