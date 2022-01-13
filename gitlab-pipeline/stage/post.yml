@@ -48,7 +48,7 @@ coverage:finish-build:mender-client:
       - $MENDER_REV =~ /pull\/.*\/head/
       - $NIGHTLY_BUILD == "true"
   variables:
-      COVERALLS_TOKEN: ${MENDER_COVERAGE_TOKEN}
+      COVERALLS_TOKEN: ${MENDER_COVERALLS_TOKEN}
       REPO_NAME: "mender"
 
 # Publish acceptance test coverage into coveralls when either:
