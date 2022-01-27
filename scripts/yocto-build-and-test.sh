@@ -128,10 +128,21 @@ EOF
     if [ -z "$mender_monitor_version" ]; then
         mender_monitor_version="master-git%"
     fi
+
+    local mender_gateway_version=$(tar -Oxf $WORKSPACE/stage-artifacts/mender-gateway-*.tar.gz ./mender-gateway/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
+    if [ -z "$mender_gateway_version" ]; then
+        mender_gateway_version="master-git%"
+    fi
+
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST += "commercial_mender-monitor"
 SRC_URI_pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/mender-monitor-*.tar.gz"
 PREFERRED_VERSION_pn-mender-monitor = "$mender_monitor_version"
+
+LICENSE_FLAGS_WHITELIST += "commercial_mender-gateway"
+SRC_URI_pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/mender-gateway-*.tar.gz"
+PREFERRED_VERSION_pn-mender-gateway = "$mender_gateway_version"
+
 EOF
 
     if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then

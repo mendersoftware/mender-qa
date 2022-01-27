@@ -4,6 +4,7 @@
   needs:
     - init:workspace
     - init:mender-monitor-package
+    - init:mender-gateway-package
   tags:
     - mender-qa-slave-highcpu
   before_script:
