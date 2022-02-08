@@ -4,12 +4,6 @@ trigger:mender-dist-packages:
   rules:
     - if: $BUILD_MENDER_DIST_PACKAGES == "true"
   variables:
-    # Unset DOCKER_ variables, the pipeline will execute on shared runners
-    DOCKER_HOST: "tcp://docker:2375"
-    DOCKER_CERT_PATH: ""
-    DOCKER_TLS_VERIFY: ""
-    DOCKER_TLS_CERTDIR: ""
-
     # Mender release tagged versions:
     MENDER_VERSION: $MENDER_REV
     MENDER_CONNECT_VERSION: $MENDER_CONNECT_REV
@@ -24,5 +18,5 @@ trigger:mender-dist-packages:
     PUBLISH_MENDER_DIST_PACKAGES_AUTOMATIC: $PUBLISH_RELEASE_AUTOMATIC
   trigger:
     project: Northern.tech/Mender/mender-dist-packages
-    branch: master
+    branch: $MENDER_DIST_PACKAGES_REV
     strategy: depend

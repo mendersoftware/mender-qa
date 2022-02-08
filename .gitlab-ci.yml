@@ -71,6 +71,7 @@ variables:
 
   # Child pipelines build and test
   MENDER_CONVERT_REV: "master"
+  MENDER_DIST_PACKAGES_REV: "master"
   BUILD_MENDER_DIST_PACKAGES: "false"
   BUILD_MENDER_CONVERT: "false"
   TEST_MENDER_DIST_PACKAGES: "false"
