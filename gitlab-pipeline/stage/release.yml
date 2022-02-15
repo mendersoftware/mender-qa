@@ -374,7 +374,7 @@ release_binary_tools:automatic:
     S3_BUCKET_PATH: "mender-monitor/yocto"
   dependencies:
     - init:workspace
-    - init:mender-monitor-package
+    - build:mender-monitor-package
   before_script:
     # Install dependencies
     - apt update && apt install -yyq awscli git wget python3 python3-pip
