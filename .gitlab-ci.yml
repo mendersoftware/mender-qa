@@ -113,8 +113,8 @@ include:
   - local: '/gitlab-pipeline/shared/build_and_test_acceptance.yml'
   - local: '/gitlab-pipeline/stage/pre.yml'
   - local: '/gitlab-pipeline/stage/init.yml'
-  - local: '/gitlab-pipeline/stage/init-mender-monitor-package.yml'
   - local: '/gitlab-pipeline/stage/build.yml'
+  - local: '/gitlab-pipeline/stage/yocto-build-n-test.yml'
   - local: '/gitlab-pipeline/stage/test.yml'
   - local: '/gitlab-pipeline/stage/publish-tests.yml'
   - local: '/gitlab-pipeline/stage/trigger-packages.yml'
@@ -129,6 +129,7 @@ stages:
   - .pre
   - init
   - build
+  - yocto:build-n-test
   - test
   - publish:tests
   - release
