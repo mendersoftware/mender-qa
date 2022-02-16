@@ -297,8 +297,10 @@ then
             echo "Failed to SSH to nested VM, probably it's hanging, resetting it"
             reset_nested_vm
         else
-            echo "Failed to SSH to proxy target, aborting the build"
-	    exit 1
+            echo "Failed to SSH to proxy target, aborting the build as unstable (exit code 2)"
+            cat GH_status_info.json | jq '.description = "Unstable, known issue" | .state ="error"' > .$$.GH_status_info.json
+            mv .$$.GH_status_info.json GH_status_info.json
+	    exit 2
         fi
     fi
 
