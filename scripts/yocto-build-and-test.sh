@@ -380,21 +380,17 @@ build_and_test_client() {
                 --version pr
         fi
 
-        # Check if there is a R/O rootfs recipe available.
-        if [[ $image_name == core-image-full-cmdline ]] \
-               && [[ -f $WORKSPACE/meta-mender/meta-mender-demo/recipes-extended/images/mender-image-full-cmdline-rofs.bb ]]; then
+        # R/O image
+        if [[ $image_name == core-image-full-cmdline ]]; then
             bitbake mender-image-full-cmdline-rofs
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -i mender-image-full-cmdline-rofs \
                     $machine_name \
                     -t mendersoftware/mender-client-qemu-rofs:pr
-                # It's ok if the next step fails, it just means we are
-                # testing a version of integration that neither has a rofs
-                # image, nor any tests for it.
                 $WORKSPACE/integration/extra/release_tool.py \
                     --set-version-of mender-client-qemu-rofs \
-                    --version pr || true
+                    --version pr
             fi
         fi
 
