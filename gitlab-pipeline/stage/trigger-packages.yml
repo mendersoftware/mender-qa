@@ -8,10 +8,7 @@ trigger:mender-dist-packages:
     MENDER_VERSION: $MENDER_REV
     MENDER_CONNECT_VERSION: $MENDER_CONNECT_REV
     MENDER_MONITOR_VERSION: $MONITOR_CLIENT_REV
-    # Obs! mender-configure-module is not part of the release (from release_tool eyes)
-    # so it cannot be passed downstream to mender-dist-packages.
-    # For this repo, we use the old flow of tag in repo -> trigger in mender-dist-packages
-    #MENDER_CONFIGURE_VERSION
+    MENDER_CONFIGURE_VERSION: $MENDER_CONFIGURE_MODULE_REV
 
     # Mode: "build and publish" or "build and test"
     TEST_MENDER_DIST_PACKAGES: $TEST_MENDER_DIST_PACKAGES
