@@ -1,5 +1,6 @@
 
 variables:
+
   # Versions of components used for integration tests
   MENDER_REV: "master"
   META_MENDER_REV: "master"
@@ -37,11 +38,16 @@ variables:
   DEVICEMONITOR_REV: "master"
   MONITOR_CLIENT_REV: "master"
   REPORTING_REV: "master"
-  MENDER_GATEWAY_REV: "master"
 
   # Versions of independent components
   MENDER_BINARY_DELTA_VERSION: "latest"
   MENDER_CONFIGURE_MODULE_VERSION: "latest"
+
+  # The revision variables for the following components need to be defined also
+  # in the project's CI/CD settings because they are used in include statements
+  # See comment here: https://gitlab.com/gitlab-org/gitlab/-/issues/219065#note_619008094
+  # Defined here: https://gitlab.com/Northern.tech/Mender/mender-qa/-/settings/ci_cd
+  MENDER_GATEWAY_REV: "master"
 
   # Build stage
   BUILD_CLIENT: "true"
