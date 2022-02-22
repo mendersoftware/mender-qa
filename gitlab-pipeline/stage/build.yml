@@ -256,6 +256,9 @@ build:mender-gateway:package:
   needs:
     - init:workspace
   before_script:
+    # Early exit when building an integration version without mender-gateway
+    - tar -tf workspace.tar.gz
+        ./go/src/github.com/mendersoftware/mender-gateway  >/dev/null 2>/dev/null || exit 0
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env /tmp
