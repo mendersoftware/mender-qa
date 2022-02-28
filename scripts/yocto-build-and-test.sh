@@ -124,29 +124,33 @@ FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "$WORKSPACE/mender-binary-delt
 PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
 
-    local mender_monitor_filename=$(ls -1 $WORKSPACE/stage-artifacts/mender-monitor-*.tar.gz | xargs basename)
-    local mender_monitor_version=$(tar -Oxf $WORKSPACE/stage-artifacts/$mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
-    if [ -z "$mender_monitor_version" ]; then
-        mender_monitor_version="master-git%"
-    fi
+    local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1 | xargs basename)
+    if [[ -n "$mender_monitor_filename" ]]; then
+        local mender_monitor_version=$(tar -Oxf $WORKSPACE/stage-artifacts/$mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
+        if [ -z "$mender_monitor_version" ]; then
+            mender_monitor_version="master-git%"
+        fi
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST += "commercial_mender-monitor"
 SRC_URI_pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/$mender_monitor_filename"
 PREFERRED_VERSION_pn-mender-monitor = "$mender_monitor_version"
 EOF
-
-    local mender_gateway_filename=$(ls -1 $WORKSPACE/stage-artifacts/mender-gateway-*.tar.xz | xargs basename)
-    tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-    local mender_gateway_version=$(/tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
-    rm /tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-    if [ -z "$mender_gateway_version" ]; then
-        mender_gateway_version="master-git%"
     fi
-    cat >> $BUILDDIR/conf/local.conf <<EOF
+
+    local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
+    if [[ -n "$mender_gateway_filename" ]]; then
+        tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
+        local mender_gateway_version=$(/tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
+        rm /tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
+        if [ -z "$mender_gateway_version" ]; then
+            mender_gateway_version="master-git%"
+        fi
+        cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST += "commercial_mender-gateway"
 SRC_URI_pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/$mender_gateway_filename"
 PREFERRED_VERSION_pn-mender-gateway = "$mender_gateway_version"
 EOF
+    fi
 
     if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
