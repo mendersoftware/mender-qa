@@ -60,17 +60,13 @@ for integ_version in $integration_versions; do
 
   variables_revs=""
 
-  all_repos=$($WORKSPACE/integration/extra/release_tool.py --list git)
+  repos_in_version=$(release_tool.py --list git --in-integration-version "$integ_version")
 
-  for repo in $all_repos; do
-    v=$($WORKSPACE/integration/extra/release_tool.py \
+  for repo in $repos_in_version; do
+    repo_version=$($WORKSPACE/integration/extra/release_tool.py \
                    --version-of $repo \
-                   --in-integration-version $integ_version);
-    # we assume that if the repository was not found, i.e. we got:
-    # Unrecognized repository: $repo
-    # it does not exist in the given $integ_version
-    [[ $? -ne 0 ]] && continue
-    repo_version=$(echo "$v" | cut -d/ -f2);
+                   --in-integration-version $integ_version |
+                   cut -d/ -f2);
     variables_revs="$variables_revs $(echo -n -F variables[; \
                     echo -n $repo | tr '[a-z-]' '[A-Z_]'; \
                     echo _REV]=${repo_version})";
