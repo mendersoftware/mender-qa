@@ -60,7 +60,7 @@ for integ_version in $integration_versions; do
 
   variables_revs=""
 
-  repos_in_version=$(release_tool.py --list git --in-integration-version "$integ_version")
+  repos_in_version=$($WORKSPACE/integration/extra/release_tool.py --list git --in-integration-version "$integ_version")
 
   for repo in $repos_in_version; do
     repo_version=$($WORKSPACE/integration/extra/release_tool.py \
