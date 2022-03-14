@@ -409,7 +409,8 @@ release_mender-monitor:automatic:
   image: debian:buster
   variables:
     S3_BUCKET_NAME: "mender-binaries"
-    S3_BUCKET_PATH: "mender-gateway/yocto"
+    S3_BUCKET_PATH_YOCTO: "mender-gateway/yocto"
+    S3_BUCKET_PATH_EXAMPLES: "mender-gateway/examples"
   dependencies:
     - init:workspace
     - build:mender-gateway:package
@@ -429,8 +430,9 @@ release_mender-monitor:automatic:
   script:
     - mender_gateway_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-gateway --in-integration-version $INTEGRATION_REV)
     - echo "=== mender-gateway $mender_gateway_version ==="
-    - echo "Publishing $mender_gateway_version version to s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_gateway_version/"
-    - aws s3 cp stage-artifacts/mender-gateway-*.tar.xz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_gateway_version/
+    - echo "Publishing $mender_gateway_version version to s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH_YOCTO/$mender_gateway_version/"
+    - aws s3 cp stage-artifacts/mender-gateway-*.tar.xz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH_YOCTO/$mender_gateway_version/
+    - aws s3 cp stage-artifacts/mender-gateway-examples-*.tar s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH_EXAMPLES/$mender_gateway_version/
 
 release_mender-gateway:manual:
   when: manual

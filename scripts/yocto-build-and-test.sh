@@ -145,9 +145,11 @@ EOF
         if [ -z "$mender_gateway_version" ]; then
             mender_gateway_version="master-git%"
         fi
+        local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-examples-*.tar" | head -n1 | xargs basename)
         cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST += "commercial_mender-gateway"
 SRC_URI_pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/$mender_gateway_filename"
+SRC_URI_pn-mender-gateway_append = " file:///$WORKSPACE/stage-artifacts/$mender_gateway_examples_filename"
 PREFERRED_VERSION_pn-mender-gateway = "$mender_gateway_version"
 EOF
     fi
