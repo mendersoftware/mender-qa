@@ -10,7 +10,7 @@ test:backend-integration:open_source:
   services:
     - docker:19.03-dind
   tags:
-    - mender-qa-slave-highcpu
+    - mender-qa-k8s-gke
   needs:
     - init:workspace
     - build:servers
@@ -19,6 +19,7 @@ test:backend-integration:open_source:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
 
+    - while [ ! -f /tmp/bp0 ]; do sleep 0.5; done;
     - docker version
     - apk --update add bash git py-pip gcc make python2-dev
       libc-dev libffi-dev openssl-dev python3 curl jq sysstat
