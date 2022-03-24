@@ -40,12 +40,12 @@ test:backend-integration:open_source:
     # Load all docker images except client
     - for image in $(integration/extra/release_tool.py -l docker); do
     -   if ! echo $image | egrep -q 'mender-client|mender-monitor|mender-gateway'; then
-    -     docker load -i stage-artifacts/${image}.tar
+    -     su - -c "docker load -i stage-artifacts/${image}.tar"
     -   fi
     - done
     # Login for private repos
-    - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
-    - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
+    - su - -c "docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}"
+    - su - -c "docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io"
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker`; do
         integration/extra/release_tool.py --set-version-of $repo --version pr;
@@ -85,9 +85,9 @@ test:backend-integration:open_source:
 
         # for pre 2.2.x releases, ignore test suite selection and just run open tests
     -   if ./run --help | grep -e --suite; then
-    -     ./run --suite $TEST_SUITE $RUN_ARGS;
+    -     su - -c "`pwd`/run --suite $TEST_SUITE $RUN_ARGS";
     -   else
-    -     PYTEST_ARGS="-k 'not Multitenant'" ./run;
+    -     export PYTEST_ARGS="-k 'not Multitenant'" su - -c `pwd`/run;
     -   fi
 
         # Always keep this at the end of the script stage
