@@ -44,6 +44,8 @@ test:backend-integration:open_source:
     -   fi
     - done
     # Login for private repos
+    - su - -c "echo 128 > /proc/sys/net/ipv4/tcp_retries1"
+    - su - -c "echo 255 > /proc/sys/net/ipv4/tcp_retries2"
     - su - -c "docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}"
     - su - -c "docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io"
     # Set testing versions to PR
