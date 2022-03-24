@@ -4,7 +4,7 @@ test:backend-integration:open_source:
     variables:
       - $RUN_INTEGRATION_TESTS == "true"
   stage: test
-  image: docker/compose:alpine-1.27.4
+  image: docker:19.03-dind
   variables:
     TEST_SUITE: "open"
   services:
