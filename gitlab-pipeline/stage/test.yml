@@ -19,8 +19,8 @@ test:backend-integration:open_source:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
 
-    - apk update && apk add docker
     - while [ ! -f /tmp/bp0 ]; do sleep 0.5; done;
+    - apk update && apk add docker
     - nohup su - -c /usr/bin/dockerd &
     - while [ ! -f /tmp/bp1 ]; do sleep 0.5; done;
     - su - -c "docker version"
@@ -44,6 +44,7 @@ test:backend-integration:open_source:
     -   fi
     - done
     # Login for private repos
+    - su - -c "sysctl -w vm.max_map_count=262144"
     - su - -c "echo 128 > /proc/sys/net/ipv4/tcp_retries1"
     - su - -c "echo 255 > /proc/sys/net/ipv4/tcp_retries2"
     - su - -c "docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}"
