@@ -20,8 +20,7 @@ test:backend-integration:open_source:
     - echo "failure" > /JOB_RESULT.txt
 
     - while [ ! -f /tmp/bp0 ]; do sleep 0.5; done;
-    - apk update && apk add docker
-    - nohup su - -c /usr/bin/dockerd &
+    - nohup su - -c /usr/local/bin/dockerd-entrypoint.sh &
     - while [ ! -f /tmp/bp1 ]; do sleep 0.5; done;
     - su - -c "docker version"
     - apk --update add bash git py-pip gcc make python2-dev
