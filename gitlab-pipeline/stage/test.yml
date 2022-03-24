@@ -24,7 +24,6 @@ test:backend-integration:open_source:
     - nohup su - -c /usr/bin/dockerd &
     - while [ ! -f /tmp/bp1 ]; do sleep 0.5; done;
     - su - -c "docker version"
-    - docker version
     - apk --update add bash git py-pip gcc make python2-dev
       libc-dev libffi-dev openssl-dev python3 curl jq sysstat
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
