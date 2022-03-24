@@ -19,8 +19,8 @@ test:backend-integration:open_source:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
 
-    - su -
-    - docker version || true
+    - su - -c docker version
+    - nohup su - -c dockerd &
     - while [ ! -f /tmp/bp0 ]; do sleep 0.5; done;
     - docker version
     - apk --update add bash git py-pip gcc make python2-dev
