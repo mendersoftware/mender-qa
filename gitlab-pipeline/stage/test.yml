@@ -85,9 +85,9 @@ test:backend-integration:open_source:
 
         # for pre 2.2.x releases, ignore test suite selection and just run open tests
     -   if ./run --help | grep -e --suite; then
-    -     su - -c "cd `pwd` && ./run --suite $TEST_SUITE $RUN_ARGS";
+    -     su - -c "export COMPOSE_HTTP_TIMEOUT=1024; cd `pwd` && ./run --suite $TEST_SUITE $RUN_ARGS";
     -   else
-    -     export PYTEST_ARGS="-k 'not Multitenant'" su - -c "cd `pwd` && ./run";
+    -     export PYTEST_ARGS="-k 'not Multitenant'" su - -c "export COMPOSE_HTTP_TIMEOUT=1024; cd `pwd` && ./run";
     -   fi
 
         # Always keep this at the end of the script stage
