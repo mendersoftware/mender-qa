@@ -24,10 +24,9 @@ test:backend-integration:open_source:
     - while [ ! -f /tmp/bp1 ]; do sleep 0.5; done;
     - su - -c "docker version"
     - apk --update add bash git py-pip gcc make python2-dev
-      libc-dev libffi-dev openssl-dev python3 curl jq sysstat
+      libc-dev libffi-dev openssl-dev python3 curl jq sysstat docker-compose
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
-    - pip3 install docker-compose
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
