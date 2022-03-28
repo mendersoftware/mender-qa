@@ -29,6 +29,11 @@ is_testing_board() {
     return $ret
 }
 
+has_component() {
+    test -d $WORKSPACE/go/src/github.com/mendersoftware/$1
+    return $?
+}
+
 modify_ext4() {
     echo -n "artifact_name=$2" > /tmp/artifactfile
     debugfs -w -R "rm /etc/mender/artifact_info" $1
@@ -124,8 +129,8 @@ FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "$WORKSPACE/mender-binary-delt
 PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
 
-    local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1 | xargs basename)
-    if [[ -n "$mender_monitor_filename" ]]; then
+    if has_component monitor-client; then
+        local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1 | xargs basename)
         local mender_monitor_version=$(tar -Oxf $WORKSPACE/stage-artifacts/$mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
         if [ -z "$mender_monitor_version" ]; then
             mender_monitor_version="master-git%"
@@ -137,8 +142,8 @@ PREFERRED_VERSION_pn-mender-monitor = "$mender_monitor_version"
 EOF
     fi
 
-    local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
-    if [[ -n "$mender_gateway_filename" ]]; then
+    if has_component mender-gateway; then
+        local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
         tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
         local mender_gateway_version=$(/tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
         rm /tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
@@ -415,7 +420,8 @@ build_and_test_client() {
         fi
 
         # Check if there is a mender-monitor image recipe available.
-        if [[ $image_name == core-image-full-cmdline ]] \
+        if has_component monitor-client \
+               && [[ $image_name == core-image-full-cmdline ]] \
                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             bitbake mender-monitor-image-full-cmdline
@@ -435,7 +441,8 @@ build_and_test_client() {
         fi
 
         # Check if there is a mender-gateway image recipe available.
-        if [[ $image_name == core-image-full-cmdline ]] \
+        if has_component mender-gateway \
+               && [[ $image_name == core-image-full-cmdline ]] \
                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             bitbake mender-gateway-image-full-cmdline
