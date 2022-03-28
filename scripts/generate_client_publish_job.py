@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Copyright 2021 Northern.tech AS
+# Copyright 2022 Northern.tech AS
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -19,14 +19,22 @@ import re
 import tempfile
 import shutil
 import yaml
+import urllib.request
 
 
 def initWorkspace():
     path = tempfile.mkdtemp()
-    subprocess.check_output(
+    subprocess.check_call(
         ["git", "clone", "https://github.com/mendersoftware/integration.git", path],
     )
     return path
+
+
+def getStableMetaMender():
+    with urllib.request.urlopen(
+        "https://raw.githubusercontent.com/mendersoftware/mender-qa/master/.gitlab-ci.yml"
+    ) as stream:
+        return yaml.safe_load(stream)["variables"]["POKY_REV"]
 
 
 def generate(integration_repo, args):
@@ -40,9 +48,7 @@ def generate(integration_repo, args):
     ]
     if args.feature_branches:
         release_tool_args.append("--feature-branches")
-    integration_versions = subprocess.check_output(
-        release_tool_args,
-    )
+    integration_versions = subprocess.check_output(release_tool_args)
 
     # Filter out saas-* versions
     # Historically, there have been some saas- releases using "master" of independent components
@@ -61,13 +67,10 @@ def generate(integration_repo, args):
     for integ_version in integration_versions_list:
 
         subprocess.check_output(
-            ["git", "checkout", integ_version],
-            cwd=integration_repo,
+            ["git", "checkout", integ_version], cwd=integration_repo,
         )
 
-        all_repos = subprocess.check_output(
-            [release_tool, "--list", "git"]
-        )
+        all_repos = subprocess.check_output([release_tool, "--list", "git"])
 
         job_key = "trigger:mender-qa:" + integ_version.split("/")[1]
 
@@ -94,7 +97,10 @@ def generate(integration_repo, args):
 
             # Do not allow any job which will push build or final tags. These
             # should never be done outside of manual releases.
-            if re.match("^[0-9]+\.[0-9]+\.[0-9]+(-build[0-9]+)?$", repo_version) is not None:
+            if (
+                re.match("^[0-9]+\.[0-9]+\.[0-9]+(-build[0-9]+)?$", repo_version)
+                is not None
+            ):
                 any_tag = True
                 break
 
@@ -145,10 +151,14 @@ if __name__ == "__main__":
     parser.add_argument("--trigger", required=True)
     parser.add_argument("--workspace", default=None)
     parser.add_argument("--version", default="master")
-    parser.add_argument("--meta-mender-version", default="master")
+    parser.add_argument("--meta-mender-version", default=None)
     parser.add_argument("--feature-branches", action="store_true")
     parser.add_argument("--filename", default="gitlab-ci-client-qemu-publish-job.yml")
     args = parser.parse_args()
+
+    if not args.meta_mender_version:
+        args.meta_mender_version = getStableMetaMender()
+
     if args.workspace:
         generate(args.workspace, args)
     else:

@@ -5,6 +5,11 @@ set -e
 # Number of release branches to build when trigger comes from meta-mender
 NUMBER_OF_MINOR_VERSIONS=3
 
+# Branch to use when building QEMU images to publish
+LATEST_STABLE_YOCTO_BRANCH=$(wget -q -O - \
+  https://raw.githubusercontent.com/mendersoftware/mender-qa/master/.gitlab-ci.yml | \
+  sed -ne 's/.*POKY_REV:.*"\(.*\)"/\1/p')
+
 if [[ $# -eq 2 ]]; then
   version_to_publish=$1
   trigger_from_repo=$2
@@ -77,6 +82,7 @@ for integ_version in $integration_versions; do
     -F token=$MENDER_QA_TRIGGER_TOKEN \
     -F ref=master \
     -F variables[PUBLISH_DOCKER_CLIENT_IMAGES]=true \
+    -F variables[META_MENDER_REV]=$LATEST_STABLE_YOCTO_BRANCH \
     -F variables[BUILD_CLIENT]=true \
     -F variables[BUILD_SERVERS]=false \
     -F variables[BUILD_QEMUX86_64_UEFI_GRUB]=false \
