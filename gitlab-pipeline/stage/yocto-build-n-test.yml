@@ -26,8 +26,10 @@ build:client:qemu:
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
+#     - cp ${WORKSPACE}/qemux86-64-uefi-grub/clean-image* stage-artifacts/
+    - cp ${WORKSPACE}/qemux86-64-uefi-grub/*.mender stage-artifacts/
     - docker save mendersoftware/mender-client-qemu:pr -o stage-artifacts/mender-client-qemu.tar
-    - docker save mendersoftware/mender-client-qemu-rofs:pr -o stage-artifacts/mender-client-qemu-rofs.tar
+#     - docker save mendersoftware/mender-client-qemu-rofs:pr -o stage-artifacts/mender-client-qemu-rofs.tar
     - if [[ -d $WORKSPACE/go/src/github.com/mendersoftware/monitor-client ]] && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
     -   docker save registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr -o stage-artifacts/mender-monitor-qemu-commercial.tar
     - fi

@@ -182,11 +182,16 @@ EOF
     if [ -d /mnt/sstate-cache ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
 SSTATE_DIR = "/mnt/sstate-cache"
+DL_DIR = "/mnt/sstate-cache/download"
 EOF
     else
-        mkdir -p $HOME/sstate-cache
+        mkdir -p /cache/sstate-cache
         cat >> $BUILDDIR/conf/local.conf <<EOF
-SSTATE_DIR = "$HOME/sstate-cache"
+SSTATE_DIR = "/cache/sstate-cache"
+EOF
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PARALLEL_MAKE = "-j 12"
+BB_NUMBER_THREADS = "12"
 EOF
     fi
 
@@ -251,6 +256,57 @@ EOF
 PREFERRED_VERSION_pn-mender-connect = "$mender_connect_version-git%"
 EOF
     fi
+}
+
+clean_build_config() {
+    sed -i.backup -e 's/^MENDER_ARTIFACT_NAME = .*/MENDER_ARTIFACT_NAME = "mender-image-clean"/' $BUILDDIR/conf/local.conf
+    echo 'IMAGE_INSTALL_append = " openssh lsof mc"' >> "$BUILDDIR/conf/local.conf"
+    echo "$BUILDDIR/conf/local.conf {{{"
+    cat "$BUILDDIR/conf/local.conf" | grep -v '^#' | grep -v ^$ || true
+    echo "}}}"
+}
+
+restore_build_config() {
+    diff "${BUILDDIR}/conf/local.conf.backup" "${BUILDDIR}/conf/local.conf" || true
+    mv -fv "${BUILDDIR}/conf/local.conf.backup" "${BUILDDIR}/conf/local.conf"
+    bitbake -c cleanall mender-artifact-info
+#     bitbake cleanall mender-artifact-info
+#     bitbake -c cleanall mender-client
+}
+
+copy_clean_image() {
+    local machine_name="$1"
+    local board_name="$2"
+    local image_name="$3"
+    local device_type="$4"
+    local extension=""
+    local filename
+
+    egrep -q '\bmender-image-uefi\b' <(bitbake -e $image_name | egrep '^MENDER_FEATURES=') && extension="uefiimg"
+    egrep -q '\bmender-image-sd\b' <(bitbake -e $image_name | egrep '^MENDER_FEATURES=') && extension="sdimg"
+    filename="$(bitbake -e $image_name | egrep '^IMAGE_LINK_NAME=' | sed -e 's/.*=//' -e 's/\"//g').${extension}"
+    mkdir -p "${WORKSPACE}/${board_name}" 1>&2
+# cp -Lv "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" "${WORKSPACE}/${board_name}/clean-image-${filename}" 1>&2
+     while read -r; do
+      cp "${REPLY}" "${WORKSPACE}/${board_name}/clean-image-`basename ${REPLY}`";
+     done < <(find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name '*.mender';)
+    cp -Lv "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}" 1>&2
+    echo "images: {{{" 1>&2
+    echo "${BUILDDIR}/tmp/deploy/images: {{{" 1>&2
+    find "${BUILDDIR}/tmp/deploy/images" -exec ls -al {} \; 1>&2
+    echo "clean:" 1>&2
+    ls -al "${WORKSPACE}/${board_name}"/clean-image-* 1>&2 || true
+    echo "}}}" 1>&2
+    echo "rc: ${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}" 1>&2
+    echo "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}"
+    rm -f "`readlink \"${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}\"`" || true
+    find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name 'core-image-*' -and -exec rm -f {} \; 1>&2 || true
+    rm -f "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" || true
+    echo "${BUILDDIR}/tmp/deploy/images on return: {{{" 1>&2
+    find "${BUILDDIR}/tmp/deploy/images" -exec ls -al {} \; 1>&2
+    echo "clean on return:" 1>&2
+    ls -al "${WORKSPACE}/${board_name}"/clean-image-* 1>&2 || true
+    echo "}}}" 1>&2
 }
 
 init_environment() {
@@ -357,6 +413,26 @@ select_build_config() {
     echo $machine_to_build $board_to_build $image_to_build $device_type_to_build
 }
 
+function bp() {
+ local b
+
+ if [[ "$DEBUG_BPS" == "" ]]; then
+  return
+ fi
+ set +e
+ set +x
+ export BP_ID_=${BP_ID_:-0}
+ let BP_ID_++
+ b="/tmp/bp${BP_ID_}"
+ echo "bp_:waiting at ${b} ${FUNCNAME[1]}.${BASH_LINENO[0]}${2}"
+ while [ ! -f "${b}" ]; do
+  sleep 1
+ done
+ echo "bp_:released at ${b} ${FUNCNAME[1]}.${BASH_LINENO[0]}${2}"
+ set -e
+ set -x
+}
+
 # ------------------------------------------------------------------------------
 # Generic function for building and testing client.
 #
@@ -381,6 +457,7 @@ build_and_test_client() {
         local board_name="$2"
         local image_name="$3"
         local device_type="$4"
+        local clean_image
 
         if ! is_building_board $board_name; then
             echo "Not building board? We should never get here."
@@ -394,16 +471,51 @@ build_and_test_client() {
 
         cd $BUILDDIR
 
-        # Base image
+        bp " entry point"
+        # Base image clean
+        echo "bitbake -e | grep MENDER_ARTIFACT_NAME 0 {{{ "
+        bitbake -e | grep MENDER_ARTIFACT_NAME
+        echo "}}}"
+        clean_build_config
+        bp " before first build"
+        echo "bitbake -e | grep MENDER_ARTIFACT_NAME 1 {{{ "
+        bitbake -e | grep MENDER_ARTIFACT_NAME
+        echo "}}}"
         bitbake $image_name
+        clean_image=`copy_clean_image "${machine_name}" "${board_name}" "${image_name}" "${device_type}"`
+        restore_build_config
+        echo "bitbake -e | grep MENDER_ARTIFACT_NAME 2 {{{ "
+        bitbake -e | grep MENDER_ARTIFACT_NAME
+        echo "}}}"
+        echo "$BUILDDIR/conf/local.conf restored {{{"
+        cat "$BUILDDIR/conf/local.conf" | grep -v '^#' | grep -v ^$ || true
+        echo "}}}"
+
+
+        bp
+        # Base image
+        # bitbake -f -c compile $image_name
+        bp
+        bitbake $image_name
+    echo "images after restored-build: {{{" 1>&2
+    echo "${BUILDDIR}/tmp/deploy/images:" 1>&2
+    find "${BUILDDIR}/tmp/deploy/images" -exec ls -al {} \; 1>&2
+    echo "}}}" 1>&2
+ 
+    while read -r; do
+     cp "${REPLY}" "${WORKSPACE}/${board_name}/build-image-`basename ${REPLY}`";
+    done < <(find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name '*.mender';)
+        bp
         if ${BUILD_DOCKER_IMAGES:-false}; then
             $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                -I "${clean_image}" \
                 $machine_name \
                 -t mendersoftware/mender-client-qemu:pr
             $WORKSPACE/integration/extra/release_tool.py \
                 --set-version-of mender-client-qemu \
                 --version pr
         fi
+        bp " final release"
 
         # R/O image
         if [[ $image_name == core-image-full-cmdline ]]; then
@@ -467,7 +579,7 @@ build_and_test_client() {
             cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/u-boot.elf $WORKSPACE/$board_name
         fi
         for image in $WORKSPACE/$board_name/*; do
-            cp $image $image.clean
+            cp -a $image $image.clean
         done
 
         prepare_and_set_PATH
