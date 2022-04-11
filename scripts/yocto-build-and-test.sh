@@ -299,9 +299,9 @@ copy_clean_image() {
     echo "}}}" 1>&2
     echo "rc: ${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}" 1>&2
     echo "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}"
-    rm -f "`readlink \"${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}\"`" || true
+#     rm -f "`readlink \"${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}\"`" || true
     find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name 'core-image-*' -and -exec rm -f {} \; 1>&2 || true
-    rm -f "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" || true
+#     rm -f "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" || true
     echo "${BUILDDIR}/tmp/deploy/images on return: {{{" 1>&2
     find "${BUILDDIR}/tmp/deploy/images" -exec ls -al {} \; 1>&2
     echo "clean on return:" 1>&2
