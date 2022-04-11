@@ -288,7 +288,7 @@ copy_clean_image() {
     mkdir -p "${WORKSPACE}/${board_name}" 1>&2
 # cp -Lv "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" "${WORKSPACE}/${board_name}/clean-image-${filename}" 1>&2
      while read -r; do
-      cp "${REPLY}" "${WORKSPACE}/${board_name}/clean-image-`basename ${REPLY}`";
+      echo cp "${REPLY}" "${WORKSPACE}/${board_name}/clean-image-`basename ${REPLY}`";
      done < <(find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name '*.mender';)
     cp -Lv "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}" 1>&2
     echo "images: {{{" 1>&2
@@ -297,8 +297,9 @@ copy_clean_image() {
     echo "clean:" 1>&2
     ls -al "${WORKSPACE}/${board_name}"/clean-image-* 1>&2 || true
     echo "}}}" 1>&2
-    echo "rc: ${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}" 1>&2
-    echo "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}"
+    bzip2 -9 ${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename} || true
+    echo "rc: ${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}.bz2" 1>&2
+    echo "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}.bz2"
 #     rm -f "`readlink \"${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}\"`" || true
 #     find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name 'core-image-*' -and -exec rm -f {} \; 1>&2 || true
 #     rm -f "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" || true
@@ -503,7 +504,7 @@ build_and_test_client() {
     echo "}}}" 1>&2
  
     while read -r; do
-     cp "${REPLY}" "${WORKSPACE}/${board_name}/build-image-`basename ${REPLY}`";
+     echo cp "${REPLY}" "${WORKSPACE}/${board_name}/build-image-`basename ${REPLY}`";
     done < <(find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name '*.mender';)
         bp
         if ${BUILD_DOCKER_IMAGES:-false}; then
