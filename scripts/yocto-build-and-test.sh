@@ -287,9 +287,9 @@ copy_clean_image() {
     filename="$(bitbake -e $image_name | egrep '^IMAGE_LINK_NAME=' | sed -e 's/.*=//' -e 's/\"//g').${extension}"
     mkdir -p "${WORKSPACE}/${board_name}" 1>&2
 # cp -Lv "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" "${WORKSPACE}/${board_name}/clean-image-${filename}" 1>&2
-     while read -r; do
-      echo cp "${REPLY}" "${WORKSPACE}/${board_name}/clean-image-`basename ${REPLY}`";
-     done < <(find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name '*.mender';)
+#      while read -r; do
+#       cp "${REPLY}" "${WORKSPACE}/${board_name}/clean-image-`basename ${REPLY}`";
+#      done < <(find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name '*.mender';)
     cp -Lv "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}" 1>&2
     echo "images: {{{" 1>&2
     echo "${BUILDDIR}/tmp/deploy/images: {{{" 1>&2
@@ -503,9 +503,9 @@ build_and_test_client() {
     find "${BUILDDIR}/tmp/deploy/images" -exec ls -al {} \; 1>&2
     echo "}}}" 1>&2
  
-    while read -r; do
-     echo cp "${REPLY}" "${WORKSPACE}/${board_name}/build-image-`basename ${REPLY}`";
-    done < <(find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name '*.mender';)
+#     while read -r; do
+#      echo cp "${REPLY}" "${WORKSPACE}/${board_name}/build-image-`basename ${REPLY}`";
+#     done < <(find "${BUILDDIR}/tmp/deploy/images/${machine_name}/" -name '*.mender';)
         bp
         if ${BUILD_DOCKER_IMAGES:-false}; then
             $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
