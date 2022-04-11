@@ -519,9 +519,14 @@ build_and_test_client() {
 
         # R/O image
         if [[ $image_name == core-image-full-cmdline ]]; then
+            clean_build_config
+            bitbake mender-image-full-cmdline-rofs
+            clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs" "${device_type}"`
+            restore_build_config
             bitbake mender-image-full-cmdline-rofs
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                    -I "${clean_image}" \
                     -i mender-image-full-cmdline-rofs \
                     $machine_name \
                     -t mendersoftware/mender-client-qemu-rofs:pr
@@ -536,9 +541,14 @@ build_and_test_client() {
                && [[ $image_name == core-image-full-cmdline ]] \
                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
+            clean_build_config
+            bitbake mender-monitor-image-full-cmdline
+            clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-monitor-image-full-cmdline" "${device_type}"`
+            restore_build_config
             bitbake mender-monitor-image-full-cmdline
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                    -I "${clean_image}" \
                     -i mender-monitor-image-full-cmdline \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr
@@ -557,9 +567,14 @@ build_and_test_client() {
                && [[ $image_name == core-image-full-cmdline ]] \
                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
+            clean_build_config
+            bitbake mender-gateway-image-full-cmdline
+            clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-gateway-image-full-cmdline" "${device_type}"`
+            restore_build_config
             bitbake mender-gateway-image-full-cmdline
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                    -I "${clean_image}" \
                     -i mender-gateway-image-full-cmdline \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-gateway-qemu-commercial:pr
