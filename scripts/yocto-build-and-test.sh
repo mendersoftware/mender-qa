@@ -260,7 +260,7 @@ EOF
 
 clean_build_config() {
     sed -i.backup -e 's/^MENDER_ARTIFACT_NAME = .*/MENDER_ARTIFACT_NAME = "mender-image-clean"/' $BUILDDIR/conf/local.conf
-    echo 'IMAGE_INSTALL_append = " openssh lsof mc"' >> "$BUILDDIR/conf/local.conf"
+    echo 'IMAGE_INSTALL_append = " sqlite3 vim lsof"' >> "$BUILDDIR/conf/local.conf"
     echo "$BUILDDIR/conf/local.conf {{{"
     cat "$BUILDDIR/conf/local.conf" | grep -v '^#' | grep -v ^$ || true
     echo "}}}"
