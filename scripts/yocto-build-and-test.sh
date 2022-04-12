@@ -269,8 +269,8 @@ clean_build_config() {
 restore_build_config() {
     diff "${BUILDDIR}/conf/local.conf.backup" "${BUILDDIR}/conf/local.conf" || true
     mv -fv "${BUILDDIR}/conf/local.conf.backup" "${BUILDDIR}/conf/local.conf"
-    bitbake -c cleanall mender-artifact-info
-#     bitbake cleanall mender-artifact-info
+#     bitbake -c cleanall mender-artifact-info
+    bitbake mender-artifact-info
 #     bitbake -c cleanall mender-client
 }
 
