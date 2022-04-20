@@ -457,6 +457,9 @@ release_mender-monitor:automatic:
     - init:workspace
     - build:mender-gateway:package
   before_script:
+    # Early exit when building an integration version without mender-gateway
+    - tar -tf workspace.tar.gz
+        ./go/src/github.com/mendersoftware/mender-gateway  >/dev/null 2>/dev/null || exit 0
     # Install dependencies
     - apt update && apt install -yyq awscli git wget python3 python3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
