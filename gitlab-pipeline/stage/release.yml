@@ -317,6 +317,7 @@ release_board_artifacts:raspberrypi4:automatic:
   stage: release
   image: debian:buster
   before_script:
+    - *publish_helper_functions
     # Install dependencies
     - apt update && apt install -yyq awscli git wget python3 python3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
@@ -340,32 +341,32 @@ release_board_artifacts:raspberrypi4:automatic:
     - echo "=== mender-cli $mender_cli_version ==="
     # We can simplify once mender-cli 1.2.0 is not supported
     - if grep -q build-multiplatform $WORKSPACE/go/src/github.com/mendersoftware/mender-cli/Makefile; then
-        key="mender-cli/${mender_cli_version}/linux/mender-cli"
-        if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
-          echo "Not publishing ${key} as it exists and is a final or build tag."
-        else
-          echo "Publishing ${mender_cli_version} version for linux to S3";
-          aws s3 cp stage-artifacts/mender-cli.linux.amd64 "s3://mender/${key}";
-          aws s3api put-object-acl --acl public-read --bucket mender --key "${key}";
-        fi
+    -   key="mender-cli/${mender_cli_version}/linux/mender-cli"
+    -   if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
+    -     echo "Not publishing ${key} as it exists and is a final or build tag."
+    -   else
+    -     echo "Publishing ${mender_cli_version} version for linux to S3"
+    -     aws s3 cp stage-artifacts/mender-cli.linux.amd64 "s3://mender/${key}"
+    -     aws s3api put-object-acl --acl public-read --bucket mender --key "${key}"
+    -   fi
 
-        key="mender-cli/${mender_cli_version}/darwin/mender-cli"
-        if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
-          echo "Not publishing ${key} as it exists and is final or build tag."
-        else
-          echo "Publishing ${mender_cli_version} version for darwin to S3";
-          aws s3 cp stage-artifacts/mender-cli.darwin.amd64 "s3://mender/${key}";
-          aws s3api put-object-acl --acl public-read --bucket mender --key "${key}";
-        fi
-      else
-        key="mender-cli/${mender_cli_version}/mender-cli"
-        if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
-          echo "Not publishing ${key} as it exists and is final or build tag."
-        else
-          aws s3 cp stage-artifacts/mender-cli "s3://mender/${key}";
-          aws s3api put-object-acl --acl public-read --bucket mender --key "${key}";
-        fi
-      fi
+    -   key="mender-cli/${mender_cli_version}/darwin/mender-cli"
+    -   if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
+    -     echo "Not publishing ${key} as it exists and is final or build tag."
+    -   else
+    -     echo "Publishing ${mender_cli_version} version for darwin to S3"
+    -     aws s3 cp stage-artifacts/mender-cli.darwin.amd64 "s3://mender/${key}"
+    -     aws s3api put-object-acl --acl public-read --bucket mender --key "${key}"
+    -   fi
+    - else
+    -   key="mender-cli/${mender_cli_version}/mender-cli"
+    -   if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
+    -     echo "Not publishing ${key} as it exists and is final or build tag."
+    -   else
+    -     aws s3 cp stage-artifacts/mender-cli "s3://mender/${key}"
+    -     aws s3api put-object-acl --acl public-read --bucket mender --key "${key}"
+    -   fi
+    - fi
     # mender-artifact
     - mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version $INTEGRATION_REV)
     - is_build_or_final_tag=0
@@ -375,17 +376,17 @@ release_board_artifacts:raspberrypi4:automatic:
     - fi
     - echo "=== mender-artifact $mender_artifact_version ==="
     - for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
-        platform=${bin#mender-artifact-};
-        platform=${platform%.*};
-        key="mender-artifact/${mender_artifact_version}/${platform}/mender-artifact"
-        if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
-          echo "Not publishing ${key} as it exists and is final or build tag."
-        else
-          echo "Publishing ${mender_artifact_version} version for ${platform} to S3";
-          aws s3 cp stage-artifacts/${bin} "s3://mender/${key}";
-          aws s3api put-object-acl --acl public-read --bucket mender --key "${key}";
-        fi
-      done
+    -   platform=${bin#mender-artifact-}
+    -   platform=${platform%.*}
+    -   key="mender-artifact/${mender_artifact_version}/${platform}/mender-artifact"
+    -   if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
+    -     echo "Not publishing ${key} as it exists and is final or build tag."
+    -   else
+    -     echo "Publishing ${mender_artifact_version} version for ${platform} to S3"
+    -     aws s3 cp stage-artifacts/${bin} "s3://mender/${key}"
+    -     aws s3api put-object-acl --acl public-read --bucket mender --key "${key}"
+    -   fi
+    - done
 
 # Use "needs" for :manual to unlock mender-convert build in advance
 # or to trigger it despite mender-qa tests errors
@@ -456,6 +457,9 @@ release_mender-monitor:automatic:
     - init:workspace
     - build:mender-gateway:package
   before_script:
+    # Early exit when building an integration version without mender-gateway
+    - tar -tf workspace.tar.gz
+        ./go/src/github.com/mendersoftware/mender-gateway  >/dev/null 2>/dev/null || exit 0
     # Install dependencies
     - apt update && apt install -yyq awscli git wget python3 python3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
