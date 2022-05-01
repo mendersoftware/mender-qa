@@ -288,6 +288,8 @@ copy_clean_image() {
     local features
 
     features=`bitbake -e $image_name | egrep '^MENDER_FEATURES='`
+    # fall back to DISTRO_FEATURES if we found no MENDER_FEATURES
+    [[ "$features" == "" ]] && features=`bitbake -e $image_name | egrep '^DISTRO_FEATURES='`
     egrep -q '\bmender-image-uefi\b' <<<${features} && extension="uefiimg"
     egrep -q '\bmender-image-sd\b' <<<${features} && extension="sdimg"
     filename="$(bitbake -e $image_name | egrep '^IMAGE_LINK_NAME=' | sed -e 's/.*=//' -e 's/\"//g').${extension}"
