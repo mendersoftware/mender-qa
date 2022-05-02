@@ -466,11 +466,14 @@ build_and_test_client() {
         clean_build_config
         bp;
         bitbake $image_name
+        bp;
         clean_image=`copy_clean_image "${machine_name}" "${board_name}" "${image_name}" "${device_type}"`
         restore_build_config
 
         # Base image
+        bp;
         bitbake $image_name
+        bp;
         if ${BUILD_DOCKER_IMAGES:-false}; then
             $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${clean_image}" \
@@ -484,10 +487,14 @@ build_and_test_client() {
         # R/O image
         if [[ $image_name == core-image-full-cmdline ]]; then
             clean_build_config
+            bp;
             bitbake mender-image-full-cmdline-rofs
+            bp;
             clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs" "${device_type}"`
             restore_build_config
+            bp;
             bitbake mender-image-full-cmdline-rofs
+            bp;
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${clean_image}" \
@@ -506,10 +513,14 @@ build_and_test_client() {
                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             clean_build_config
+            bp;
             bitbake mender-monitor-image-full-cmdline
+            bp;
             clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-monitor-image-full-cmdline" "${device_type}"`
             restore_build_config
+            bp;
             bitbake mender-monitor-image-full-cmdline
+            bp;
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${clean_image}" \
@@ -532,10 +543,14 @@ build_and_test_client() {
                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             clean_build_config
+            bp;
             bitbake mender-gateway-image-full-cmdline
+            bp;
             clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-gateway-image-full-cmdline" "${device_type}"`
             restore_build_config
+            bp;
             bitbake mender-gateway-image-full-cmdline
+            bp;
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${clean_image}" \
@@ -598,7 +613,9 @@ build_and_test_client() {
             echo 'MENDER_FEATURES_ENABLE_append = " mender-testing-enabled"' >> $BUILDDIR/conf/local.conf
             fi
 
+            bp;
             bitbake $image_name
+            bp;
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
 
