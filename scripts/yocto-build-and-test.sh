@@ -458,6 +458,7 @@ build_and_test_client() {
         prepare_build_config $machine_name $board_name
 
         cd $BUILDDIR
+        git --version
 
         # Base image clean
         clean_build_config
