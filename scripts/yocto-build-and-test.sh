@@ -403,9 +403,16 @@ select_build_config() {
     echo $machine_to_build $board_to_build $image_to_build $device_type_to_build
 }
 
+function chckown() {
+ local s
+ local i
+ s=""; for i in `echo ${WORKSPACE}/go/src/github.com/mendersoftware/mender | tr '/' '\n' | grep . --color`; do s=${s}/${i}; ls -ald $s; done
+}
+
 function bp() {
  local b
 
+ chckown
  if [[ "$DEBUG_BPS" == "0" || "$DEBUG_BPS" == "" ]]; then
   return
  fi
