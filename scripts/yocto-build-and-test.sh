@@ -406,7 +406,7 @@ select_build_config() {
 function bp() {
  local b
 
- if [[ "$DEBUG_BPS" == "" ]]; then
+ if [[ "$DEBUG_BPS" == "0" || "$DEBUG_BPS" == "" ]]; then
   return
  fi
  set +x
@@ -462,15 +462,17 @@ build_and_test_client() {
         # Base image clean
         clean_build_config
         bp;
-        bitbake $image_name
+        bitbake $image_name || DEBUG_BPS=1
         bp;
+        DEBUG_BPS=0
         clean_image=`copy_clean_image "${machine_name}" "${board_name}" "${image_name}" "${device_type}"`
         restore_build_config
 
         # Base image
         bp;
-        bitbake $image_name
+        bitbake $image_name || DEBUG_BPS=1
         bp;
+        DEBUG_BPS=0
         if ${BUILD_DOCKER_IMAGES:-false}; then
             $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${clean_image}" \
@@ -485,13 +487,15 @@ build_and_test_client() {
         if [[ $image_name == core-image-full-cmdline ]]; then
             clean_build_config
             bp;
-            bitbake mender-image-full-cmdline-rofs
+            bitbake mender-image-full-cmdline-rofs || DEBUG_BPS=1
             bp;
+            DEBUG_BPS=0
             clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs" "${device_type}"`
             restore_build_config
             bp;
-            bitbake mender-image-full-cmdline-rofs
+            bitbake mender-image-full-cmdline-rofs || DEBUG_BPS=1
             bp;
+            DEBUG_BPS=0
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${clean_image}" \
@@ -511,13 +515,15 @@ build_and_test_client() {
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             clean_build_config
             bp;
-            bitbake mender-monitor-image-full-cmdline
+            bitbake mender-monitor-image-full-cmdline || DEBUG_BPS=1
             bp;
+            DEBUG_BPS=0
             clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-monitor-image-full-cmdline" "${device_type}"`
             restore_build_config
             bp;
-            bitbake mender-monitor-image-full-cmdline
+            bitbake mender-monitor-image-full-cmdline || DEBUG_BPS=1
             bp;
+            DEBUG_BPS=0
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${clean_image}" \
@@ -541,13 +547,15 @@ build_and_test_client() {
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             clean_build_config
             bp;
-            bitbake mender-gateway-image-full-cmdline
+            bitbake mender-gateway-image-full-cmdline || DEBUG_BPS=1
             bp;
+            DEBUG_BPS=0
             clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-gateway-image-full-cmdline" "${device_type}"`
             restore_build_config
             bp;
-            bitbake mender-gateway-image-full-cmdline
+            bitbake mender-gateway-image-full-cmdline || DEBUG_BPS=1
             bp;
+            DEBUG_BPS=0
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${clean_image}" \
@@ -611,7 +619,7 @@ build_and_test_client() {
             fi
 
             bp;
-            bitbake $image_name
+            bitbake $image_name || DEBUG_BPS=1
             bp;
 
             DEBUG_BPS=1
