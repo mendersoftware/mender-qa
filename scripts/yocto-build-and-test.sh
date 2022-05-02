@@ -403,6 +403,26 @@ select_build_config() {
     echo $machine_to_build $board_to_build $image_to_build $device_type_to_build
 }
 
+function bp() {
+ local b
+
+ if [[ "$DEBUG_BPS" == "" ]]; then
+  return
+ fi
+ set +e
+ set +x
+ export BP_ID_=${BP_ID_:-0}
+ let BP_ID_++
+ b="/tmp/bp${BP_ID_}"
+ echo "bp_:waiting at ${b} ${FUNCNAME[1]}.${BASH_LINENO[0]}${2}"
+ while [ ! -f "${b}" ]; do
+  sleep 1
+ done
+ echo "bp_:released at ${b} ${FUNCNAME[1]}.${BASH_LINENO[0]}${2}"
+ set -e
+ set -x
+}
+
 # ------------------------------------------------------------------------------
 # Generic function for building and testing client.
 #
@@ -440,9 +460,11 @@ build_and_test_client() {
         prepare_build_config $machine_name $board_name
 
         cd $BUILDDIR
+        DEBUG_BPS=1
 
         # Base image clean
         clean_build_config
+        bp;
         bitbake $image_name
         clean_image=`copy_clean_image "${machine_name}" "${board_name}" "${image_name}" "${device_type}"`
         restore_build_config
