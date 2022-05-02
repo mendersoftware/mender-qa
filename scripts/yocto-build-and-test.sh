@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -x -E
+set -x -E
 
 export S3_BUCKET_NAME=${S3_BUCKET_NAME:-"mender-binaries"}
 
