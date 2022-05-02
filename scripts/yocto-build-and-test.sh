@@ -458,7 +458,6 @@ build_and_test_client() {
         prepare_build_config $machine_name $board_name
 
         cd $BUILDDIR
-        DEBUG_BPS=1
 
         # Base image clean
         clean_build_config
@@ -613,6 +612,9 @@ build_and_test_client() {
 
             bp;
             bitbake $image_name
+            bp;
+
+            DEBUG_BPS=1
             bp;
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
