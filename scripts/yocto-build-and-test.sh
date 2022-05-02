@@ -409,7 +409,6 @@ function bp() {
  if [[ "$DEBUG_BPS" == "" ]]; then
   return
  fi
- set +e
  set +x
  export BP_ID_=${BP_ID_:-0}
  let BP_ID_++
@@ -419,7 +418,6 @@ function bp() {
   sleep 1
  done
  echo "bp_:released at ${b} ${FUNCNAME[1]}.${BASH_LINENO[0]}${2}"
- set -e
  set -x
 }
 
