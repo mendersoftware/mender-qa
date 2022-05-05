@@ -3,8 +3,7 @@
   image: mendersoftware/mender-test-containers:mender-client-acceptance-testing
   needs:
     - init:workspace
-    - build:mender-monitor:package
-    - build:mender-gateway:package
+    - build:mender-monitor-package
   tags:
     - mender-qa-slave-highcpu
   before_script:

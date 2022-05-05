@@ -137,27 +137,9 @@ EOF
         fi
     cat >> $BUILDDIR/conf/local.conf <<EOF
 LICENSE_FLAGS_WHITELIST += "commercial_mender-monitor"
-SRC_URI_pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/$mender_monitor_filename"
+SRC_URI_pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/mender-monitor-*.tar.gz"
 PREFERRED_VERSION_pn-mender-monitor = "$mender_monitor_version"
 EOF
-    fi
-
-    if has_component mender-gateway; then
-        local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
-        tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-        local mender_gateway_version=$(/tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
-        rm /tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-        if [ -z "$mender_gateway_version" ]; then
-            mender_gateway_version="master-git%"
-        fi
-        local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-examples-*.tar" | head -n1 | xargs basename)
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-LICENSE_FLAGS_WHITELIST += "commercial_mender-gateway"
-SRC_URI_pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/$mender_gateway_filename"
-SRC_URI_pn-mender-gateway_append = " file:///$WORKSPACE/stage-artifacts/$mender_gateway_examples_filename"
-PREFERRED_VERSION_pn-mender-gateway = "$mender_gateway_version"
-EOF
-    fi
 
     if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -512,32 +494,6 @@ build_and_test_client() {
                 # image, nor any tests for it.
                 $WORKSPACE/integration/extra/release_tool.py \
                     --set-version-of mender-monitor-qemu-commercial \
-                    --version pr || true
-            fi
-            bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-commercial
-        fi
-
-        # Check if there is a mender-gateway image recipe available.
-        if has_component mender-gateway \
-               && [[ $image_name == core-image-full-cmdline ]] \
-               && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
-            bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
-            clean_build_config
-            bitbake mender-gateway-image-full-cmdline
-            clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-gateway-image-full-cmdline" "${device_type}"`
-            restore_build_config
-            bitbake mender-gateway-image-full-cmdline
-            if ${BUILD_DOCKER_IMAGES:-false}; then
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
-                    -I "${clean_image}" \
-                    -i mender-gateway-image-full-cmdline \
-                    $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-gateway-qemu-commercial:pr
-                # It's ok if the next step fails, it just means we are
-                # testing a version of integration that neither has a gateway
-                # image, nor any tests for it.
-                $WORKSPACE/integration/extra/release_tool.py \
-                    --set-version-of mender-gateway-qemu-commercial \
                     --version pr || true
             fi
             bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-commercial
