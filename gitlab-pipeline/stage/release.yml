@@ -36,7 +36,7 @@
     -   VERSION_TYPE_PARAMS="--version-type docker"
     - fi
     # Load, tag and push Docker images
-    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
+    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | grep -v mender-gateway); do
         version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV);
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
         docker load -i stage-artifacts/${image}.tar;

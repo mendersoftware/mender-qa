@@ -518,9 +518,7 @@ build_and_test_client() {
         fi
 
         # Check if there is a mender-gateway image recipe available.
-        if has_component mender-gateway \
-               && [[ $image_name == core-image-full-cmdline ]] \
-               && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
+        if false ; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             clean_build_config
             bitbake mender-gateway-image-full-cmdline
