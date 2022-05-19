@@ -253,50 +253,6 @@ EOF
     fi
 }
 
-# prepares the configuration for the so-called clean image. this is the image
-# that will be embedded in the client containers and then used in integartion tests
-# see integration/tests/run.sh
-# the main idea is to change the artifact_info and the additional targets are added 
-# in order to distinguish this image (for instance so we can recognize it from
-# the inside in the tests)
-clean_build_config() {
-    sed -i.backup -e 's/^MENDER_ARTIFACT_NAME = .*/MENDER_ARTIFACT_NAME = "mender-image-clean"/' $BUILDDIR/conf/local.conf
-    echo 'IMAGE_INSTALL_append = " sqlite3 lsof"' >> "$BUILDDIR/conf/local.conf"
-    echo "using following $BUILDDIR/conf/local.conf as clean image {{{"
-    cat "$BUILDDIR/conf/local.conf" | grep -v '^#' | grep -v ^$ || true
-    echo "}}}"
-}
-
-# restore the changes made by clean_build_config and to build the regular images
-# regular being the ones that run on the devices initially
-# the bitbake mannder-artifact-info part is needed to pickup the MENDER_ARTIFACT_NAME
-# change
-restore_build_config() {
-    mv -fv "${BUILDDIR}/conf/local.conf.backup" "${BUILDDIR}/conf/local.conf"
-    bitbake mender-artifact-info
-}
-
-# copies and returns the file path to the clean image, used later in the tests to update to
-# (see above comment in clean_build_config)
-copy_clean_image() {
-    local machine_name="$1"
-    local board_name="$2"
-    local image_name="$3"
-    local device_type="$4"
-    local extension=""
-    local filename
-    local features
-
-    features=`bitbake -e $image_name | egrep '^MENDER_FEATURES='`
-    egrep -q '\bmender-image-uefi\b' <<<${features} && extension="uefiimg"
-    egrep -q '\bmender-image-sd\b' <<<${features} && extension="sdimg"
-    filename="$(bitbake -e $image_name | egrep '^IMAGE_LINK_NAME=' | sed -e 's/.*=//' -e 's/\"//g').${extension}"
-    cp -Lv "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}" 1>&2
-    # we need to compress the image otherwise we catch the payload too large 413 on publish
-    gzip -8 ${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename} || true
-    echo "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}.gz"
-}
-
 init_environment() {
     # Verify mender-qa directory exists
     if [ ! -d mender-qa ]
@@ -425,7 +381,6 @@ build_and_test_client() {
         local board_name="$2"
         local image_name="$3"
         local device_type="$4"
-        local clean_image
 
         if ! is_building_board $board_name; then
             echo "Not building board? We should never get here."
@@ -439,17 +394,10 @@ build_and_test_client() {
 
         cd $BUILDDIR
 
-        # Base image clean
-        clean_build_config
-        bitbake $image_name
-        clean_image=`copy_clean_image "${machine_name}" "${board_name}" "${image_name}" "${device_type}"`
-        restore_build_config
-
         # Base image
         bitbake $image_name
         if ${BUILD_DOCKER_IMAGES:-false}; then
             $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
-                -I "${clean_image}" \
                 $machine_name \
                 -t mendersoftware/mender-client-qemu:pr
             $WORKSPACE/integration/extra/release_tool.py \
@@ -459,14 +407,9 @@ build_and_test_client() {
 
         # R/O image
         if [[ $image_name == core-image-full-cmdline ]]; then
-            clean_build_config
-            bitbake mender-image-full-cmdline-rofs
-            clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs" "${device_type}"`
-            restore_build_config
             bitbake mender-image-full-cmdline-rofs
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
-                    -I "${clean_image}" \
                     -i mender-image-full-cmdline-rofs \
                     $machine_name \
                     -t mendersoftware/mender-client-qemu-rofs:pr
@@ -481,14 +424,9 @@ build_and_test_client() {
                && [[ $image_name == core-image-full-cmdline ]] \
                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
-            clean_build_config
-            bitbake mender-monitor-image-full-cmdline
-            clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-monitor-image-full-cmdline" "${device_type}"`
-            restore_build_config
             bitbake mender-monitor-image-full-cmdline
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
-                    -I "${clean_image}" \
                     -i mender-monitor-image-full-cmdline \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr
@@ -507,14 +445,9 @@ build_and_test_client() {
                && [[ $image_name == core-image-full-cmdline ]] \
                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
-            clean_build_config
-            bitbake mender-gateway-image-full-cmdline
-            clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-gateway-image-full-cmdline" "${device_type}"`
-            restore_build_config
             bitbake mender-gateway-image-full-cmdline
             if ${BUILD_DOCKER_IMAGES:-false}; then
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
-                    -I "${clean_image}" \
                     -i mender-gateway-image-full-cmdline \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-gateway-qemu-commercial:pr
