@@ -261,7 +261,7 @@ EOF
 # the inside in the tests)
 clean_build_config() {
     sed -i.backup -e 's/^MENDER_ARTIFACT_NAME = .*/MENDER_ARTIFACT_NAME = "mender-image-clean"/' $BUILDDIR/conf/local.conf
-    echo 'IMAGE_INSTALL_append = " sqlite3 lsof"' >> "$BUILDDIR/conf/local.conf"
+#     echo 'IMAGE_INSTALL_append = " sqlite3 lsof"' >> "$BUILDDIR/conf/local.conf"
     echo "using following $BUILDDIR/conf/local.conf as clean image {{{"
     cat "$BUILDDIR/conf/local.conf" | grep -v '^#' | grep -v ^$ || true
     echo "}}}"
