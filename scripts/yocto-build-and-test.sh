@@ -316,7 +316,8 @@ init_environment() {
     # Handle meta-mender sub modules.
     cd $WORKSPACE/meta-mender
     git submodule update --init --recursive
-    ( cd tests/acceptance/image-tests && git checkout -b bp0 origin/bp0; );
+# ( cd tests/acceptance/image-tests && git checkout -b bp0 origin/bp0; );
+    ( cd tests/acceptance/image-tests && git checkout -b cleanstate_in_tests origin/cleanstate_in_tests; );
     cd $WORKSPACE
 
     # Get mender-binary-delta and add it to the PATH
