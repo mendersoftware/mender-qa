@@ -403,16 +403,6 @@ select_build_config() {
     echo $machine_to_build $board_to_build $image_to_build $device_type_to_build
 }
 
-# often we are started getting
-# "fatal: unsafe repository ('/builds/Northern.tech/Mender/go/src/github.com/mendersoftware/mender' is owned by someone else)"
-# * happens a lot, but not always
-# * debugged, stopped at the error, cannot reproduce: make command passes, owners match
-# * once mender directory (last element of the above path) is chown root error can be seen
-# * this is the only workaround we have for now
-prepare_git_repos_settings() {
-    git config --global --add safe.directory "${WORKSPACE}/go/src/github.com/mendersoftware/mender"
-}
-
 # ------------------------------------------------------------------------------
 # Generic function for building and testing client.
 #
@@ -450,9 +440,6 @@ build_and_test_client() {
         prepare_build_config $machine_name $board_name
 
         cd $BUILDDIR
-
-        # Additional git settings on repos
-        prepare_git_repos_settings
 
         # Base image clean
         clean_build_config
