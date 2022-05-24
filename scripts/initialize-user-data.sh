@@ -36,12 +36,16 @@ cp -r /root/mender-qa /home/jenkins
 # Key generated for the purpose of connecting to build-artifacts-cache
 # via SFTP and getting the build artifacts (for normal build hosts) or
 # getting the nested VM image (for hosts that run nested-vm.sh).
-privkeyfile=/root/*id_rsa
-privkeybase=`basename $privkeyfile`  ||  true
-[ -f $privkeyfile ] \
-    && cp $privkeyfile       /home/jenkins/.ssh/id_rsa \
-    && chmod 600             /home/jenkins/.ssh/id_rsa \
-    && cp /root/mender-qa/data/$privkeybase.pub /home/jenkins/.ssh/id_rsa.pub
+copy_key() {
+  privkeyfile=/root/*$1
+  privkeybase=$(basename $privkeyfile) || true
+  [ -f $privkeyfile ] \
+    && cp $privkeyfile /home/jenkins/.ssh/$1 \
+    && chmod 600         /home/jenkins/.ssh/$1 \
+    && cp /root/mender-qa/data/$privkeybase.pub /home/jenkins/.ssh/$1.pub
+}
+copy_key id_rsa
+copy_key id_ed25519 || true # as of 2022 June this can be optional
 cp /root/mender-qa/data/known_hosts                    /home/jenkins/.ssh/known_hosts
 
 
