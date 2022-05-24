@@ -145,7 +145,7 @@ EOF
     if has_component mender-gateway; then
         local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
         tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-        local mender_gateway_version=$(/tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway --version | head -n 1 | egrep -o 'mender-gateway: ([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
+        local mender_gateway_version=$(/tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway --version | head -n 1 | egrep -o '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
         rm /tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
         if [ -z "$mender_gateway_version" ]; then
             mender_gateway_version="master-git%"
