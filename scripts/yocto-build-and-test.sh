@@ -44,6 +44,14 @@ is_building_extra_images_for_board() {
     return $ret
 }
 
+bitbake_override_separator() {
+    if egrep -q '^\s*LOCALCONF_VERSION\s*\?{0,2}=\s*"1"' "$WORKSPACE/meta/conf/sanity.conf"; then
+        echo -n "_"
+    else
+        echo -n ":"
+    fi
+}
+
 has_component() {
     test -d $WORKSPACE/go/src/github.com/mendersoftware/$1
     return $?
@@ -136,12 +144,12 @@ prepare_build_config() {
     local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
     local mender_connect_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-connect --in-integration-version HEAD)
 
+    local sep="$(bitbake_override_separator)"
 
     local mender_binary_delta_version=$($WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
     cat >> $BUILDDIR/conf/local.conf <<EOF
-LICENSE_FLAGS_WHITELIST = "commercial_mender-binary-delta"
-FILESEXTRAPATHS_prepend_pn-mender-binary-delta := "$WORKSPACE/mender-binary-delta:"
-PREFERRED_VERSION_pn-mender-binary-delta = "$mender_binary_delta_version"
+FILESEXTRAPATHS${sep}prepend${sep}pn-mender-binary-delta := "$WORKSPACE/mender-binary-delta:"
+PREFERRED_VERSION${sep}pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
 
     if has_component monitor-client; then
@@ -151,9 +159,8 @@ EOF
             mender_monitor_version="master-git%"
         fi
     cat >> $BUILDDIR/conf/local.conf <<EOF
-LICENSE_FLAGS_WHITELIST += "commercial_mender-monitor"
-SRC_URI_pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/$mender_monitor_filename"
-PREFERRED_VERSION_pn-mender-monitor = "$mender_monitor_version"
+SRC_URI${sep}pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/$mender_monitor_filename"
+PREFERRED_VERSION${sep}pn-mender-monitor = "$mender_monitor_version"
 EOF
     fi
 
@@ -167,16 +174,15 @@ EOF
         fi
         local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-examples-*.tar" | head -n1 | xargs basename)
         cat >> $BUILDDIR/conf/local.conf <<EOF
-LICENSE_FLAGS_WHITELIST += "commercial_mender-gateway"
-SRC_URI_pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/$mender_gateway_filename"
-SRC_URI_pn-mender-gateway_append = " file:///$WORKSPACE/stage-artifacts/$mender_gateway_examples_filename"
-PREFERRED_VERSION_pn-mender-gateway = "$mender_gateway_version"
+SRC_URI${sep}pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/$mender_gateway_filename"
+SRC_URI${sep}pn-mender-gateway${sep}append = " file:///$WORKSPACE/stage-artifacts/$mender_gateway_examples_filename"
+PREFERRED_VERSION${sep}pn-mender-gateway = "$mender_gateway_version"
 EOF
     fi
 
     if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
+PREFERRED_VERSION${sep}pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
 EOF
     fi
 
@@ -185,12 +191,12 @@ EOF
 # MEN-2948: Renamed mender recipe -> mender-client
 # But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
-EXTERNALSRC_pn-mender = "$WORKSPACE/go"
-EXTERNALSRC_pn-mender-client = "$WORKSPACE/go"
-EXTERNALSRC_pn-mender-client-native = "$WORKSPACE/go"
-EXTERNALSRC_pn-mender-artifact = "$WORKSPACE/go"
-EXTERNALSRC_pn-mender-artifact-native = "$WORKSPACE/go"
-EXTERNALSRC_pn-mender-connect= "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-client = "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-client-native = "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-artifact = "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-artifact-native = "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-connect= "$WORKSPACE/go"
 EOF
 
     # Use network cache if present, if not, use local cache.
@@ -230,40 +236,40 @@ EOF
 # MEN-2948: Renamed mender recipe -> mender-client
 # But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
-PREFERRED_VERSION_pn-mender = "$mender_on_exact_tag"
-PREFERRED_VERSION_pn-mender-client = "$mender_on_exact_tag"
-PREFERRED_VERSION_pn-mender-client-native = "$mender_on_exact_tag"
+PREFERRED_VERSION${sep}pn-mender = "$mender_on_exact_tag"
+PREFERRED_VERSION${sep}pn-mender-client = "$mender_on_exact_tag"
+PREFERRED_VERSION${sep}pn-mender-client-native = "$mender_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
 # MEN-2948: Renamed mender recipe -> mender-client
 # But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
-PREFERRED_VERSION_pn-mender = "$client_version-git%"
-PREFERRED_VERSION_pn-mender-client = "$client_version-git%"
-PREFERRED_VERSION_pn-mender-client-native = "$client_version-git%"
+PREFERRED_VERSION${sep}pn-mender = "$client_version-git%"
+PREFERRED_VERSION${sep}pn-mender-client = "$client_version-git%"
+PREFERRED_VERSION${sep}pn-mender-client-native = "$client_version-git%"
 EOF
     fi
 
     if [ -n "$mender_artifact_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-artifact = "$mender_artifact_on_exact_tag"
-PREFERRED_VERSION_pn-mender-artifact-native = "$mender_artifact_on_exact_tag"
+PREFERRED_VERSION${sep}pn-mender-artifact = "$mender_artifact_on_exact_tag"
+PREFERRED_VERSION${sep}pn-mender-artifact-native = "$mender_artifact_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-artifact = "$mender_artifact_version-git%"
-PREFERRED_VERSION_pn-mender-artifact-native = "$mender_artifact_version-git%"
+PREFERRED_VERSION${sep}pn-mender-artifact = "$mender_artifact_version-git%"
+PREFERRED_VERSION${sep}pn-mender-artifact-native = "$mender_artifact_version-git%"
 EOF
     fi
 
     if [ -n "$mender_connect_on_exact_tag" ]; then
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-connect = "$mender_connect_on_exact_tag"
+PREFERRED_VERSION${sep}pn-mender-connect = "$mender_connect_on_exact_tag"
 EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION_pn-mender-connect = "$mender_connect_version-git%"
+PREFERRED_VERSION${sep}pn-mender-connect = "$mender_connect_version-git%"
 EOF
     fi
 }
@@ -275,8 +281,9 @@ EOF
 # in order to distinguish this image (for instance so we can recognize it from
 # the inside in the tests)
 clean_build_config() {
+    local sep="$(bitbake_override_separator)"
     sed -i.backup -e 's/^MENDER_ARTIFACT_NAME = .*/MENDER_ARTIFACT_NAME = "mender-image-clean"/' $BUILDDIR/conf/local.conf
-    echo 'IMAGE_INSTALL_append = " sqlite3 lsof"' >> "$BUILDDIR/conf/local.conf"
+    echo "IMAGE_INSTALL${sep}append = \" sqlite3 lsof\"" >> "$BUILDDIR/conf/local.conf"
     echo "using following $BUILDDIR/conf/local.conf as clean image {{{"
     cat "$BUILDDIR/conf/local.conf" | grep -v '^#' | grep -v ^$ || true
     echo "}}}"
@@ -591,7 +598,7 @@ build_and_test_client() {
 
             # Zeus and older do not have this.
             if grep -q mender-testing-enabled $WORKSPACE/meta-mender/meta-mender-core/classes/mender-maybe-setup.bbclass; then
-            echo 'MENDER_FEATURES_ENABLE_append = " mender-testing-enabled"' >> $BUILDDIR/conf/local.conf
+                echo "MENDER_FEATURES_ENABLE$(bitbake_override_separator)append = \" mender-testing-enabled\"" >> $BUILDDIR/conf/local.conf
             fi
 
             bitbake $image_name
