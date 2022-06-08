@@ -101,6 +101,7 @@ for integ_version in $integration_versions; do
     -F variables[TEST_BEAGLEBONEBLACK]=false \
     -F variables[BUILD_RASPBERRYPI3]=false \
     -F variables[TEST_RASPBERRYPI3]=false \
+    -F variables[RUN_BACKEND_INTEGRATION_TESTS]=false \
     -F variables[RUN_INTEGRATION_TESTS]=false \
     $variables_revs \
     https://gitlab.com/api/v4/projects/12501706/trigger/pipeline

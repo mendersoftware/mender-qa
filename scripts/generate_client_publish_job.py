@@ -136,6 +136,7 @@ def generate(integration_repo, args):
                 "TEST_BEAGLEBONEBLACK": "false",
                 "BUILD_RASPBERRYPI3": "false",
                 "TEST_RASPBERRYPI3": "false",
+                "RUN_BACKEND_INTEGRATION_TESTS": "false",
                 "RUN_INTEGRATION_TESTS": "false",
             },
         }
