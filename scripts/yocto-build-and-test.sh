@@ -29,6 +29,21 @@ is_testing_board() {
     return $ret
 }
 
+# Here is the rationale behind this function: It takes a lot of time to build
+# all the extra Yocto images apart from the base image, like the read-only
+# image, commercial image, etc. We only need them to build Docker images, so we
+# could simply test for that. However, there is testing value in simply building
+# the image for a given board type, even if we won't actually use the image. So
+# use either of those two as triggers. If we are not building Docker images, and
+# not testing this board, then disable the image building, which saves a lot of
+# time when doing pure builds.
+is_building_extra_images_for_board() {
+    local ret=0
+    local board_name="$1"
+    ${BUILD_DOCKER_IMAGES:-false} || is_testing_board "$board_name" || ret=$?
+    return $ret
+}
+
 has_component() {
     test -d $WORKSPACE/go/src/github.com/mendersoftware/$1
     return $?
@@ -460,7 +475,8 @@ build_and_test_client() {
         fi
 
         # R/O image
-        if [[ $image_name == core-image-full-cmdline ]]; then
+        if is_building_extra_images_for_board "$board_name" \
+                && [[ $image_name == core-image-full-cmdline ]]; then
             clean_build_config
             bitbake mender-image-full-cmdline-rofs
             clean_image=`copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs" "${device_type}"`
@@ -479,9 +495,10 @@ build_and_test_client() {
         fi
 
         # Check if there is a mender-monitor image recipe available.
-        if has_component monitor-client \
-               && [[ $image_name == core-image-full-cmdline ]] \
-               && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
+        if is_building_extra_images_for_board "$board_name" \
+                && has_component monitor-client \
+                && [[ $image_name == core-image-full-cmdline ]] \
+                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             clean_build_config
             bitbake mender-monitor-image-full-cmdline
@@ -505,9 +522,10 @@ build_and_test_client() {
         fi
 
         # Check if there is a mender-gateway image recipe available.
-        if has_component mender-gateway \
-               && [[ $image_name == core-image-full-cmdline ]] \
-               && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
+        if is_building_extra_images_for_board "$board_name" \
+                && has_component mender-gateway \
+                && [[ $image_name == core-image-full-cmdline ]] \
+                && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
             bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
             clean_build_config
             bitbake mender-gateway-image-full-cmdline
