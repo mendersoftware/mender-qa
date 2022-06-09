@@ -67,6 +67,7 @@ variables:
   SPECIFIC_ACCEPTANCE_TEST: ""
 
   # Integration and backend integration tests
+  RUN_BACKEND_INTEGRATION_TESTS: "true"
   RUN_INTEGRATION_TESTS: "true"
   SPECIFIC_INTEGRATION_TEST: ""
   TESTS_IN_PARALLEL: "4"

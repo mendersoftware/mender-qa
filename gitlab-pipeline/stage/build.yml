@@ -67,6 +67,7 @@ build:servers:
   only:
     variables:
       - $BUILD_SERVERS == "true"
+      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   needs:
     - init:workspace
@@ -121,6 +122,7 @@ build:mender-cli:
   only:
     variables:
       - $BUILD_SERVERS == "true"
+      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   image: golang:1.15-alpine3.12
   needs:
@@ -173,6 +175,7 @@ build:mender-artifact:
   only:
     variables:
       - $BUILD_CLIENT == "true"
+      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   image: docker:19.03
   services:

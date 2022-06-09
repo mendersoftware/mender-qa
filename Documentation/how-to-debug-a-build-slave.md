@@ -23,7 +23,7 @@ Important! When selecting the region/zone, you select `northamerica-northeast1-b
    out, but only after many hours.
 
    If the job you're interested in is a server-only job, select only the
-   RUN_INTEGRATION_TESTS parameter.
+   RUN_BACKEND_INTEGRATION_TESTS parameter.
 
 3. Let the job commence until the build slave is finished cloning and has
    started the build steps (this is where they SSH keys are added). It is
