@@ -124,7 +124,7 @@ build:mender-cli:
       - $BUILD_SERVERS == "true"
       - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
-  image: golang:1.15-alpine3.12
+  image: golang:1.18-alpine3.15
   needs:
     - init:workspace
   before_script:
