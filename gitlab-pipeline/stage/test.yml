@@ -8,7 +8,7 @@ test:backend-integration:open_source:
   variables:
     TEST_SUITE: "open"
   services:
-    - docker:19.03-dind
+    - docker:dind
   tags:
     - mender-qa-slave-highcpu
   needs:

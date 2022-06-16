@@ -18,7 +18,7 @@ build:client:qemu:
   stage: yocto:build-n-test
   extends: .template_build_test_acc
   services:
-    - docker:19.03-dind
+    - docker:dind
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
     ONLY_BUILD: "true"
