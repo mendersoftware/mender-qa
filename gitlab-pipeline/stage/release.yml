@@ -6,7 +6,7 @@
   stage: release
   image: docker:19.03
   services:
-    - docker:19.03-dind
+    - docker:dind
   dependencies:
     - init:workspace
     - build:servers
@@ -500,7 +500,7 @@ release_docker_images:automatic:client-only:
   stage: release
   image: docker
   services:
-    - docker:19.03-dind
+    - docker:dind
   dependencies:
     - init:workspace
     - build:client:qemu

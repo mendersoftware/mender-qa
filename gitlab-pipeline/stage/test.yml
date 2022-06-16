@@ -148,7 +148,7 @@ test:backend-integration:enterprise:
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
   # run dockerd on the same host.
-  image: docker:19.03-dind
+  image: docker:dind
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300
