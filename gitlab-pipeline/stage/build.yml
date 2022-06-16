@@ -73,7 +73,7 @@ build:servers:
     - init:workspace
   image: docker
   services:
-    - docker:19.03-dind
+    - docker:dind
   tags:
     - mender-qa-slave-highcpu
   before_script:
