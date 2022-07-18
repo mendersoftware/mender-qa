@@ -44,6 +44,8 @@ is_building_extra_images_for_board() {
     return $ret
 }
 
+# The new ":" separator was introduced in Yocto kirkstone. Once we drop that
+# branch we can remove this function and all the references to it.
 bitbake_override_separator() {
     if egrep -q '^\s*LOCALCONF_VERSION\s*\?{0,2}=\s*"1"' "$WORKSPACE/meta/conf/sanity.conf"; then
         echo -n "_"
@@ -148,9 +150,22 @@ prepare_build_config() {
 
     local mender_binary_delta_version=$($WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
     cat >> $BUILDDIR/conf/local.conf <<EOF
-FILESEXTRAPATHS${sep}prepend${sep}pn-mender-binary-delta := "$WORKSPACE/mender-binary-delta:"
 PREFERRED_VERSION${sep}pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
+    # This condition is not actually related to the separator, but the new way
+    # to include mender-binary-delta binaries happened to change at the same
+    # time as the seperator, in kirkstone. Once that branch is dropped, we can
+    # keep only the SRC_URI variant below.
+    if [ "$sep" = "_" ]; then
+        cat >> "$BUILDDIR"/conf/local.conf <<EOF
+FILESEXTRAPATHS${sep}prepend${sep}pn-mender-binary-delta := "$WORKSPACE/mender-binary-delta:"
+EOF
+    else
+        local tarball=$(echo "$WORKSPACE"/mender-binary-delta/*.tar.xz)
+        cat >> "$BUILDDIR"/conf/local.conf <<EOF
+SRC_URI${sep}pn-mender-binary-delta = "file://${tarball}"
+EOF
+    fi
 
     if has_component monitor-client; then
         local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1 | xargs basename)
