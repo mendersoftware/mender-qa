@@ -44,6 +44,8 @@ is_building_extra_images_for_board() {
     return $ret
 }
 
+# The new ":" separator was introduced in Yocto kirkstone. Once we drop that
+# branch we can remove this function and all the references to it.
 bitbake_override_separator() {
     if egrep -q '^\s*LOCALCONF_VERSION\s*\?{0,2}=\s*"1"' "$WORKSPACE/meta/conf/sanity.conf"; then
         echo -n "_"
