@@ -69,6 +69,8 @@ build:servers:
       - $BUILD_SERVERS == "true"
       - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
+  variables:
+    DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
   image: docker
