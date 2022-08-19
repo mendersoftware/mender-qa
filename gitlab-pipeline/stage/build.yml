@@ -9,6 +9,8 @@ build:client:docker:
   only:
     variables:
       - $BUILD_CLIENT == "true"
+  variables:
+    DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
   image: docker
@@ -179,6 +181,8 @@ build:mender-artifact:
       - $BUILD_CLIENT == "true"
       - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
+  variables:
+    DOCKER_BUILDKIT: 1
   image: docker
   services:
     - docker:dind
