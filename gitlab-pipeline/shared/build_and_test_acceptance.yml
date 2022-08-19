@@ -1,6 +1,8 @@
 
 .template_build_test_acc:
   image: mendersoftware/mender-test-containers:mender-client-acceptance-testing
+  variables:
+    DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
     - build:mender-monitor:package

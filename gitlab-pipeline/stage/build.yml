@@ -9,9 +9,11 @@ build:client:docker:
   only:
     variables:
       - $BUILD_CLIENT == "true"
+  variables:
+    DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
-  image: docker:19.03
+  image: docker
   services:
     - docker:dind
   tags:
@@ -179,7 +181,9 @@ build:mender-artifact:
       - $BUILD_CLIENT == "true"
       - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
-  image: docker:19.03
+  variables:
+    DOCKER_BUILDKIT: 1
+  image: docker
   services:
     - docker:dind
   tags:
