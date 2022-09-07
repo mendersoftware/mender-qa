@@ -86,10 +86,10 @@ init:workspace:
     - )
 
     # Add MENDER_QA_REV, which is special, since it is this repository.
-    - if echo "$CI_BUILD_REF_NAME" | egrep '^pr_[0-9]+$'; then
-        export MENDER_QA_REV="pull/$(echo "$CI_BUILD_REF_NAME" | egrep -o '[0-9]+')/head";
+    - if echo "$CI_COMMIT_REF_NAME" | egrep '^pr_[0-9]+$'; then
+        export MENDER_QA_REV="pull/$(echo "$CI_COMMIT_REF_NAME" | egrep -o '[0-9]+')/head";
       else
-        export MENDER_QA_REV="$CI_BUILD_REF_NAME";
+        export MENDER_QA_REV="$CI_COMMIT_REF_NAME";
       fi
     - (
     -   cd mender-qa
