@@ -477,17 +477,14 @@ build_and_test_client() {
         # Base image
         local images_to_build=$image_name
 
-        if is_building_extra_images_for_board "$board_name"; then
-            if [[ $image_name == core-image-full-cmdline ]]; then
-                images_to_build+=" mender-image-full-cmdline-rofs"
-            fi
+        if is_building_extra_images_for_board "$board_name" \
+                && [[ $image_name == core-image-full-cmdline ]]; then
+            images_to_build+=" mender-image-full-cmdline-rofs"
             if has_component monitor-client \
-                    && [[ $image_name == core-image-full-cmdline ]] \
                     && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
                 images_to_build+=" mender-monitor-image-full-cmdline"
             fi
             if has_component mender-gateway \
-                    && [[ $image_name == core-image-full-cmdline ]] \
                     && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
                 images_to_build+=" mender-gateway-image-full-cmdline"
             fi
