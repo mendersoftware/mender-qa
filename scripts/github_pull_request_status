@@ -14,10 +14,10 @@ EOF
 # by setting the MENDER_QA_REV variables, but by simply checking out that
 # branch. It is recorded in the "CI_*" variables though.
 if [ "$CI_PROJECT_NAME" = "mender-qa" ]; then
-    if echo "$CI_BUILD_REF_NAME" | egrep '^pr_[0-9]+$'; then
-        export MENDER_QA_REV="pull/$(echo "$CI_BUILD_REF_NAME" | egrep -o '[0-9]+')/head"
+    if echo "$CI_COMMIT_REF_NAME" | egrep '^pr_[0-9]+$'; then
+        export MENDER_QA_REV="pull/$(echo "$CI_COMMIT_REF_NAME" | egrep -o '[0-9]+')/head"
     else
-        export MENDER_QA_REV="$CI_BUILD_REF_NAME"
+        export MENDER_QA_REV="$CI_COMMIT_REF_NAME"
     fi
 fi
 
