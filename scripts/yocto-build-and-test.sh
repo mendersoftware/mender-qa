@@ -507,7 +507,7 @@ build_and_test_client() {
         clean_build_config
         run_bitbake $images_to_build
         if ${BUILD_DOCKER_IMAGES:-false}; then
-            features=`bitbake -e $image_name | egrep '^MENDER_FEATURES='`
+            features=`bitbake -e $image_name | egrep '^MENDER_FEATURES=' || true`
             # fall back to DISTRO_FEATURES if we found no MENDER_FEATURES
             [[ "$features" == "" ]] && features=`bitbake -e $image_name | egrep '^DISTRO_FEATURES='`
             egrep -q '\bmender-image-uefi\b' <<<${features} && extension="uefiimg"
