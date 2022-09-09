@@ -94,6 +94,18 @@ modify_artifact() {
     mender-artifact write rootfs-image $device_types -n $new_artifact_name $file_flag $new_fs_image -o $new_artifact_file
 }
 
+run_bitbake() {
+    local ret=0
+    bitbake "$@" || ret=$?
+    if [ $ret -ne 0 ]; then
+        for log in $(find $WORKSPACE -name pseudo.log); do
+            echo "Printing $log:"
+            cat "$log"
+        done
+    fi
+    return $ret
+}
+
 prepare_and_set_PATH() {
     # On branches without recipe specific sysroots, the next step will fail
     # because the prepare_recipe_sysroot task doesn't exist. Use that failure
@@ -493,7 +505,7 @@ build_and_test_client() {
         # Build once with clean_build_config enabled and keep a copy.
         bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
         clean_build_config
-        bitbake $images_to_build
+        run_bitbake $images_to_build
         if ${BUILD_DOCKER_IMAGES:-false}; then
             features=`bitbake -e $image_name | egrep '^MENDER_FEATURES='`
             # fall back to DISTRO_FEATURES if we found no MENDER_FEATURES
@@ -509,7 +521,7 @@ build_and_test_client() {
         restore_build_config
 
         # Rebuild without clean_build_config.
-        bitbake $images_to_build
+        run_bitbake $images_to_build
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
             filename="clean-${image_name}-${machine_name}.${extension}"
@@ -612,7 +624,7 @@ build_and_test_client() {
                 echo "MENDER_FEATURES_ENABLE$(bitbake_override_separator)append = \" mender-testing-enabled\"" >> $BUILDDIR/conf/local.conf
             fi
 
-            bitbake $image_name
+            run_bitbake $image_name
 
             cd $WORKSPACE/meta-mender/tests/acceptance/
 
