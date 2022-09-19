@@ -111,6 +111,9 @@ def generate(integration_repo, args):
 
         document[job_key] = {
             "stage": stage_name,
+            "inherit": {
+                "variables": False,
+            },
             "trigger": {
                 "project": "Northern.tech/Mender/mender-qa",
                 "branch": "master",

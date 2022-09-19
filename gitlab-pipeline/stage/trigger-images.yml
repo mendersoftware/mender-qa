@@ -1,5 +1,7 @@
 .template:trigger:mender-convert:
   stage: trigger:images
+  inherit:
+    variables: false
   variables:
     MENDER_ARTIFACT_VERSION: $MENDER_ARTIFACT_REV
     MENDER_CLIENT_VERSION: $MENDER_REV
