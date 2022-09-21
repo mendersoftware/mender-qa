@@ -1,5 +1,7 @@
 trigger:mender-dist-packages:
   stage: trigger:packages
+  inherit:
+    variables: false
   needs: []
   rules:
     - if: $BUILD_MENDER_DIST_PACKAGES == "true"
