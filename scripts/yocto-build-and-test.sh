@@ -160,17 +160,18 @@ prepare_build_config() {
 
     local sep="$(bitbake_override_separator)"
 
-    local mender_binary_delta_version=$($WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta --version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
+    local mender_binary_delta_version=$(get_mender_binary_delta_version)
     cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION${sep}pn-mender-binary-delta = "$mender_binary_delta_version"
 EOF
     # This condition is not actually related to the separator, but the new way
     # to include mender-binary-delta binaries happened to change at the same
-    # time as the seperator, in kirkstone. Once that branch is dropped, we can
+    # time as the separator, in kirkstone. Once that branch is dropped, we can
     # keep only the SRC_URI variant below.
     if [ "$sep" = "_" ]; then
+        tar -C $WORKSPACE/mender-binary-delta/ -xf $WORKSPACE/mender-binary-delta/mender-binary-delta-${mender_binary_delta_version}.tar.xz
         cat >> "$BUILDDIR"/conf/local.conf <<EOF
-FILESEXTRAPATHS${sep}prepend${sep}pn-mender-binary-delta := "$WORKSPACE/mender-binary-delta:"
+FILESEXTRAPATHS${sep}prepend${sep}pn-mender-binary-delta := "$WORKSPACE/mender-binary-delta/mender-binary-delta-${mender_binary_delta_version}:"
 EOF
     else
         local tarball=$(echo "$WORKSPACE"/mender-binary-delta/*.tar.xz)
@@ -342,6 +343,18 @@ copy_clean_image() {
         > "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}.gz"
 }
 
+# returns the version of mender-binary-delta to be used in the build
+get_mender_binary_delta_version() {
+    local recipe
+    if [ -z "$MENDER_BINARY_DELTA_VERSION" -o "$MENDER_BINARY_DELTA_VERSION" = "latest" ]; then
+        recipe=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort -V | tail -n1)
+    else
+        recipe=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*$MENDER_BINARY_DELTA_VERSION*.bb)
+    fi
+    echo $recipe | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?'
+}
+
+
 init_environment() {
     # Verify mender-qa directory exists
     if [ ! -d mender-qa ]
@@ -361,18 +374,14 @@ init_environment() {
     git submodule update --init --recursive
     cd $WORKSPACE
 
-    # Get mender-binary-delta and add it to the PATH
+    # Get mender-binary-delta tarball and add the generator to the PATH
     if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
-        if [ -z "$MENDER_BINARY_DELTA_VERSION" -o "$MENDER_BINARY_DELTA_VERSION" = "latest" ]; then
-            RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort | tail -n1)
-        else
-            RECIPE=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*$MENDER_BINARY_DELTA_VERSION*.bb)
-        fi
+        local version=$(get_mender_binary_delta_version)
         mkdir -p $WORKSPACE/mender-binary-delta
-        s3cmd get --recursive s3://${S3_BUCKET_NAME}/$(sed -e 's,.*/,,; s,delta_,delta/,; s/\.bb$//' <<<$RECIPE)/ $WORKSPACE/mender-binary-delta/
-        chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta
-        chmod ugo+x $WORKSPACE/mender-binary-delta/x86_64/mender-binary-delta-generator
-        export PATH=$PATH:$WORKSPACE/mender-binary-delta/x86_64
+        s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/mender-binary-delta-${version}.tar.xz $WORKSPACE/mender-binary-delta
+        mkdir -p $WORKSPACE/bin
+        tar -C $WORKSPACE/bin --strip-components=2 -xf $WORKSPACE/mender-binary-delta/mender-binary-delta-${version}.tar.xz mender-binary-delta-${version}/x86_64/mender-binary-delta-generator
+        export PATH=$PATH:$WORKSPACE/bin
     fi
 }
 
