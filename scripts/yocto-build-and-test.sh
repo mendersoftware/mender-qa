@@ -363,6 +363,14 @@ init_environment() {
         exit 1
     fi
 
+    if [ ! -w /dev/kvm ] || [ ! -r /dev/kvm ]; then
+        echo "/dev/kvm is not properly configured for user: $(whoami)"
+        echo "user groups: $(groups)"
+        echo "$(ls -l /dev/kvm)"
+        echo "the tests need read and write access to the KVM device"
+        exit 1
+    fi
+
     # Clean up build slave.
     if [ "$CLEAN_BUILD_CACHE" = "true" ]
     then
