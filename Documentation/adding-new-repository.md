@@ -142,7 +142,7 @@ Modify source code:
 ref https://github.com/mendersoftware/integration-test-runner/blob/master/main.go
 
 Verify if the integration-test-runner tests are passing and update if needed (after `integration` PRs have been merged):
-  * Ref https://github.com/mendersoftware/integration-test-runner/pull/132/files
+  * Ref https://github.com/mendersoftware/integration-test-runner/pull/184/files
 
 ## coveralls
 
@@ -182,11 +182,11 @@ Please integrate depdendabot as much as possible:
 * Git submodules
 * Python packages
 
-## mender-build-status
+## mender-build-status in Mantra
 
-Add badge to `index.html`
+Add badge to `ui/pages/build-status.js`
 
-ref https://gitlab.com/Northern.tech/Mender/mender-build-status/-/blob/master/public/index.html
+ref https://github.com/mendersoftware/mantra/blob/master/ui/pages/build-status.js
 
 ## ME-proxy setup
 
