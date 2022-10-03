@@ -1,6 +1,4 @@
-
 variables:
-
   # Versions of components used for integration tests
   MENDER_REV: "master"
   META_MENDER_REV: "master"
@@ -39,6 +37,7 @@ variables:
   MONITOR_CLIENT_REV: "master"
   REPORTING_REV: "master"
   MENDER_GATEWAY_REV: "master"
+  GENERATE_DELTA_WORKER_REV: "master"
 
   # Versions of independent components
   MENDER_BINARY_DELTA_VERSION: "latest"
@@ -111,19 +110,19 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 include:
-  - project: 'Northern.tech/Mender/mendertesting'
-    file: '.gitlab-ci-check-commits-signoffs.yml'
-  - local: '/gitlab-pipeline/shared/build_and_test_acceptance.yml'
-  - local: '/gitlab-pipeline/stage/pre.yml'
-  - local: '/gitlab-pipeline/stage/init.yml'
-  - local: '/gitlab-pipeline/stage/build.yml'
-  - local: '/gitlab-pipeline/stage/yocto-build-n-test.yml'
-  - local: '/gitlab-pipeline/stage/test.yml'
-  - local: '/gitlab-pipeline/stage/publish-tests.yml'
-  - local: '/gitlab-pipeline/stage/trigger-packages.yml'
-  - local: '/gitlab-pipeline/stage/trigger-images.yml'
-  - local: '/gitlab-pipeline/stage/release.yml'
-  - local: '/gitlab-pipeline/stage/post.yml'
+  - project: "Northern.tech/Mender/mendertesting"
+    file: ".gitlab-ci-check-commits-signoffs.yml"
+  - local: "/gitlab-pipeline/shared/build_and_test_acceptance.yml"
+  - local: "/gitlab-pipeline/stage/pre.yml"
+  - local: "/gitlab-pipeline/stage/init.yml"
+  - local: "/gitlab-pipeline/stage/build.yml"
+  - local: "/gitlab-pipeline/stage/yocto-build-n-test.yml"
+  - local: "/gitlab-pipeline/stage/test.yml"
+  - local: "/gitlab-pipeline/stage/publish-tests.yml"
+  - local: "/gitlab-pipeline/stage/trigger-packages.yml"
+  - local: "/gitlab-pipeline/stage/trigger-images.yml"
+  - local: "/gitlab-pipeline/stage/release.yml"
+  - local: "/gitlab-pipeline/stage/post.yml"
 
 stages:
   # .pre and .post have no effect and are only for documentation purposes. .pre
