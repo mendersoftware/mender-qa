@@ -162,6 +162,9 @@ test:backend-integration:enterprise:
     - unset DOCKER_TLS_VERIFY
     - unset DOCKER_CERT_PATH
 
+    # Make sure the /dev/kvm device is readable and writable by everyone
+    - chmod o+rw /dev/kvm
+
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
