@@ -107,14 +107,8 @@ run_bitbake() {
 }
 
 prepare_and_set_PATH() {
-    # On branches without recipe specific sysroots, the next step will fail
-    # because the prepare_recipe_sysroot task doesn't exist. Use that failure
-    # to fall back to the old generic sysroot path.
-    if bitbake -c prepare_recipe_sysroot mender-test-dependencies; then
-        eval `bitbake -e mender-test-dependencies | grep '^export PATH='`:$PATH
-    else
-        eval `bitbake -e core-image-minimal | grep '^export PATH='`:$PATH
-    fi
+    bitbake -c prepare_recipe_sysroot mender-test-dependencies
+    eval `bitbake -e mender-test-dependencies | grep '^export PATH='`:$PATH
 }
 
 copy_build_conf() {
@@ -145,10 +139,6 @@ prepare_build_config() {
 
     if [ -d $WORKSPACE/meta-mender/tests/build-conf/${board} ]; then
         copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${board}/*  $BUILDDIR/conf/
-    elif [ -d $WORKSPACE/meta-mender/tests/build-conf/${machine} ]; then
-        # Fallback for older branches, should not be necessary on any new
-        # branch.
-        copy_build_conf $WORKSPACE/meta-mender/tests/build-conf/${machine}/*  $BUILDDIR/conf/
     else
         echo "Could not find build-conf for $board board."
         return 1
@@ -609,14 +599,6 @@ build_and_test_client() {
         # run tests on qemu
         if is_testing_board $board_name; then
             export QEMU_SYSTEM_ARM="/usr/bin/qemu-system-arm"
-            # TODO: clean-up python2 support after warrior goes unsupported
-            local python3_supported=false
-            local pip_cmd=pip2
-            if [ -f $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt ]; then
-                python3_supported=true
-                pip_cmd=pip3
-            fi
-
 
             bitbake-layers add-layer "$WORKSPACE"/meta-mender/tests/meta-mender-ci
             if [ -d "$WORKSPACE"/meta-mender/tests/meta-mender-$machine_name-ci ]; then
@@ -624,22 +606,9 @@ build_and_test_client() {
             fi
 
             # install test dependencies
-            if $python3_supported; then
-                sudo $pip_cmd install -r $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt
-            else
-                sudo $pip_cmd install -r $WORKSPACE/meta-mender/tests/acceptance/requirements.txt
-            fi
+            sudo pip3 install -r $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt
 
-            # patch Fabric (Python2 only)
-            if ! $python3_supported; then
-                wget https://github.com/fabric/fabric/commit/b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
-                sudo patch -p1 /usr/local/lib/python2.7/dist-packages/fabric/network.py b60247d78e9a7b541b3ed5de290fdeef2039c6df.patch || true
-            fi
-
-            # Zeus and older do not have this.
-            if grep -q mender-testing-enabled $WORKSPACE/meta-mender/meta-mender-core/classes/mender-maybe-setup.bbclass; then
-                echo "MENDER_FEATURES_ENABLE$(bitbake_override_separator)append = \" mender-testing-enabled\"" >> $BUILDDIR/conf/local.conf
-            fi
+            echo "MENDER_FEATURES_ENABLE$(bitbake_override_separator)append = \" mender-testing-enabled\"" >> $BUILDDIR/conf/local.conf
 
             run_bitbake $image_name
 
@@ -647,7 +616,7 @@ build_and_test_client() {
 
             # check if we can generate an HTML report
             local html_report_args="--html=report.html --self-contained-html"
-            if ! $pip_cmd list|grep -e pytest-html >/dev/null 2>&1; then
+            if ! pip3 list|grep -e pytest-html >/dev/null 2>&1; then
                 html_report_args=""
                 echo "WARNING: install pytest-html for html results report"
             fi
@@ -663,15 +632,9 @@ build_and_test_client() {
             pytest_args="$pytest_args --commercial-tests"
 
             # run tests with xdist explicitly disabled
-            if $python3_supported; then
-                python3 -m pytest -p no:xdist --verbose --junit-xml=results.xml \
-                        --bitbake-image $image_name --board-type=$board_name $pytest_args \
-                        $html_report_args $acceptance_test_to_run
-            else
-                py.test -p no:xdist --verbose --junit-xml=results.xml \
+            python3 -m pytest -p no:xdist --verbose --junit-xml=results.xml \
                     --bitbake-image $image_name --board-type=$board_name $pytest_args \
                     $html_report_args $acceptance_test_to_run
-            fi
 
             cd $WORKSPACE/
         fi
