@@ -1,8 +1,8 @@
 
 test:backend-integration:open_source:
-  only:
-    variables:
-      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
+  rules:
+  - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
+    when: always
   stage: test
   image: docker/compose:alpine-1.27.4
   variables:
@@ -143,6 +143,28 @@ test:backend-integration:enterprise:
   extends: test:backend-integration:open_source
   variables:
     TEST_SUITE: "enterprise"
+
+test:backend-integration:open:azblob:
+  extends: test:backend-integration:open_source
+  rules:
+  - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true" && $CI_PIPELINE_SOURCE == "schedule"'
+    when: always
+  - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
+    when: manual
+    allow_failure: true
+  variables:
+    AZURE_CONTAINER_PREFIX: "backend-os"
+
+test:backend-integration:enterprise:azblob:
+  extends: test:backend-integration:enterprise
+  rules:
+  - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true" && $CI_PIPELINE_SOURCE == "schedule"'
+    when: always
+  - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
+    when: manual
+    allow_failure: true
+  variables:
+    AZURE_CONTAINER_PREFIX: "backend-ent"
 
 .integration_setup_template:
   stage: test
