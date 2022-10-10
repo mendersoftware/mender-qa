@@ -17,9 +17,27 @@ build_servers_repositories() {
             cd go/src/github.com/mendersoftware/$repo
 
             case "$docker" in
-                generate-delta-worker|iot-manager|deployments|deployments-enterprise|deviceauth|deviceauth-enterprise|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig|devicemonitor|reporting)
+                iot-manager|deployments|deployments-enterprise|deviceauth|deviceauth-enterprise|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig|devicemonitor|reporting)
                     docker build -t $docker_url:pr .
                     $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                    ;;
+
+                generate-delta-worker)
+                    local MENDER_BINARY_DELTA_VERSION=1.4.1
+                    local MENDER_ARTIFACT_VERSION=3.9.0
+                    local previous_id="${AWS_ACCESS_KEY_ID}"
+                    local previous_secret="${AWS_SECRET_ACCESS_KEY}"
+                    export AWS_ACCESS_KEY_ID="$AWSRO_MENDER_BINARY_DELTA_AWS_ACCESS_KEY_ID"
+                    export AWS_SECRET_ACCESS_KEY="$AWSRO_MENDER_BINARY_DELTA_AWS_SECRET_ACCESS_KEY"
+                    aws s3 cp s3://mender-binaries/mender-binary-delta/${MENDER_BINARY_DELTA_VERSION}/mender-binary-delta-${MENDER_BINARY_DELTA_VERSION}.tar.xz .
+                    xz -cd mender-binary-delta-${MENDER_BINARY_DELTA_VERSION}.tar.xz | tar xvf -;
+                    cp mender-binary-delta-${MENDER_BINARY_DELTA_VERSION}/x86_64/mender-binary-delta-generator .
+                    wget -q https://downloads.mender.io/mender-artifact/${MENDER_ARTIFACT_VERSION}/linux/mender-artifact -O mender-artifact
+                    docker build -t $docker_url:pr .
+                    $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                    export AWS_ACCESS_KEY_ID="$previous_id"
+                    export AWS_SECRET_ACCESS_KEY="$previous_secret"
+                    rm -Rf "mender-binary-delta-${MENDER_BINARY_DELTA_VERSION}"
                     ;;
 
                 workflows-worker|workflows-enterprise-worker)

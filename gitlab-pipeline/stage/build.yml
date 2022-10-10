@@ -84,7 +84,7 @@ build:servers:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Dependencies
-    - apk --update add bash git make python3 py-pip curl jq
+    - apk --update add bash git make python3 py-pip curl jq xz aws-cli wget
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Post job status
