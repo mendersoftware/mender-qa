@@ -175,6 +175,76 @@ check_interval = 0  # Default poll interval
     ]
 ```
 
+#### Mender's gitlab-master configuration reference
+
+The content of `/etc/gitlab-runner/config.toml` at the time of writing follows:
+
+```
+concurrent = 40
+check_interval = 0
+
+[session_server]
+  session_timeout = 1800
+
+[[runners]]
+  name = "mender-qa-master"
+  limit = 40
+  output_limit = 512000
+  url = "https://gitlab.com/"
+  token = "<edited>"
+  executor = "docker+machine"
+  [runners.custom_build_dir]
+  [runners.cache]
+  [runners.docker]
+    tls_verify = false
+    image = "ubuntu:22.04"
+    privileged = true
+    disable_entrypoint_overwrite = true
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = ["/dev/shm:/dev/shm", "/cache", "/dind/certs:/certs"]
+    shm_size = 8589934592
+  [runners.machine]
+    IdleCount = 0
+    IdleScaleFactor = 0.0
+    IdleCountMin = 0
+    IdleTime = 300
+    MachineDriver = "google"
+    MachineName = "gitlab-runner-slave-%s"
+    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n1-standard-16", "google-disk-size=100", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20220506", "google-tags=mender-qa-slave", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
+    #OffPeakPeriods = ["* * 0-7,20-23 * * mon-fri *", "* * * * * sat,sun *"]
+    #OffPeakIdleTime = 300
+
+[[runners]]
+  name = "mender-qa-master"
+  limit = 40
+  output_limit = 512000
+  url = "https://gitlab.com/"
+  token = "<edited>"
+  executor = "docker+machine"
+  [runners.custom_build_dir]
+  [runners.cache]
+  [runners.docker]
+    tls_verify = false
+    image = "ubuntu:22.04"
+    privileged = true
+    disable_entrypoint_overwrite = true
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = ["/dev/shm:/dev/shm", "/cache", "/dind/certs:/certs"]
+    shm_size = 8589934592
+  [runners.machine]
+    IdleCount = 0
+    IdleScaleFactor = 0.0
+    IdleCountMin = 0
+    IdleTime = 300
+    MachineDriver = "google"
+    MachineName = "gitlab-runner-slave-%s"
+    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n1-highcpu-16", "google-disk-size=100", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20220506", "google-tags=mender-qa-slave", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
+    #OffPeakPeriods = ["* * 0-7,20-23 * * mon-fri *", "* * * * * sat,sun *"]
+    #OffPeakIdleTime = 300
+```
+
 ## .gitlab-ci.yml
 We are now in a position where we can finally start implementing the CI job
 definitions, i.e. the `.gitlab-ci.yml` file. This file must be at the root of
