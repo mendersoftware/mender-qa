@@ -15,6 +15,7 @@ test:backend-integration:open_source:
     - init:workspace
     - build:servers
     - build:mender-artifact
+    - build:generate-delta-worker:docker
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -349,6 +350,7 @@ test:integration:source_client:open_source:
     - build:client:docker
     - build:mender-artifact
     - build:mender-cli
+    - build:generate-delta-worker:docker
 
 
 test:integration:source_client:enterprise:
@@ -370,6 +372,7 @@ test:integration:prebuilt_client:open_source:
     - build:servers
     - build:mender-artifact
     - build:mender-cli
+    - build:generate-delta-worker:docker
 
 
 test:integration:prebuilt_client:enterprise:
