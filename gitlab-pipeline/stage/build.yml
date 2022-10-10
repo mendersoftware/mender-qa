@@ -3,6 +3,9 @@ include:
   - project: 'Northern.tech/Mender/mender-gateway'
     file: '.gitlab-ci-build-package.yml'
     ref: 'master'
+  - project: 'Northern.tech/Mender/generate-delta-worker'
+    file: '.gitlab-ci-build.yml'
+    ref: $GENERATE_DELTA_WORKER_REV
 
 build:client:docker:
   stage: build
