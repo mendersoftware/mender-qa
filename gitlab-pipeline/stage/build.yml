@@ -3,6 +3,9 @@ include:
   - project: 'Northern.tech/Mender/mender-gateway'
     file: '.gitlab-ci-build-package.yml'
     ref: 'master'
+  - project: 'Northern.tech/Mender/generate-delta-worker'
+    file: '.gitlab-ci-build.yml'
+    ref: 'master'
 
 build:client:docker:
   stage: build
@@ -106,7 +109,7 @@ build:servers:
 
     - mkdir -p stage-artifacts
     - for image in $(${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker); do
-    -   if ! echo $image | egrep -q 'mender-client|mender-monitor|mender-gateway'; then
+    -   if ! echo $image | egrep -q 'mender-client|mender-monitor|mender-gateway|generate-delta-worker'; then
     -     docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker $image docker_url)
     -     docker save $docker_url:pr -o stage-artifacts/${image}.tar
     -   fi
@@ -278,3 +281,19 @@ build:mender-gateway:package:
     - mv /tmp/build_revisions.env .
     # Move into component path
     - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-gateway
+
+build:generate-delta-worker:docker:
+  stage: build
+  needs:
+    - init:workspace
+  before_script:
+    - apk --update --no-cache add bash curl aws-cli xz
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.gz /tmp
+    - mkdir -p "${WORKSPACE}"
+    - cd "${WORKSPACE}"
+    - tar -xf /tmp/workspace.tar.gz
+    - repository=$(basename ${DOCKER_REPOSITORY})
+    - cd "go/src/github.com/mendersoftware/$repository"
+    - FORCE_DOCKER_BUILD_TAG=pr
+
