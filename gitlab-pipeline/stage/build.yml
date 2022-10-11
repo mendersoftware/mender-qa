@@ -5,7 +5,7 @@ include:
     ref: 'master'
   - project: 'Northern.tech/Mender/generate-delta-worker'
     file: '.gitlab-ci-build.yml'
-    ref: 'master'
+    ref: 'men_5963_generate_delta_artifact_fixes'
 
 build:client:docker:
   stage: build
