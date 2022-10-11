@@ -17,9 +17,12 @@ build_servers_repositories() {
             cd go/src/github.com/mendersoftware/$repo
 
             case "$docker" in
-                generate-delta-worker|iot-manager|deployments|deployments-enterprise|deviceauth|deviceauth-enterprise|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig|devicemonitor|reporting)
+                iot-manager|deployments|deployments-enterprise|deviceauth|deviceauth-enterprise|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig|devicemonitor|reporting)
                     docker build -t $docker_url:pr .
                     $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
+                    ;;
+
+                generate-delta-worker)
                     ;;
 
                 workflows-worker|workflows-enterprise-worker)
