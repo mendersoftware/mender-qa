@@ -293,6 +293,12 @@ build:generate-delta-worker:docker:
     - mkdir -p "${WORKSPACE}"
     - cd "${WORKSPACE}"
     - tar -xf /tmp/workspace.tar.gz
+
+    - if ! "${WORKSPACE}/integration/extra/release_tool.py" -l | grep -qF generate-delta-worker; then
+        # Skip build on branches that don't include generate-delta-worker.
+    -   exit 0
+    - fi
+
     - repository=$(basename ${DOCKER_REPOSITORY})
     - cd "go/src/github.com/mendersoftware/$repository"
     - FORCE_DOCKER_BUILD_TAG=pr
