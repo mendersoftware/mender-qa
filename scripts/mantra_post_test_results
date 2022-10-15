@@ -24,6 +24,7 @@ builds_endpoint=https://qastatus.mender.io/api/projects/${project_id}/builds
 
 rm -f output
 curl -f --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
+        -L \
         -H "Content-Type: application/json" \
         -d "$request_body" \
         -o output \
@@ -37,6 +38,7 @@ build_id=$(cat output | jq .id)
 results_endpoint=https://qastatus.mender.io/api/projects/${project_id}/builds/${build_id}/results
 
 curl -f --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
+        -L \
         -H "Content-Type: application/xml" \
         --data-binary @$results_file \
         "$results_endpoint"
