@@ -69,7 +69,7 @@ variables:
   RUN_BACKEND_INTEGRATION_TESTS: "true"
   RUN_INTEGRATION_TESTS: "true"
   SPECIFIC_INTEGRATION_TEST: ""
-  TESTS_IN_PARALLEL: "2"
+  TESTS_IN_PARALLEL: "8"
 
   # Child pipelines build and test
   MENDER_CONVERT_REV: "master"
