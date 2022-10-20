@@ -631,8 +631,16 @@ build_and_test_client() {
             # Assuming rocko or newer
             pytest_args="$pytest_args --commercial-tests"
 
-            # run tests with xdist explicitly disabled
-            python3 -m pytest -p no:xdist --verbose --junit-xml=results.xml \
+            local xdist_args
+            # Use the exclusivity fixture as a sign that this branch supports
+            # running tests in parallel with xdist.
+            if ( cd image-tests && git grep -q '^def exclusivity' ); then
+                xdist_args="-n $CLIENT_ACCEPTANCE_TESTS_IN_PARALLEL"
+            else
+                xdist_args="-p no:xdist"
+            fi
+
+            python3 -m pytest $xdist_args --verbose --junit-xml=results.xml \
                     --bitbake-image $image_name --board-type=$board_name $pytest_args \
                     $html_report_args $acceptance_test_to_run
 
