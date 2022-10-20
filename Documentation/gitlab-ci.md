@@ -211,9 +211,7 @@ check_interval = 0
     IdleTime = 300
     MachineDriver = "google"
     MachineName = "gitlab-runner-slave-%s"
-    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n1-standard-16", "google-disk-size=100", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20220506", "google-tags=mender-qa-slave", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
-    #OffPeakPeriods = ["* * 0-7,20-23 * * mon-fri *", "* * * * * sat,sun *"]
-    #OffPeakIdleTime = 300
+    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n2-standard-16", "google-disk-size=100", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20221011", "google-tags=mender-qa-slave", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
 
 [[runners]]
   name = "mender-qa-master"
@@ -240,9 +238,7 @@ check_interval = 0
     IdleTime = 300
     MachineDriver = "google"
     MachineName = "gitlab-runner-slave-%s"
-    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n1-highcpu-16", "google-disk-size=100", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20220506", "google-tags=mender-qa-slave", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
-    #OffPeakPeriods = ["* * 0-7,20-23 * * mon-fri *", "* * * * * sat,sun *"]
-    #OffPeakIdleTime = 300
+    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n2-highcpu-16", "google-disk-size=100", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20221011", "google-tags=mender-qa-slave", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
 ```
 
 ## .gitlab-ci.yml
