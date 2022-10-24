@@ -16,6 +16,7 @@ build:client:docker:
     DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
+  allow_failure: false
   image: docker
   services:
     - docker:dind
@@ -78,6 +79,7 @@ build:servers:
     DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
+  allow_failure: false
   image: docker
   services:
     - docker:dind
@@ -134,6 +136,7 @@ build:mender-cli:
   image: golang:1.18-alpine3.15
   needs:
     - init:workspace
+  allow_failure: false
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -193,6 +196,7 @@ build:mender-artifact:
     - mender-qa-slave-highcpu
   needs:
     - init:workspace
+  allow_failure: false
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -237,6 +241,7 @@ build:mender-monitor:package:
   stage: build
   image: alpine:3.12
   needs: []
+  allow_failure: false
   before_script:
     - apk add --no-cache git openssh
     # Prepare SSH keys
@@ -267,6 +272,7 @@ build:mender-gateway:package:
   stage: build
   needs:
     - init:workspace
+  allow_failure: false
   before_script:
     # Early exit when building an integration version without mender-gateway
     - tar -tf workspace.tar.gz
@@ -287,6 +293,7 @@ build:generate-delta-worker:docker:
   needs:
     - init:workspace
     - build:mender-artifact
+  allow_failure: false
   before_script:
     - apk --update --no-cache add bash curl aws-cli xz
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
