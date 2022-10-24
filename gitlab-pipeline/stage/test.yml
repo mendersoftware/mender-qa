@@ -145,7 +145,7 @@ test:backend-integration:enterprise:
   variables:
     TEST_SUITE: "enterprise"
 
-test:backend-integration:open:azblob:
+test:backend-integration:azblob:open:
   extends: test:backend-integration:open_source
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true" && $CI_PIPELINE_SOURCE == "schedule"'
@@ -156,7 +156,7 @@ test:backend-integration:open:azblob:
   variables:
     AZURE_CONTAINER_PREFIX: "backend-os"
 
-test:backend-integration:enterprise:azblob:
+test:backend-integration:azblob:enterprise:
   extends: test:backend-integration:enterprise
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true" && $CI_PIPELINE_SOURCE == "schedule"'
