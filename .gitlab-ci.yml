@@ -38,6 +38,7 @@ variables:
   REPORTING_REV: "master"
   MENDER_GATEWAY_REV: "master"
   GENERATE_DELTA_WORKER_REV: "master"
+  MENDER_CI_WORKFLOWS_REV: "master"
 
   # Versions of independent components
   MENDER_BINARY_DELTA_VERSION: "latest"
