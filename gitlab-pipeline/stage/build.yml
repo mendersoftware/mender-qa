@@ -286,6 +286,7 @@ build:generate-delta-worker:docker:
   stage: build
   needs:
     - init:workspace
+    - build:mender-artifact
   before_script:
     - apk --update --no-cache add bash curl aws-cli xz
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
@@ -301,5 +302,6 @@ build:generate-delta-worker:docker:
 
     - repository=$(basename ${DOCKER_REPOSITORY})
     - cd "go/src/github.com/mendersoftware/$repository"
+    - cp "${CI_PROJECT_DIR}/stage-artifacts/mender-artifact-linux" mender-artifact
     - FORCE_DOCKER_BUILD_TAG=pr
 
