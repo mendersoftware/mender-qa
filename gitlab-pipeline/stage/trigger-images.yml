@@ -21,6 +21,7 @@
 # trigger we set empty needs to support advance uses cases (example: release with no new packages)
 trigger:mender-convert:manual:
   needs: []
+  when: manual
   rules:
     - if: '$BUILD_MENDER_CONVERT == "true" && $PUBLISH_RELEASE_AUTOMATIC == "false"'
   extends: .template:trigger:mender-convert
