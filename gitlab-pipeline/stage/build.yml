@@ -290,6 +290,11 @@ build:mender-gateway:package:
 
 build:generate-delta-worker:docker:
   stage: build
+  only:
+    variables:
+      - $BUILD_SERVERS == "true"
+      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
+      - $RUN_INTEGRATION_TESTS == "true"
   needs:
     - init:workspace
     - build:mender-artifact
