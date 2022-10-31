@@ -192,6 +192,10 @@ ref https://github.com/mendersoftware/mantra/blob/master/ui/pages/build-status.j
 
 Update regex in [nginx config](https://github.com/mendersoftware/sre-tools/blob/41e00a1d37a772ebfb3ef3e21345184fae712c19/me-proxy/nginx.conf#L15) by adding a new image name.
 
+## License file
+
+Add proper [LICENSE](https://github.com/mendersoftware/integration/blob/master/LICENSE) file and sha256 checksum of it `sha256sum LICENSE >> LIC_FILES_CHKSUM.sha256`, followed by adding and commiting the files.
+
 ## Peer review
 
 Once all the above is done, ping the team to get a full peer review of all the settings.
