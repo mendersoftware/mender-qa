@@ -17,14 +17,11 @@
     strategy: depend
 
 
-# mender-convert downloads mender-artifact from upstream, so the trigger(s) either
-# need release_binary_tools:manual or release_binary_tools:automatic.
+# mender-convert downloads mender-artifact and .deb packages from upstream. However for the manual
+# trigger we set empty needs to support advance uses cases (example: release with no new packages)
 trigger:mender-convert:manual:
-  needs:
-    - job: trigger:mender-dist-packages
-      artifacts: false
-    - job: release_binary_tools:manual
-      artifacts: false
+  needs: []
+  when: manual
   rules:
     - if: '$BUILD_MENDER_CONVERT == "true" && $PUBLISH_RELEASE_AUTOMATIC == "false"'
   extends: .template:trigger:mender-convert
