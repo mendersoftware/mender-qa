@@ -71,6 +71,8 @@ variables:
   SPECIFIC_INTEGRATION_TEST: ""
   TESTS_IN_PARALLEL: "2"
 
+  CLIENT_ACCEPTANCE_TESTS_IN_PARALLEL: "4"
+
   # Child pipelines build and test
   MENDER_CONVERT_REV: "master"
   MENDER_DIST_PACKAGES_REV: "master"
