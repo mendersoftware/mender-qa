@@ -5,6 +5,59 @@ CI/CD setup using GitLab on Google Cloud Platform (GCP). For a basic introductio
 to GitLab, refer to the dedicated guide in `gitlab-ci.md`.
 
 
+## GitLab's master runner dependencies
+
+We have only one permanent machine in GCP. It receives requests from GitLab for running jobs and
+then launches, and configures "workers" to perform the actual CI job.
+
+This machine requires three pieces of software:
+* `gitlab-runner` to communicate with GitLab backend
+* `docker-machine` to launch the workers in GCP and install/configure Docker in them
+* `docker` as a dependency of the above.
+
+### Installing `gitlab-runner`
+
+We install the GitLab runner from GitLab's APT repositories. Follow
+[this guide](https://docs.gitlab.com/runner/install/linux-repository.html#installing-gitlab-runner)
+for more details.
+
+In a nutshell:
+```
+curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh" | sudo bash
+sudo apt-get install gitlab-runner
+```
+
+See [gitlab-ci.md](gitlab-ci.md#menders-gitlab-master-configuration-reference) for a sample of
+our latest configuration settings.
+
+### Installing `docker-machine`
+
+Docker's `docker-machine` is out of support. GitLab's maintain their own fork while they develop
+a full solution to replace the autoscaling functionality. Whenever this is in place we will migrate
+to the new software stack. More details of this plan in these links:
+* https://docs.gitlab.com/runner/configuration/autoscale.html
+* https://gitlab.com/groups/gitlab-org/-/epics/2502
+* https://gitlab.com/gitlab-org/gitlab/-/issues/341856
+
+We install GitLab's fork of `docker-machine` from the direct downloads of GitLab repo. Browse
+[this page](https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/releases) to find the latest
+release and install it manually.
+
+In a nutshell:
+```
+curl -O "https://gitlab-docker-machine-downloads.s3.amazonaws.com/v0.16.2-gitlab.18/docker-machine-Linux-x86_64"
+sudo cp docker-machine-Linux-x86_64 /usr/local/bin/docker-machine
+sudo chmod +x /usr/local/bin/docker-machine
+```
+
+### Installing `docker`
+
+We install Docker from official Ubuntu repositories, so just:
+```
+sudo apt-get install docker.io
+```
+
+
 ## Enable KVM acceleration on GCP
 Enabling KVM on Google Cloud's Compute Engine there are two steps:
 1. Create a KVM-enabled custom image using the following license URL: `https://compute.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx`
@@ -67,19 +120,25 @@ demonstrate setting up the kernel server.
 
 Instead of listing all the configuration options for exports(5), the following 
 provides a brief example installing `nfs-kernel-server` and exporting the 
-directory `/nfs-dir` as read/write to all hosts on the sub-net `192.168.1.0/24`
+directory `/sstate-cache` as read/write to all hosts on the sub-net `192.168.1.0/24`
 and making it read-only for hosts outside this range.
 ```
 sudo apt-get install -y nfs-common nfs-kernel-server
-sudo mkdir -p /nfs-dir
-sudo chown -R 1000:1000 /nfs-dir # Set the owner 
+sudo mkdir -p /sstate-cache
+sudo chown -R 1000:1000 /sstate-cache # Set the owner
+
+# Mount the NFS drive
+sudo tee -a /etc/fstab > /dev/null << EOF
+UUID=3e4b3f08-6e97-464e-a03c-8e10124b3357   /sstate-cache    ext4    defaults    0    0
+EOF
+sudo mount -a
 
 # See exports(5) for detailed description of configuration options to /etc/exports
-sudo cat << EOF >> /etc/exports
-/nfs-dir 192.168.1.0/24(rw,insecure,all_squash,anonuid=1000,anongid=1000) *(ro,insecure,all_squash,anonuid=1000,anongid=1000)
+sudo tee -a /etc/exports > /dev/null << EOF
+/sstate-cache 10.162.0.0/20(rw,insecure,no_subtree_check,all_squash,anonuid=1010,anongid=1010) *(ro,insecure,no_subtree_check,all_squash,anonuid=1010,anongid=1010)
 EOF
 
-systemctl start nfs-server && systemctl enable nfs-server
+sudo systemctl start nfs-server && sudo systemctl enable nfs-server
 ```
 The NFS exports are configured in `/etc/exports` and may contain a series of
 entries of the form.
@@ -90,6 +149,11 @@ In the example above, the `all_squash` maps all uids and gids to the anonymous
 user, and the `anonuid,anongid` options fixes the clients user and group ids. 
 Moreover, the `insecure` option lifts the restrictions that inbound client must 
 use reserved ports (<= 1024) for accessing the directory.
+
+Use command `exportfs` to verify that NFS exports are being exposed correctly:
+```
+sudo exportfs -v
+```
 
 If you plan on exposing an NFS export outside the local area network, you will
 have to setup an additional firewall rule for the configured NFS port 
@@ -103,11 +167,11 @@ to the new rule.
 Mounting an exported NFS directory is almost as easy as mounting a local device,
 the only additional requirement is having the NFS driver installed and a URI to
 the remote instance. The following example snippets mounts the exported directory
-`nfs-dir` running on the same `localhost` to the `/mnt` directory.
+`sstate-cache` running on the same `localhost` to the `/mnt` directory.
 ```
 NFS_URI="localhost"
 sudo apt-get install -y nfs-common
-sudo mount.nfs4 $NFS_URI:/nfs-dir /mnt
+sudo mount.nfs4 $NFS_URI:/sstate-cache /mnt
 ```
 
 > The Yocto CI pipeline [expects](https://github.com/mendersoftware/mender-qa/blob/7f733b65cbc9c0aabbaa8f09f56a8ef7703c3073/scripts/jenkins-yoctobuild-build.sh#L153) the sstate-cache to be mounted at `/mnt/sstate-cache`
