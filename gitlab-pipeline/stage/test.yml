@@ -154,7 +154,7 @@ test:backend-integration:azblob:open:
     when: manual
     allow_failure: true
   variables:
-    AZURE_CONTAINER_PREFIX: "backend-os"
+    AZURE_STORAGE_CONTAINER_PREFIX: "backend-os"
 
 test:backend-integration:azblob:enterprise:
   extends: test:backend-integration:enterprise
@@ -165,7 +165,7 @@ test:backend-integration:azblob:enterprise:
     when: manual
     allow_failure: true
   variables:
-    AZURE_CONTAINER_PREFIX: "backend-ent"
+    AZURE_STORAGE_CONTAINER_PREFIX: "backend-ent"
 
 .integration_setup_template:
   stage: test
