@@ -51,7 +51,7 @@ build_servers_repositories() {
                     :
                     ;;
 
-                mender-monitor-qemu-commercial|mender-gateway-qemu-commercial)
+                mender-monitor-qemu-commercial|mender-gateway-qemu-commercial|mender-qemu-rofs-commercial)
                     # Built in yocto-build-and-test.sh::build_and_test_client
                     :
                     ;;

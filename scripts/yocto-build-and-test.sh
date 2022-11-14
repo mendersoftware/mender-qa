@@ -507,6 +507,9 @@ build_and_test_client() {
                     && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
                 images_to_build+=" mender-gateway-image-full-cmdline"
             fi
+            if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
+                images_to_build+=" mender-image-full-cmdline-rofs-commercial"
+            fi
         fi
 
         # Build once with clean_build_config enabled and keep a copy.
@@ -522,6 +525,7 @@ build_and_test_client() {
 
             copy_clean_image "${machine_name}" "${board_name}" "${image_name}" "${device_type}" "$extension"
             copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs" "${device_type}" "$extension"
+            copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs-commercial" "${device_type}" "$extension"
             copy_clean_image "${machine_name}" "${board_name}" "mender-monitor-image-full-cmdline" "${device_type}" "$extension"
             copy_clean_image "${machine_name}" "${board_name}" "mender-gateway-image-full-cmdline" "${device_type}" "$extension"
         fi
@@ -580,6 +584,19 @@ build_and_test_client() {
                 $WORKSPACE/integration/extra/release_tool.py \
                     --set-version-of mender-gateway-qemu-commercial \
                     --version pr || true
+            fi
+
+            if grep mender-image-full-cmdline-rofs-commercial <<<"$images_to_build"; then
+                filename="clean-mender-image-full-cmdline-rofs-commercial-${machine_name}.${extension}"
+
+                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                    -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
+                    -i mender-image-full-cmdline-rofs-commercial \
+                    $machine_name \
+                    -t registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr
+                $WORKSPACE/integration/extra/release_tool.py \
+                    --set-version-of mender-qemu-rofs-commercial \
+                    --version pr
             fi
         fi
 
