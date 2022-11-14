@@ -10,7 +10,7 @@ test:backend-integration:open_source:
   services:
     - docker:dind
   tags:
-    - mender-qa-slave-highcpu
+    - mender-qa-worker-backend-integration-tests
   needs:
     - init:workspace
     - build:servers
@@ -177,7 +177,7 @@ test:backend-integration:azblob:enterprise:
     COMPOSE_HTTP_TIMEOUT: 300
     TEST_SUITE: "open"
   tags:
-    - mender-qa-slave-highmem
+    - mender-qa-worker-integration-tests
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt

@@ -84,7 +84,7 @@ build:servers:
   services:
     - docker:dind
   tags:
-    - mender-qa-slave-highcpu
+    - mender-qa-worker-generic-heavy
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -193,7 +193,7 @@ build:mender-artifact:
   services:
     - docker:dind
   tags:
-    - mender-qa-slave-highcpu
+    - mender-qa-worker-generic
   needs:
     - init:workspace
   allow_failure: false
