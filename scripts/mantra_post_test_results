@@ -20,7 +20,7 @@ EOF
 
 results_file=$3
 
-builds_endpoint=https://qastatus.mender.io/api/projects/${project_id}/builds
+builds_endpoint=https://qastatus.mender.io/api/ci/projects/${project_id}/builds
 
 rm -f output
 curl -f --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
@@ -34,7 +34,7 @@ echo
 
 build_id=$(cat output | jq .id)
 
-results_endpoint=https://qastatus.mender.io/api/projects/${project_id}/builds/${build_id}/results
+results_endpoint=https://qastatus.mender.io/api/ci/projects/${project_id}/builds/${build_id}/results
 
 curl -f --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
         -H "Content-Type: application/xml" \
