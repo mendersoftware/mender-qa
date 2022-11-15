@@ -295,7 +295,7 @@ EOF
 # prepares the configuration for the so-called clean image. this is the image
 # that will be embedded in the client containers and then used in integartion tests
 # see integration/tests/run.sh
-# the main idea is to change the artifact_info and the additional targets are added 
+# the main idea is to change the artifact_info and the additional targets are added
 # in order to distinguish this image (for instance so we can recognize it from
 # the inside in the tests)
 clean_build_config() {

@@ -122,7 +122,7 @@ ubifs). Following is a list of the current platforms under test:
 * beagleboneblack
 * qemux86-64-bios-grub-gpt
 * qemux86-64-bios-grub
-* vexpress-qemu-uboot-uefi-grub  
+* vexpress-qemu-uboot-uefi-grub
 
 ### Running locally
 
