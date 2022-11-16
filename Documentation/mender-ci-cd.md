@@ -27,8 +27,7 @@ curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/s
 sudo apt-get install gitlab-runner
 ```
 
-See [gitlab-ci.md](gitlab-ci.md#menders-gitlab-master-configuration-reference) for a sample of
-our latest configuration settings.
+See [Configuring gitlab-runner(s)](#configuring-gitlab-runners) for configuration instructions.
 
 ### Installing `docker-machine`
 
@@ -175,3 +174,95 @@ sudo mount.nfs4 $NFS_URI:/sstate-cache /mnt
 ```
 
 > The Yocto CI pipeline [expects](https://github.com/mendersoftware/mender-qa/blob/7f733b65cbc9c0aabbaa8f09f56a8ef7703c3073/scripts/jenkins-yoctobuild-build.sh#L153) the sstate-cache to be mounted at `/mnt/sstate-cache`
+
+
+### Configuring gitlab-runner(s)
+
+First override the default `concurrent` setting in the runner configuration:
+
+```
+sudo sed -i 's/^concurrent.*/concurrent = 30/' /etc/gitlab-runner/config.toml
+
+```
+
+Then create a template with the common Mender runner settings:
+
+```
+sudo tee /etc/gitlab-runner/mender-runner-template-config.toml << EOF
+[[runners]]
+  limit = 30
+  output_limit = 512000
+  url = "https://gitlab.com"
+  executor = "docker+machine"
+  [runners.docker]
+    tls_verify = false
+    image = "ubuntu:22.04"
+    privileged = true
+    disable_entrypoint_overwrite = true
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = ["/dev/shm:/dev/shm", "/cache", "/dind/certs:/certs"]
+    shm_size = 8589934592
+  [runners.machine]
+    IdleCount = 0
+    IdleScaleFactor = 0.0
+    IdleCountMin = 0
+    IdleTime = 300
+    MachineDriver = "google"
+    MachineName = "gitlab-runner-worker-%s"
+    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n2-standard-16", "google-disk-size=100", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20221011", "google-tags=mender-qa-worker", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
+EOF
+```
+
+From the above, the only parameter that we need to manually modify per runner is
+`google-machine-type=n2-standard-16`. See more info below.
+
+Next, use `gitlab-runner register` to register runners. For each runner there are three key
+parameters to configure:
+* `--tag-list`: keywords to identify the kind of jobs that the runner will take. These map with the
+  CI jobs that we define in our pipelines and can be later edited (and moved around) using GitLab
+  UI.
+* `--name`: visible runner name as seen from GitLab UI. It cannot be modified after registration.
+  This is a name that represents the kind of machines that the runner will launch, not the kind of
+  jobs that the runner will accept.
+* `google-machine-type=` in `MachineOptions`: exact machine name to launch in Google Cloud Platform.
+
+
+For example, to register a runner with N2 16 cores machines to run client acceptance tests.
+
+* First execute `gitlab-runner` command:
+
+```
+sudo gitlab-runner register --non-interactive \
+    --template-config /etc/gitlab-runner/mender-runner-template-config.toml \
+    --registration-token <REDACTED> \
+    --access-level="not_protected" \
+    --locked="false" \
+    --run-untagged="false" \
+    --tag-list "mender-qa-worker-client-acceptance-tests" \
+    --name mender-runner-n2-standard-16
+```
+
+* Then manually edit `/etc/gitlab-runner/config.toml` replacing the value of `google-machine-type=`
+  for the desired one.
+
+
+#### GitLab runners in Mender CI infra
+
+This table summarizes the existing runners at the time of writing this lines.
+
+The machine types in the table correspond to the types described in [Google Clouds
+docs](https://cloud.google.com/compute/docs/general-purpose-machines).
+
+NOTE: Check GitLab UI and/or `/etc/gitlab-runner/config.toml` on the master's machine for the source
+of truth.
+
+| Runner's name                | GPC machine type | Pipeline tags |
+| ---------------------------- | ---------------- | ------------------------------------------ |
+| mender-runner-n2-standard-16 | n2-standard-16   | mender-qa-worker-integration-tests,mender-qa-worker-client-acceptance-tests |
+| mender-runner-n2-highcpu-16  | n2-highcpu-16    | mender-qa-worker-backend-integration-tests |
+| mender-runner-n2-standard-8  | n2-standard-8    | _currently not in use_                     |
+| mender-runner-n2d-standard-8 | n2d-standard-8   | _currently not in use_                     |
+| mender-runner-n2d-standard-4 | n2d-standard-4   | mender-qa-worker-generic-heavy             |
+| mender-runner-n2d-standard-2 | n2d-standard-2   | mender-qa-worker-generic,mender-qa-worker-generic-light |
+| mender-runner-n1-standard-1  | n1-standard-1    | _currently not in use_                     |
