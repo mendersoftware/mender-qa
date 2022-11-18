@@ -176,7 +176,7 @@ sudo mount.nfs4 $NFS_URI:/sstate-cache /mnt
 > The Yocto CI pipeline [expects](https://github.com/mendersoftware/mender-qa/blob/7f733b65cbc9c0aabbaa8f09f56a8ef7703c3073/scripts/jenkins-yoctobuild-build.sh#L153) the sstate-cache to be mounted at `/mnt/sstate-cache`
 
 
-### Configuring gitlab-runner(s)
+## Configuring gitlab-runner(s)
 
 First override the default `concurrent` setting in the runner configuration:
 
@@ -260,7 +260,7 @@ of truth.
 | Runner's name                | GPC machine type | Pipeline tags |
 | ---------------------------- | ---------------- | ------------------------------------------ |
 | mender-runner-n2-standard-16 | n2-standard-16   | mender-qa-worker-integration-tests,mender-qa-worker-client-acceptance-tests |
-| mender-runner-n2-highcpu-16  | n2-highcpu-16    | mender-qa-worker-backend-integration-tests |
+| mender-runner-n2-highcpu-16  | n2-highcpu-16    | mender-qa-worker-backend-integration-tests,mender-qa-worker-gui-tests,mender-qa-worker-mender-convert-tests |
 | mender-runner-n2-standard-8  | n2-standard-8    | _currently not in use_                     |
 | mender-runner-n2d-standard-8 | n2d-standard-8   | _currently not in use_                     |
 | mender-runner-n2d-standard-4 | n2d-standard-4   | mender-qa-worker-generic-heavy             |
