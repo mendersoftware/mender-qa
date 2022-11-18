@@ -220,7 +220,7 @@ test:backend-integration:azblob:enterprise:
 
     # Load all docker images, and the client images depending on $BUILD_CLIENT
     - for image in $(integration/extra/release_tool.py -l docker); do
-    -   if echo $image | egrep -q 'mender-client|mender-monitor|mender-gateway'; then
+    -   if echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway'; then
     -     if [ "${BUILD_CLIENT}" = "true" ]; then
     -       docker load -i stage-artifacts/${image}.tar
     -     else
@@ -235,7 +235,7 @@ test:backend-integration:azblob:enterprise:
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     # Set testing versions to PR
     - for image in $(integration/extra/release_tool.py -l docker); do
-    -   if echo $image | egrep -q 'mender-client|mender-monitor|mender-gateway'; then
+    -   if echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway'; then
     -     if [ "${BUILD_CLIENT}" = "true" ]; then
     -       integration/extra/release_tool.py --set-version-of $image --version pr
     -     else
