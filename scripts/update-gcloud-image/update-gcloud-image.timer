@@ -1,5 +1,5 @@
 [Unit]
-Description=Run /etc/gitlab-runnere/update-image.sh once a day
+Description=Run update-gcloud-image once a day
 
 [Timer]
 OnBootSec=15min

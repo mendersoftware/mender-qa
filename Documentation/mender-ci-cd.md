@@ -266,3 +266,23 @@ of truth.
 | mender-runner-n2d-standard-4 | n2d-standard-4   | mender-qa-worker-generic-heavy             |
 | mender-runner-n2d-standard-2 | n2d-standard-2   | mender-qa-worker-generic,mender-qa-worker-generic-light |
 | mender-runner-n1-standard-1  | n1-standard-1    | _currently not in use_                     |
+
+
+## Installing systemd services and timers
+
+We use two systemd services:
+* `prune-sstate-cache` to periodically delete old cache files to keep the NFS drive below 900GiB
+* `update-gcloud-image` to periodically update the runners base image based on latest GCP image
+
+For each service, install and enable it by:
+* Copy the script and system files into `/etc/gitlab-runner/...`
+* Enable timer and service
+* Start service
+
+For example, for `prune-sstate-cache`:
+```
+sudo systemctl enable /etc/gitlab-runner/prune-sstate-cache/prune-sstate-cache.timer
+sudo systemctl enable /etc/gitlab-runner/prune-sstate-cache/prune-sstate-cache.service
+sudo systemctl start prune-sstate-cache.timer
+systemctl status prune-sstate-cache.timer prune-sstate-cache.service
+```
