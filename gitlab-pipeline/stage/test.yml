@@ -36,7 +36,7 @@ test:backend-integration:open_source:
 
     # Load all docker images except client
     - for image in $(integration/extra/release_tool.py -l docker); do
-    -   if ! echo $image | egrep -q 'mender-client|mender-monitor|mender-gateway'; then
+    -   if ! echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway'; then
     -     docker load -i stage-artifacts/${image}.tar
     -   fi
     - done
