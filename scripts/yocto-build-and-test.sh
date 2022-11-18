@@ -523,11 +523,10 @@ build_and_test_client() {
             egrep -q '\bmender-image-uefi\b' <<<${features} && extension="uefiimg"
             egrep -q '\bmender-image-sd\b' <<<${features} && extension="sdimg"
 
-            copy_clean_image "${machine_name}" "${board_name}" "${image_name}" "${device_type}" "$extension"
-            copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs" "${device_type}" "$extension"
-            copy_clean_image "${machine_name}" "${board_name}" "mender-image-full-cmdline-rofs-commercial" "${device_type}" "$extension"
-            copy_clean_image "${machine_name}" "${board_name}" "mender-monitor-image-full-cmdline" "${device_type}" "$extension"
-            copy_clean_image "${machine_name}" "${board_name}" "mender-gateway-image-full-cmdline" "${device_type}" "$extension"
+            for img in ${images_to_build}; do
+                copy_clean_image "${machine_name}" "${board_name}" "${img}" "${device_type}" "${extension}"
+            done
+
         fi
         restore_build_config
 
