@@ -1,0 +1,8 @@
+[Unit]
+Description=Remove really old files, keep sstate-cache size within 900GB limit
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /etc/gitlab-runner/prune-sstate-cache/prune_cache.py -t 183 -s 850 -d /sstate-cache
+Group=systemd-journal

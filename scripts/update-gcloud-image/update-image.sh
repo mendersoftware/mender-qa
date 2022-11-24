@@ -33,6 +33,7 @@ then
     echo $NEW_IMAGE_URL
     sed -i "s|\(\"google-machine-image=\).*\"|\1${NEW_IMAGE_URL}\"|" /etc/gitlab-runner/config.toml
     echo "Image successfully updated from '${CUR_IMAGE}' to 'nested-virt-${IMAGE}'"
+
     # Delete all the older images we don't want to keep
     while [ $(echo $CUR_IMAGES | wc -w) -gt $IMAGES_TO_KEEP ]
     do
