@@ -651,7 +651,7 @@ build_and_test_client() {
             # Use the exclusivity fixture as a sign that this branch supports
             # running tests in parallel with xdist.
             if ( cd image-tests && git grep -q '^def exclusivity' ); then
-                xdist_args="-n $CLIENT_ACCEPTANCE_TESTS_IN_PARALLEL"
+                xdist_args="-n $TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE"
             else
                 xdist_args="-p no:xdist"
             fi
