@@ -231,6 +231,9 @@ EOF
 
     cat >> $BUILDDIR/conf/local.conf <<EOF
 MENDER_ARTIFACT_NAME = "mender-image-$client_version"
+
+MENDER_CI_LOGLEVEL = "trace"
+
 EOF
 
     local mender_on_exact_tag=$(test "$MENDER_REV" != "master" && \
