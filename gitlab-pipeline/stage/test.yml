@@ -218,6 +218,9 @@ test:backend-integration:azblob:enterprise:
     - apk add $(cat ${WORKSPACE}/integration/tests/requirements/apk-requirements.txt)
     - pip install -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
 
+    # QA-507: Install OpenSSL 1.1 compatibility package while we redesign this dependency
+    - apk add openssl1.1-compat-dev
+
     # Load all docker images, and the client images depending on $BUILD_CLIENT
     - for image in $(integration/extra/release_tool.py -l docker); do
     -   if echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway'; then
