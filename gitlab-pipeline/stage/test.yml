@@ -171,7 +171,8 @@ test:backend-integration:azblob:enterprise:
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
   # run dockerd on the same host.
-  image: docker:dind
+  # QA-507: Pin to Alpine 3.16 to have OpenSSL 1.1 compatibility while we redesign this dependency
+  image: docker:20.10.21-dind-alpine3.16
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300
