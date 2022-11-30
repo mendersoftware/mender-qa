@@ -206,7 +206,8 @@ test:backend-integration:azblob:enterprise:
     # Wait for dockerd to start
     - |-
       MAX_WAIT=30
-      while [ ! -e "/var/run/docker.sock" ] && [ $MAX_WAIT -gt 0 ]; do
+      while [ $MAX_WAIT -gt 0 ]; do
+        docker version && break
         MAX_WAIT=$(($MAX_WAIT - 1))
         sleep 1
       done
