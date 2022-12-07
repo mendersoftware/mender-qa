@@ -17,7 +17,7 @@ This is the Google calendar that shows who takes this role when.
 
 ### Nightly Mender QA build
 
-Link:  https://qastatus.mender.io/build-status
+Link: https://gitlab.com/Northern.tech/Mender/mender-qa/-/pipeline_schedules
 
 There is no golden rule on what to do when the "Last Pipeline" in the link above
 is not green.
@@ -48,7 +48,7 @@ where a new Hosted Mender release is planned.
 
 ### Individual pipelines
 
-Link: https://qastatus.mender.io/nightlies
+Link: https://qastatus.mender.io/build-status
 
 All should be green. If a pipeline is broken, ping the corresponding team.
 
