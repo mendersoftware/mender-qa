@@ -13,10 +13,11 @@ Link: https://calendar.google.com/calendar/embed?src=northern.tech_m6aop2it00n2j
 
 This is the Google calendar that shows who takes this role when.
 
-## Reponsibilities
+## Responsibilities
 
 ### Nightly Mender QA build
 
+Link: https://qastatus.mender.io/nightlies
 Link: https://gitlab.com/Northern.tech/Mender/mender-qa/-/pipeline_schedules
 
 There is no golden rule on what to do when the "Last Pipeline" in the link above
