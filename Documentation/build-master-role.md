@@ -13,7 +13,7 @@ Link: https://calendar.google.com/calendar/embed?src=northern.tech_m6aop2it00n2j
 
 This is the Google calendar that shows who takes this role when.
 
-## Reponsibilities
+## Responsibilities
 
 ### Nightly Mender QA build
 
