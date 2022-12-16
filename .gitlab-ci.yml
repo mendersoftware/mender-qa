@@ -96,22 +96,8 @@ variables:
   WAIT_IN_STAGE_BUILD: ""
   WAIT_IN_STAGE_TEST: ""
 
-  # Internal address for nfs sstate cache server (northamerica-northeast1-b)
-  SSTATE_CACHE_INTRNL_ADDR: "10.162.0.25"
-
-  # Global environment variables (not meant to be changed)
-  DEBIAN_FRONTEND: noninteractive
-
-  # Docker dind configuration.
-  # To use dind, make sure gitlab-runner's configuration
-  # has a common mount for /certs (i.e. runners.docker.volumes) directory
-  # and that the dind service name is always docker (default hostname).
-  DOCKER_HOST: "tcp://docker:2376"
-  DOCKER_CERT_PATH: "/certs/client"
-  DOCKER_TLS_VERIFY: "1"
-  DOCKER_TLS_CERTDIR: "/certs"
-
 include:
+  - local: "/gitlab-pipeline/internal-variables.yml"
   - project: "Northern.tech/Mender/mendertesting"
     file: ".gitlab-ci-check-commits-signoffs.yml"
   - local: "/gitlab-pipeline/shared/build_and_test_acceptance.yml"
