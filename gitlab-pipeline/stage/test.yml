@@ -210,7 +210,8 @@ test:backend-integration:azblob:enterprise:
     - |-
       MAX_WAIT=30
       while [ $MAX_WAIT -gt 0 ]; do
-        docker version && break
+        echo "[$(date +%F_%T)] MAX_WAIT=${MAX_WAIT}"; ps afx # Debug information
+        docker version >/dev/null && break
         MAX_WAIT=$(($MAX_WAIT - 1))
         sleep 1
       done
