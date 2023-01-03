@@ -201,7 +201,11 @@ test:backend-integration:azblob:enterprise:
     - apk --update add curl jq sysstat hdparm
 
     # Start dockerd in the background
-    - /usr/local/bin/dockerd &
+    # The entrypoint script additionally uses docker-init as workarround of known
+    # containerd issue - https://github.com/docker-library/docker/issues/318
+    - export TINI_SUBREAPER=true # https://github.com/krallin/tini#subreaping
+    - /bin/sh -c "/usr/local/bin/dockerd-entrypoint.sh &"
+
     # Wait for dockerd to start
     - |-
       MAX_WAIT=30
