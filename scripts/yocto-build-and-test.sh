@@ -204,12 +204,22 @@ PREFERRED_VERSION${sep}pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
 EOF
     fi
 
+    if [ -n "${BUILD_CPP_CLIENT}" ]; then
+        BUILD_CPP_CLIENT_PATH=/src/github.com/mendersoftware/mender
+        ( cd ${WORKSPACE}/go/${BUILD_CPP_CLIENT_PATH} && git submodule update --init )
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_PROVIDER_virtual/mender-client = "mender"
+PREFERRED_PROVIDER_virtual/mender-client-native = "mender-native"
+EOF
+    fi
+
     # Assuming sumo or newer
     cat >> $BUILDDIR/conf/local.conf <<EOF
 # MEN-2948: Renamed mender recipe -> mender-client
 # But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
-EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go${BUILD_CPP_CLIENT_PATH:-}"
+EXTERNALSRC${sep}pn-mender-native = "$WORKSPACE/go${BUILD_CPP_CLIENT_PATH:-}"
 EXTERNALSRC${sep}pn-mender-client = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-client-native = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-artifact = "$WORKSPACE/go"

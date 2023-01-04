@@ -26,7 +26,7 @@ build:client:docker:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Dependencies
-    - apk --update add python3 py-pip curl jq bash
+    - apk --update add python3 py-pip curl jq bash git
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Post job status
@@ -44,6 +44,7 @@ build:client:docker:
     # First build mender's repo Docker image
     - docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker mender-client-docker docker_url)
     - cd go/src/github.com/mendersoftware/mender
+    - git submodule update --init
     - ./tests/build-docker -t $docker_url:pr
     - docker save $docker_url:pr -o ${CI_PROJECT_DIR}/stage-artifacts/mender-client-docker.tar
     # Then, if available, build integration's repo Docker image (Mender 2.7 and later)
