@@ -170,7 +170,12 @@ test:backend-integration:azblob:enterprise:
 .integration_setup_template:
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
-  # run dockerd on the same host.
+  # run dockerd on the same host. It prevents us from using GitLab service,
+  # because technically it runs dockerd in a separate container, interacts
+  # with it via tcp and all containers starts in that separate container
+  # when with used by GitLab network driver network connection between those
+  # containers is denied (it might work locally on Linux host because of the
+  # default bridge driver).
   image: docker:dind
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
