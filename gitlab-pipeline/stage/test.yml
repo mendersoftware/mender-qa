@@ -170,7 +170,12 @@ test:backend-integration:azblob:enterprise:
 .integration_setup_template:
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
-  # run dockerd on the same host.
+  # run dockerd on the same host. It prevents us from using GitLab service,
+  # because technically it runs dockerd in a separate container, interacts
+  # with it via tcp and all containers starts in that separate container
+  # when with used by GitLab network driver network connection between those
+  # containers is denied (it might work locally on Linux host because of the
+  # default bridge driver).
   image: docker:dind
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
@@ -181,9 +186,9 @@ test:backend-integration:azblob:enterprise:
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
+
+    # Make sure docker interacts with dockerd via socket
     - unset DOCKER_HOST
-    - unset DOCKER_TLS_VERIFY
-    - unset DOCKER_CERT_PATH
 
     # Make sure the /dev/kvm device is readable and writable by everyone
     - chmod o+rw /dev/kvm
@@ -201,12 +206,17 @@ test:backend-integration:azblob:enterprise:
     - apk --update add curl jq sysstat hdparm
 
     # Start dockerd in the background
-    - /usr/local/bin/dockerd &
+    # The entrypoint script additionally uses docker-init as workarround of known
+    # containerd issue - https://github.com/docker-library/docker/issues/318
+    - export TINI_SUBREAPER=true # https://github.com/krallin/tini#subreaping
+    - /bin/sh -c "/usr/local/bin/dockerd-entrypoint.sh &"
+
     # Wait for dockerd to start
     - |-
       MAX_WAIT=30
       while [ $MAX_WAIT -gt 0 ]; do
-        docker version && break
+        echo "[$(date +%F_%T)] MAX_WAIT=${MAX_WAIT}"; ps afx # Debug information
+        docker version >/dev/null && break
         MAX_WAIT=$(($MAX_WAIT - 1))
         sleep 1
       done
