@@ -649,8 +649,8 @@ build_and_test_client() {
 
             # make it possible to run specific test
             local acceptance_test_to_run=""
-            if [ -n "$SPECIFIC_ACCEPTANCE_TEST" ]; then
-                acceptance_test_to_run=" -k $SPECIFIC_ACCEPTANCE_TEST"
+            if [ -n "$CLIENT_ACCEPTANCE_TEST_SPECIFIC" ]; then
+                acceptance_test_to_run=" -k $CLIENT_ACCEPTANCE_TEST_SPECIFIC"
             fi
 
             local pytest_args=

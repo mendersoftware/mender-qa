@@ -64,7 +64,7 @@ variables:
   BUILD_BEAGLEBONEBLACK: "true"
   BUILD_RASPBERRYPI3: "false"
   BUILD_RASPBERRYPI4: "false"
-  SPECIFIC_ACCEPTANCE_TEST: ""
+  CLIENT_ACCEPTANCE_TEST_SPECIFIC: ""
 
   # Integration and backend integration tests
   RUN_BACKEND_INTEGRATION_TESTS: "true"
