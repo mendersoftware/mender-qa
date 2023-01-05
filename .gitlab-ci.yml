@@ -65,6 +65,7 @@ variables:
   BUILD_RASPBERRYPI3: "false"
   BUILD_RASPBERRYPI4: "false"
   CLIENT_ACCEPTANCE_TEST_SPECIFIC: ""
+  CLIENT_ACCEPTANCE_TEST_SUITES: "--platform-tests --software-tests"
 
   # Integration and backend integration tests
   RUN_BACKEND_INTEGRATION_TESTS: "true"
