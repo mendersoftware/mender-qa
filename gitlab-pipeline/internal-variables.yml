@@ -5,7 +5,13 @@ variables:
   # Global environment variables (not meant to be changed)
   DEBIAN_FRONTEND: noninteractive
 
-  # Docker dind configuration.
+  # GitLab service Docker in Docker configuration
+  #
+  # GitLab Docker dind service starts a separate container with dockerd,
+  # links 2376 tcp port to a container where the job is executing and
+  # Docker clients (cli and python) interacts with it over TCP+TLS. That
+  # adds the requirement to share TLS certificates between containers.
+  #
   # To use dind, make sure gitlab-runner's configuration
   # has a common mount for /certs (i.e. runners.docker.volumes) directory
   # and that the dind service name is always docker (default hostname).
