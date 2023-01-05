@@ -213,7 +213,7 @@ test:backend-integration:azblob:enterprise:
       # The entrypoint script additionally uses docker-init as workarround of known
       # containerd issue - https://github.com/docker-library/docker/issues/318
       run_dockerd() {
-        /bin/sh -c '/usr/local/bin/dockerd-entrypoint.sh &'
+        /bin/sh -c '/usr/local/bin/dockerd-entrypoint.sh &>${CI_PROJECT_DIR}/dockerd.log &'
       }
       # Run dockerd and wait it to start
       MAX_WAIT=60
@@ -353,6 +353,7 @@ test:backend-integration:azblob:enterprise:
       - report_full_integration.html
       - sysstat.log
       - sysstat.svg
+      - dockerd.log
     reports:
       junit: results_full_integration.xml
 
