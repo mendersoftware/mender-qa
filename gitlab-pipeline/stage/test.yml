@@ -202,27 +202,32 @@ test:backend-integration:azblob:enterprise:
     # Dependencies for post job status and io stats
     - apk --update add curl jq sysstat hdparm
 
-    # Start dockerd in the background
-    # The entrypoint script additionally uses docker-init as workarround of known
-    # containerd issue - https://github.com/docker-library/docker/issues/318
-    - export TINI_SUBREAPER=true # https://github.com/krallin/tini#subreaping
-    - /bin/sh -c "/usr/local/bin/dockerd-entrypoint.sh &"
-
     # Make sure docker clients (cli and python) interacts with dockerd via socket
     - unset DOCKER_HOST
     - unset DOCKER_TLS_VERIFY
     - unset DOCKER_CERT_PATH
 
-    # Wait for dockerd to start
+    # Start dockerd in the background
+    - export TINI_SUBREAPER=true # https://github.com/krallin/tini#subreaping
     - |-
-      MAX_WAIT=30
-      while [ $MAX_WAIT -gt 0 ]; do
-        echo "[$(date +%F_%T)] MAX_WAIT=${MAX_WAIT}"; ps afx # Debug information
-        docker version >/dev/null && break
-        MAX_WAIT=$(($MAX_WAIT - 1))
+      # The entrypoint script additionally uses docker-init as workarround of known
+      # containerd issue - https://github.com/docker-library/docker/issues/318
+      run_dockerd() {
+        /bin/sh -c '/usr/local/bin/dockerd-entrypoint.sh &>${CI_PROJECT_DIR}/dockerd.log &'
+      }
+      # Run dockerd and wait it to start
+      MAX_WAIT=60
+      while [ ${MAX_WAIT} -gt 0 ]; do
+        echo "[$(date +%F_%T)] MAX_WAIT=${MAX_WAIT}"; ps # Debug information
+        if docker version &>/dev/null; then
+          docker version # Verify that the dockerd is up and running
+          break
+        elif ! ps -o comm | grep -q -E "docker-init|dockerd|containerd"; then
+          run_dockerd # Run dockerd if no related processes are running
+        fi
+        MAX_WAIT=$((${MAX_WAIT} - 1))
         sleep 1
       done
-    - docker version # Verify that the docker server is up and running
 
     # Output storage io stats
     - df -h . | tail -1 | awk '{system("hdparm -tT "$1);}'
@@ -348,6 +353,7 @@ test:backend-integration:azblob:enterprise:
       - report_full_integration.html
       - sysstat.log
       - sysstat.svg
+      - dockerd.log
     reports:
       junit: results_full_integration.xml
 
