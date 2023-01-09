@@ -320,7 +320,7 @@ test:acceptance:vexpress_qemu:uboot_uefi_grub:
 # Note that vexpress-qemu-flash configuration does not generate an ext4 image so
 # the build script does not generate the Mender Artifact neither. This job
 # collects the .ubifs for debugging but not for release publishing
-test:acceptance:vexpress_qemu_flash:
+test:acceptance:vexpress_qemu:flash:
   only:
     variables:
       - $BUILD_VEXPRESS_QEMU_FLASH == "true"

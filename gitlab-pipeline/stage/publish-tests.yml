@@ -122,14 +122,14 @@ publish:tests:acceptance:vexpress_qemu:uboot_uefi_grub:
   variables:
     JOB_BASE_NAME: vexpress_qemu_uboot_uefi_grub
 
-publish:tests:acceptance:vexpress_qemu_flash:
+publish:tests:acceptance:vexpress_qemu:flash:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
       - $TEST_VEXPRESS_QEMU_FLASH != "true"
   needs:
     - init:workspace
-    - test:acceptance:vexpress_qemu_flash
+    - test:acceptance:vexpress_qemu:flash
   variables:
     JOB_BASE_NAME: vexpress_qemu_flash
 
