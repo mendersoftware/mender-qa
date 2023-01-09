@@ -10,6 +10,7 @@ variables:
   MANTRA_ID_backend_integration_enterprise: "8"
   MANTRA_ID_full_integration_open_source: "9"
   MANTRA_ID_full_integration_enterprise: "10"
+  MANTRA_ID_accep_qemux86_64_uefi_grub_cross_platform: "11"
 
 build:client:qemu:
   only:
@@ -66,6 +67,7 @@ test:acceptance:qemux86_64:uefi_grub:
   extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
+    CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -109,6 +111,58 @@ test:acceptance:qemux86_64:uefi_grub:
     reports:
       junit: results_accep_qemux86_64_uefi_grub.xml
 
+test:acceptance:qemux86_64:uefi_grub:cross-platform:
+  only:
+    variables:
+      - $TEST_QEMUX86_64_UEFI_GRUB == "true"
+  stage: yocto:build-n-test
+  extends: .template_build_test_acc
+  variables:
+    JOB_BASE_NAME: mender_qemux86_64_uefi_grub
+    CROSS_PLATFORM_TESTS_ARG: "--only-cross-platform-tests"
+  script:
+    - cd ${CI_PROJECT_DIR}
+    - mkdir -p stage-artifacts
+    - cp $WORKSPACE/qemux86-64-uefi-grub/qemux86-64-uefi-grub_release_1_*.mender stage-artifacts/
+  after_script:
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
+
+    - if [ "$TEST_QEMUX86_64_UEFI_GRUB" = "true" ]; then
+    -   cp $WORKSPACE/meta-mender/tests/acceptance/results.xml results_accep_qemux86_64_uefi_grub_cross_platform.xml
+    -   cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub_cross_platform.html
+    - fi
+
+    - if [ "$NIGHTLY_BUILD" = "true" ]; then
+    -   build_name=nightly-$(date +%Y-%m-%d)
+    - else
+    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
+    - fi
+    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
+        $MANTRA_ID_accep_qemux86_64_uefi_grub_cross_platform
+        $build_name
+        results_accep_qemux86_64_uefi_grub_cross_platform.xml || true
+
+    - cp /var/log/sysstat/sysstat.log .
+    - sadf sysstat.log -g -- -qurbS > sysstat.svg
+
+    - ls -lh stage-artifacts/
+    # Post job status
+    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
+
+  artifacts:
+    expire_in: 2w
+    when: always
+    paths:
+      - stage-artifacts/
+      - results_accep_qemux86_64_uefi_grub_cross_platform.xml
+      - report_accep_qemux86_64_uefi_grub_cross_platform.html
+      - acceptance-tests-coverage
+      - sysstat.log
+      - sysstat.svg
+    reports:
+      junit: results_accep_qemux86_64_uefi_grub_cross_platform.xml
+
 test:acceptance:vexpress_qemu:
   only:
     variables:
@@ -118,6 +172,7 @@ test:acceptance:vexpress_qemu:
   extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu
+    CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -170,6 +225,7 @@ test:acceptance:qemux86_64:bios_grub:
   extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
+    CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -222,6 +278,7 @@ test:acceptance:qemux86_64:bios_grub_gpt:
   extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
+    CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -274,6 +331,7 @@ test:acceptance:vexpress_qemu:uboot_uefi_grub:
   extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
+    CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -329,6 +387,7 @@ test:acceptance:vexpress_qemu:flash:
   extends: .template_build_test_acc
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_flash
+    CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts

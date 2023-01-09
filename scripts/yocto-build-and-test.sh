@@ -668,7 +668,8 @@ build_and_test_client() {
 
             python3 -m pytest $xdist_args --verbose --junit-xml=results.xml \
                     --bitbake-image $image_name --board-type=$board_name $pytest_args \
-                    $html_report_args $acceptance_test_to_run
+                    $html_report_args $acceptance_test_to_run \
+                    ${CROSS_PLATFORM_TESTS_ARG}
 
             cd $WORKSPACE/
         fi
