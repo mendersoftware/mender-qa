@@ -222,7 +222,7 @@ test:backend-integration:azblob:enterprise:
         if docker version &>/dev/null; then
           docker version # Verify that the dockerd is up and running
           break
-        elif ! ps -o comm | grep -q -E "docker-init|dockerd|containerd"; then
+        elif ! ps -o comm | grep -q -E "docker-init|dockerd|containerd|dockerd-entry|dind|openssl"; then
           run_dockerd # Run dockerd if no related processes are running
         fi
         MAX_WAIT=$((${MAX_WAIT} - 1))
