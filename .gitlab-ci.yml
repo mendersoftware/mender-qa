@@ -74,7 +74,7 @@ variables:
   # Parallel factor for tests
   TESTS_IN_PARALLEL_INTEGRATION: "2"
   TESTS_IN_PARALLEL_BACKEND_INTEGRATION: "2"
-  TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE: "2"
+  TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE: "4"
 
   # Child pipelines build and test
   MENDER_CONVERT_REV: "master"
