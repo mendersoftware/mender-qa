@@ -210,7 +210,7 @@ sudo tee /etc/gitlab-runner/mender-runner-template-config.toml << EOF
     IdleTime = 300
     MachineDriver = "google"
     MachineName = "gitlab-runner-worker-%s"
-    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n2-standard-16", "google-disk-size=100", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20221011", "google-tags=mender-qa-worker", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
+    MachineOptions = ["google-project=mender-gitlab-runners", "google-machine-type=n2-standard-16", "google-disk-size=100", "google-disk-type=pd-ssd", "google-machine-image=https://www.googleapis.com/compute/v1/projects/mender-gitlab-runners/global/images/nested-virt-ubuntu-2204-jammy-v20221011", "google-tags=mender-qa-worker", "google-zone=northamerica-northeast1-b", "google-use-internal-ip=true", "google-scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/cloud-platform"]
 EOF
 ```
 
