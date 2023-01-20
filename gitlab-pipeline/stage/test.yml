@@ -20,6 +20,10 @@ test:backend-integration:open_source:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
 
+    # Increase inotify limit to make sure the tests are not limited while
+    # running with high parallelism on a single VM
+    - sysctl -w fs.inotify.max_user_instances=1024
+
     # Set minimaly required by Opensearch 'max virtual memory areas'
     # https://opensearch.org/docs/2.4/install-and-configure/install-opensearch/index/#important-settings
     - sysctl -w vm.max_map_count=262144
@@ -194,6 +198,14 @@ test:backend-integration:azblob:enterprise:
     # Make sure the /dev/kvm device is readable and writable by everyone
     - chmod o+rw /dev/kvm
 
+    # Increase inotify limit to make sure the tests are not limited while
+    # running with high parallelism on a single VM
+    - sysctl -w fs.inotify.max_user_instances=1024
+
+    # Set minimaly required by Opensearch 'max virtual memory areas'
+    # https://opensearch.org/docs/2.4/install-and-configure/install-opensearch/index/#important-settings
+    - sysctl -w vm.max_map_count=262144
+
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
@@ -232,10 +244,6 @@ test:backend-integration:azblob:enterprise:
         MAX_WAIT=$((${MAX_WAIT} - 1))
         sleep 1
       done
-
-    # Set minimaly required by Opensearch 'max virtual memory areas'
-    # https://opensearch.org/docs/2.4/install-and-configure/install-opensearch/index/#important-settings
-    - sysctl -w vm.max_map_count=262144
 
     # Output storage io stats
     - df -h . | tail -1 | awk '{system("hdparm -tT "$1);}'
