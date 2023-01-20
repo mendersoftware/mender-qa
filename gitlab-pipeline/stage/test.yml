@@ -20,6 +20,10 @@ test:backend-integration:open_source:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
 
+    # Set minimaly required by Opensearch 'max virtual memory areas'
+    # https://opensearch.org/docs/2.4/install-and-configure/install-opensearch/index/#important-settings
+    - sysctl -w vm.max_map_count=262144
+
     - docker version
     - apk --update add bash git py-pip gcc make python2-dev
       libc-dev libffi-dev openssl-dev python3 curl jq sysstat
@@ -228,6 +232,10 @@ test:backend-integration:azblob:enterprise:
         MAX_WAIT=$((${MAX_WAIT} - 1))
         sleep 1
       done
+
+    # Set minimaly required by Opensearch 'max virtual memory areas'
+    # https://opensearch.org/docs/2.4/install-and-configure/install-opensearch/index/#important-settings
+    - sysctl -w vm.max_map_count=262144
 
     # Output storage io stats
     - df -h . | tail -1 | awk '{system("hdparm -tT "$1);}'
