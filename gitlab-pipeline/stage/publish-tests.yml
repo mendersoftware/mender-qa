@@ -78,6 +78,18 @@ publish:tests:acceptance:qemux86_64:uefi_grub:
   variables:
     JOB_BASE_NAME: qemux86_64_uefi_grub
 
+publish:tests:acceptance:qemux86_64:uefi_grub:cross-platform:
+  extends: .template_publish_acceptance_coverage
+  except:
+    variables:
+      - $TEST_QEMUX86_64_UEFI_GRUB != "true"
+  needs:
+    - init:workspace
+    - test:acceptance:qemux86_64:uefi_grub:cross-platform
+  variables:
+    # Modify JOB_BASE_NAME to have a different flag when reporting coverage
+    JOB_BASE_NAME: qemux86_64_uefi_grub-cross-platform
+
 publish:tests:acceptance:vexpress_qemu:
   extends: .template_publish_acceptance_coverage
   except:
@@ -122,14 +134,14 @@ publish:tests:acceptance:vexpress_qemu:uboot_uefi_grub:
   variables:
     JOB_BASE_NAME: vexpress_qemu_uboot_uefi_grub
 
-publish:tests:acceptance:vexpress_qemu_flash:
+publish:tests:acceptance:vexpress_qemu:flash:
   extends: .template_publish_acceptance_coverage
   except:
     variables:
       - $TEST_VEXPRESS_QEMU_FLASH != "true"
   needs:
     - init:workspace
-    - test:acceptance:vexpress_qemu_flash
+    - test:acceptance:vexpress_qemu:flash
   variables:
     JOB_BASE_NAME: vexpress_qemu_flash
 

@@ -205,7 +205,7 @@ release_board_artifacts:vexpress-qemu-uboot-uefi-grub:automatic:
 # release_board_artifacts:vexpress-qemu-flash:manual:
 #   dependencies:
 #     - init:workspace
-#     - test:acceptance:vexpress_qemu_flash
+#     - test:acceptance:vexpress_qemu:flash
 #   when: manual
 #   only:
 #     variables:
@@ -215,7 +215,7 @@ release_board_artifacts:vexpress-qemu-uboot-uefi-grub:automatic:
 # release_board_artifacts:vexpress-qemu-flash:automatic:
 #   dependencies:
 #     - init:workspace
-#     - test:acceptance:vexpress_qemu_flash
+#     - test:acceptance:vexpress_qemu:flash
 #   only:
 #     variables:
 #       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_VEXPRESS_QEMU_FLASH == "true"
