@@ -18,7 +18,7 @@ This is the Google calendar that shows who takes this role when.
 ### Nightly Mender QA build
 
 Link: https://qastatus.mender.io/nightlies
-Link: https://gitlab.com/Northern.tech/Mender/mender-qa/-/pipeline_schedules
+Link: https://gitlab.com/Northern.tech/Mender/mender-qa/-/pipelines?page=1&scope=all&source=schedule
 
 There is no golden rule on what to do when the "Last Pipeline" in the link above
 is not green.
@@ -29,7 +29,7 @@ for actual test failures we need to asses if it might be a regression or not.
 
 ### Weekly Mender integration tests on staging
 
-Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipeline_schedules
+Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipelines?page=1&scope=all&source=schedule
 
 Every Monday evening, at 9 PM UTC, we run the Mender integration tests targeting
 the Mender staging environment.
