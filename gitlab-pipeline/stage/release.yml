@@ -226,7 +226,7 @@ release_board_artifacts:beagleboneblack:manual:
     PUBLISH_BOARD_NAME: beagleboneblack
   dependencies:
     - init:workspace
-    - test:acceptance:beagleboneblack
+    - build:acceptance:beagleboneblack
   when: manual
   only:
     variables:
@@ -238,7 +238,7 @@ release_board_artifacts:beagleboneblack:automatic:
     PUBLISH_BOARD_NAME: beagleboneblack
   dependencies:
     - init:workspace
-    - test:acceptance:beagleboneblack
+    - build:acceptance:beagleboneblack
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_BEAGLEBONEBLACK == "true"
@@ -249,7 +249,7 @@ release_board_artifacts:raspberrypi3:manual:
     PUBLISH_BOARD_NAME: raspberrypi3
   dependencies:
     - init:workspace
-    - test:acceptance:raspberrypi3
+    - build:acceptance:raspberrypi3
   when: manual
   only:
     variables:
@@ -261,7 +261,7 @@ release_board_artifacts:raspberrypi3:automatic:
     PUBLISH_BOARD_NAME: raspberrypi3
   dependencies:
     - init:workspace
-    - test:acceptance:raspberrypi3
+    - build:acceptance:raspberrypi3
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_RASPBERRYPI3 == "true"
@@ -272,7 +272,7 @@ release_board_artifacts:raspberrypi4:manual:
     PUBLISH_BOARD_NAME: raspberrypi4
   dependencies:
     - init:workspace
-    - test:acceptance:raspberrypi4
+    - build:acceptance:raspberrypi4
   when: manual
   only:
     variables:
@@ -284,7 +284,7 @@ release_board_artifacts:raspberrypi4:automatic:
     PUBLISH_BOARD_NAME: raspberrypi4
   dependencies:
     - init:workspace
-    - test:acceptance:raspberrypi4
+    - build:acceptance:raspberrypi4
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_RASPBERRYPI4 == "true"
