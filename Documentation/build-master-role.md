@@ -15,6 +15,16 @@ This is the Google calendar that shows who takes this role when.
 
 ## Responsibilities
 
+### Overview of unstable tests
+
+Link: https://qastatus.mender.io/stats
+
+The unstable tests should be known to the Build Master so that it can be detected when
+test failures are genuine or spurious.
+
+By the end of the Build Master period, all failed tests in nightly builds (link above)
+should either be fixed or reported in JIRA tasks to follow-up in the next period.
+
 ### Nightly Mender QA build
 
 Link: https://qastatus.mender.io/nightlies
