@@ -1,5 +1,7 @@
 
 mender-qa:success:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   when: on_success
   # Keep overhead low by using a small image with curl preinstalled.
@@ -10,6 +12,8 @@ mender-qa:success:
     - $CI_PROJECT_DIR/scripts/github_pull_request_status success "mender-qa pipeline passed" $CI_PIPELINE_URL ci/mender-qa
 
 mender-qa:failure:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   when: on_failure
   # Keep overhead low by using a small image with curl preinstalled.
@@ -21,6 +25,8 @@ mender-qa:failure:
 
 
 .coveralls:finish-build:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   # See https://docs.coveralls.io/parallel-build-webhook
   variables:

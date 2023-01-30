@@ -1,5 +1,7 @@
 
 .template_release_docker_images:
+  tags:
+    - mender-qa-worker-generic-light
   only:
     variables:
       - ($BUILD_SERVERS == "true" && $BUILD_CLIENT == "true") || $RUN_INTEGRATION_TESTS == "true"
@@ -56,6 +58,8 @@ release_docker_images:automatic:
   extends: .template_release_docker_images
 
 .template_release_board_artifacts:
+  tags:
+    - mender-qa-worker-generic-light
   # Jobs including this template must define PUBLISH_BOARD_NAME and set up dependencies
   stage: release
   image: debian:buster
@@ -309,6 +313,8 @@ release_board_artifacts:raspberrypi4:automatic:
   }
 
 .template_release_binary_tools:
+  tags:
+    - mender-qa-worker-generic-light
   # Jobs including this template must set either "dependencies" or "needs"
   # for "init:workspace", "build:mender-cli" and "build:mender-artifact".
   only:
@@ -409,6 +415,8 @@ release_binary_tools:automatic:
   extends: .template_release_binary_tools
 
 .template_release_mender-monitor:
+  tags:
+    - mender-qa-worker-generic-light
   stage: release
   image: debian:buster
   variables:
@@ -447,6 +455,8 @@ release_mender-monitor:automatic:
   extends: .template_release_mender-monitor
 
 .template_release_mender-gateway:
+  tags:
+    - mender-qa-worker-generic-light
   stage: release
   image: debian:buster
   variables:
@@ -494,6 +504,8 @@ release_mender-gateway:automatic:
 # Do not confuse with release_docker_images which publishes all images
 # (including client ones) used during releases.
 release_docker_images:automatic:client-only:
+  tags:
+    - mender-qa-worker-generic-light
   only:
     variables:
       - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"

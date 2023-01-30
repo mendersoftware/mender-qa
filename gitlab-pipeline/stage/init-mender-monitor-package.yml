@@ -1,4 +1,6 @@
 init:mender-monitor-package:
+  tags:
+    - mender-qa-worker-generic-light
   stage: init
   image: alpine:3.12
   before_script:

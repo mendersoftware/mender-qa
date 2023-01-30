@@ -1,5 +1,7 @@
 
 .template_build_test_acc:
+  tags:
+    - mender-qa-worker-client-acceptance-tests
   image: mendersoftware/mender-test-containers:mender-client-acceptance-testing
   variables:
     DOCKER_BUILDKIT: 1
@@ -7,8 +9,6 @@
     - init:workspace
     - build:mender-monitor:package
     - build:mender-gateway:package
-  tags:
-    - mender-qa-worker-client-acceptance-tests
   before_script:
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually

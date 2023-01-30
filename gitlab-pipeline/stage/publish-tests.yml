@@ -3,6 +3,8 @@
 # * running tests for a mender PR: MENDER_REV ~= /pull/XXX/head/
 # * running nightly build: $NIGHTLY_BUILD == "true"
 .template_publish_acceptance_coverage:
+  tags:
+    - mender-qa-worker-generic-light
   only:
     variables:
       - $MENDER_REV =~ /pull\/.*\/head/

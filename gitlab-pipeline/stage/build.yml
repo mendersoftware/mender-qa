@@ -8,6 +8,8 @@ include:
     ref: 'master'
 
 build:client:docker:
+  tags:
+    - mender-qa-worker-generic-light
   stage: build
   only:
     variables:
@@ -20,8 +22,6 @@ build:client:docker:
   image: docker
   services:
     - docker:dind
-  tags:
-    - docker
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -70,6 +70,8 @@ build:client:docker:
       - stage-artifacts/
 
 build:servers:
+  tags:
+    - mender-qa-worker-generic-heavy
   stage: build
   only:
     variables:
@@ -84,8 +86,6 @@ build:servers:
   image: docker
   services:
     - docker:dind
-  tags:
-    - mender-qa-worker-generic-heavy
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -128,6 +128,8 @@ build:servers:
       - stage-artifacts/
 
 build:mender-cli:
+  tags:
+    - mender-qa-worker-generic-light
   stage: build
   only:
     variables:
@@ -182,6 +184,8 @@ build:mender-cli:
       - stage-artifacts/
 
 build:mender-artifact:
+  tags:
+    - mender-qa-worker-generic
   stage: build
   only:
     variables:
@@ -193,8 +197,6 @@ build:mender-artifact:
   image: docker
   services:
     - docker:dind
-  tags:
-    - mender-qa-worker-generic
   needs:
     - init:workspace
   allow_failure: false
@@ -239,6 +241,8 @@ build:mender-artifact:
       - stage-artifacts/
 
 build:mender-monitor:package:
+  tags:
+    - mender-qa-worker-generic-light
   stage: build
   image: alpine:3.12
   needs: []
@@ -270,6 +274,8 @@ build:mender-monitor:package:
       - stage-artifacts
 
 build:mender-gateway:package:
+  tags:
+    - mender-qa-worker-generic-light
   stage: build
   needs:
     - init:workspace
@@ -290,6 +296,8 @@ build:mender-gateway:package:
     - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-gateway
 
 build:generate-delta-worker:docker:
+  tags:
+    - mender-qa-worker-generic-light
   stage: build
   only:
     variables:
