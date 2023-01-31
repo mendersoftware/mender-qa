@@ -1,5 +1,7 @@
 
 test:backend-integration:open_source:
+  tags:
+    - mender-qa-worker-backend-integration-tests
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
     when: always
@@ -9,8 +11,6 @@ test:backend-integration:open_source:
     TEST_SUITE: "open"
   services:
     - docker:dind
-  tags:
-    - mender-qa-worker-backend-integration-tests
   needs:
     - init:workspace
     - build:servers
@@ -176,6 +176,8 @@ test:backend-integration:azblob:enterprise:
     AZURE_STORAGE_CONTAINER_PREFIX: "backend-ent"
 
 .integration_setup_template:
+  tags:
+    - mender-qa-worker-integration-tests
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
   # run dockerd on the same host. It prevents us from using GitLab service,
@@ -189,8 +191,6 @@ test:backend-integration:azblob:enterprise:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300
     TEST_SUITE: "open"
-  tags:
-    - mender-qa-worker-integration-tests
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt

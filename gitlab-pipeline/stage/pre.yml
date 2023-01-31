@@ -1,5 +1,7 @@
 
 mender-qa:start:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .pre
   # Keep overhead low by using a small image with curl preinstalled.
   image: appropriate/curl

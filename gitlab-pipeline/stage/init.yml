@@ -1,5 +1,7 @@
 
 init:workspace:
+  tags:
+    - mender-qa-worker-generic-light
   stage: init
   image: alpine:3.12
   script:
