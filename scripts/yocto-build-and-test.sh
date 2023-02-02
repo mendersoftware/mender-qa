@@ -221,6 +221,10 @@ EXTERNALSRC${sep}pn-mender-client-native = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-artifact = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-artifact-native = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-connect= "$WORKSPACE/go"
+
+# When using externalsrc from CI, we still want to apply patches
+SRCTREECOVEREDTASKS${sep}remove = "do_patch"
+
 EOF
 
     # Use network cache if present, if not, use local cache.
