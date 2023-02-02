@@ -213,11 +213,7 @@ PREFERRED_PROVIDER_virtual/mender-client-native = "mender-native"
 EOF
     fi
 
-    # Assuming sumo or newer
     cat >> $BUILDDIR/conf/local.conf <<EOF
-# MEN-2948: Renamed mender recipe -> mender-client
-# But the "mender" reference has to be kept for backwards compatibility
-# with 2.1.x, 2.2.x, and 2.3.x
 EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go${BUILD_CPP_CLIENT_PATH:-}"
 EXTERNALSRC${sep}pn-mender-native = "$WORKSPACE/go${BUILD_CPP_CLIENT_PATH:-}"
 EXTERNALSRC${sep}pn-mender-client = "$WORKSPACE/go"
