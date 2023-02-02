@@ -658,10 +658,13 @@ build_and_test_client() {
             pytest_args="$pytest_args --commercial-tests"
 
             local xdist_args
-            # Use the exclusivity fixture as a sign that this branch supports
-            # running tests in parallel with xdist.
+            local cross_args
+            # Use the exclusivity fixture as a sign that this branch support modern
+            # features of mender-image-tests: running tests in parallel and filtering
+            # cross platform tests
             if ( cd image-tests && git grep -q '^def exclusivity' ); then
                 xdist_args="-n $TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE"
+                cross_args="${CROSS_PLATFORM_TESTS_ARG}"
             else
                 xdist_args="-p no:xdist"
             fi
@@ -669,7 +672,7 @@ build_and_test_client() {
             python3 -m pytest $xdist_args --verbose --junit-xml=results.xml \
                     --bitbake-image $image_name --board-type=$board_name $pytest_args \
                     $html_report_args $acceptance_test_to_run \
-                    ${CROSS_PLATFORM_TESTS_ARG}
+                    ${cross_args}
 
             cd $WORKSPACE/
         fi
