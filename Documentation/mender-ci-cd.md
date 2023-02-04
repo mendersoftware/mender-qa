@@ -44,9 +44,9 @@ release and install it manually.
 
 In a nutshell:
 ```
-curl -O "https://gitlab-docker-machine-downloads.s3.amazonaws.com/v0.16.2-gitlab.18/docker-machine-Linux-x86_64"
-sudo cp docker-machine-Linux-x86_64 /usr/local/bin/docker-machine
-sudo chmod +x /usr/local/bin/docker-machine
+curl -o docker-machine "https://gitlab-docker-machine-downloads.s3.amazonaws.com/v0.16.2-gitlab.19/docker-machine-Linux-x86_64"
+chmod +x docker-machine
+sudo cp docker-machine /usr/local/bin/docker-machine
 ```
 
 ### Installing `docker`
