@@ -12,6 +12,7 @@
   dependencies:
     - init:workspace
     - build:servers
+    - build:generate-delta-worker:docker
     - build:client:qemu
     - build:client:docker
   before_script:
