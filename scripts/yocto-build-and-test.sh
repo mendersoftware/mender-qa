@@ -322,7 +322,10 @@ clean_build_config() {
 # the bitbake mannder-artifact-info part is needed to pickup the MENDER_ARTIFACT_NAME
 # change
 restore_build_config() {
+    local sep="$(bitbake_override_separator)"
     mv -fv "${BUILDDIR}/conf/local.conf.backup" "${BUILDDIR}/conf/local.conf"
+#     echo "IMAGE_INSTALL${sep}append = \" mc sqlite\"" >> "$BUILDDIR/conf/local.conf"
+    echo "IMAGE_INSTALL${sep}append = \" mc openssh\"" >> "$BUILDDIR/conf/local.conf"
     bitbake mender-artifact-info
 }
 
@@ -526,6 +529,7 @@ build_and_test_client() {
         bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
         clean_build_config
         run_bitbake $images_to_build
+# cp -a ${BUILDDIR}/tmp/deploy/images/${machine_name} $WORKSPACE/stage-artifacts/ || true
         if ${BUILD_DOCKER_IMAGES:-false}; then
             features=`bitbake -e $image_name | egrep '^MENDER_FEATURES=' || true`
             # fall back to DISTRO_FEATURES if we found no MENDER_FEATURES
@@ -597,7 +601,7 @@ build_and_test_client() {
 
             if grep mender-image-full-cmdline-rofs-commercial <<<"$images_to_build"; then
                 filename="clean-mender-image-full-cmdline-rofs-commercial-${machine_name}.${extension}"
-
+                cp -a "${BUILDDIR}/tmp/deploy/images/${machine_name}" $WORKSPACE/stage-artifacts/
                 $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-image-full-cmdline-rofs-commercial \
