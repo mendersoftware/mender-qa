@@ -324,8 +324,8 @@ clean_build_config() {
 restore_build_config() {
     local sep="$(bitbake_override_separator)"
     mv -fv "${BUILDDIR}/conf/local.conf.backup" "${BUILDDIR}/conf/local.conf"
-#     echo "IMAGE_INSTALL${sep}append = \" mc sqlite\"" >> "$BUILDDIR/conf/local.conf"
-    echo "IMAGE_INSTALL${sep}append = \" mc openssh\"" >> "$BUILDDIR/conf/local.conf"
+    echo "IMAGE_INSTALL${sep}append = \" mc sqlite\"" >> "$BUILDDIR/conf/local.conf"
+#     echo "IMAGE_INSTALL${sep}append = \" mc openssh\"" >> "$BUILDDIR/conf/local.conf"
     bitbake mender-artifact-info
 }
 
