@@ -605,7 +605,7 @@ build_and_test_client() {
                     -t registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr
                 $WORKSPACE/integration/extra/release_tool.py \
                     --set-version-of mender-qemu-rofs-commercial \
-                    --version pr
+                    --version pr || true
             fi
         fi
 
