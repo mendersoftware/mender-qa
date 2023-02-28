@@ -1,6 +1,8 @@
 variables:
   # Internal address for nfs sstate cache server (northamerica-northeast1-b)
-  SSTATE_CACHE_INTRNL_ADDR: "10.162.0.25"
+  # Keep align with IP address set with Terraform:
+  # https://github.com/mendersoftware/sre-tools/blob/9b0ca4b560145aa78459e4931a953157d00dd707/terragrunt/gcp_mender-gitlab-runners/gitlab-master-vm/terragrunt.hcl#L18
+  SSTATE_CACHE_INTRNL_ADDR: "10.164.0.42"
 
   # Global environment variables (not meant to be changed)
   DEBIAN_FRONTEND: noninteractive
