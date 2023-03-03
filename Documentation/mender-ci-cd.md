@@ -1,5 +1,21 @@
 # Mender CI/CD
 
+- [Mender CI/CD](#mender-cicd)
+  - [GitLab's master runner dependencies](#gitlabs-master-runner-dependencies)
+    - [`gitlab-runner` lifecycle](#gitlab-runner-lifecycle)
+      - [Setup instructions](#setup-instructions)
+    - [Installing `gitlab-runner` - Manual reference](#installing-gitlab-runner---manual-reference)
+    - [Installing `docker-machine`](#installing-docker-machine)
+    - [Installing `docker`](#installing-docker)
+  - [Enable KVM acceleration on GCP](#enable-kvm-acceleration-on-gcp)
+  - [NFS sstate-cache](#nfs-sstate-cache)
+    - [Setting up an NFS server](#setting-up-an-nfs-server)
+    - [Mounting a remote NFS directory](#mounting-a-remote-nfs-directory)
+  - [Configuring gitlab-runner(s)](#configuring-gitlab-runners)
+      - [GitLab runners in Mender CI infra](#gitlab-runners-in-mender-ci-infra)
+  - [Installing systemd services and timers](#installing-systemd-services-and-timers)
+
+
 This document contains various guides and how-to's for topics around our current
 CI/CD setup using GitLab on Google Cloud Platform (GCP). For a basic introduction
 to GitLab, refer to the dedicated guide in `gitlab-ci.md`.
@@ -15,7 +31,24 @@ This machine requires three pieces of software:
 * `docker-machine` to launch the workers in GCP and install/configure Docker in them
 * `docker` as a dependency of the above.
 
-### Installing `gitlab-runner`
+### `gitlab-runner` lifecycle
+The `gitlab-runner` VM is managed by a [Google Managed Instance Group](https://cloud.google.com/compute/docs/instance-groups)
+which ensures that a VM is always on and that it's created from 
+a specific [Instance Template](https://cloud.google.com/compute/docs/instance-templates).
+This template contains an installation script based on the following chapter.
+
+This code is managed by Terraform (reference [here](https://github.com/mendersoftware/sre-tools/pull/275)),
+[here](https://github.com/mendersoftware/sre-tools/blob/master/terragrunt/modules/gcp-gitlab-master-mig/gitlab_vm_initialization.sh.tftpl)
+the actual setup script.
+
+#### Setup instructions
+Please refer to the terraform [readme document](https://github.com/mendersoftware/sre-tools/tree/master/terragrunt/gcp_mender-gitlab-runners#terraform-gcp)
+
+
+### Installing `gitlab-runner` - Manual reference
+
+*Update 20230203: [QA-480](https://northerntech.atlassian.net/browse/QA-480) this procedure is
+maintained for reference but it's superseded by [gitlab-runner lifecycle](#gitlab-runner-lifecycle)*
 
 We install the GitLab runner from GitLab's APT repositories. Follow
 [this guide](https://docs.gitlab.com/runner/install/linux-repository.html#installing-gitlab-runner)
