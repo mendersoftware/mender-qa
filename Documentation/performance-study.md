@@ -1,6 +1,6 @@
 # Performance study 11.02.2019 on GCP slaves
 
-- 3 weeks debugging **master-agent connectivity issues** [QA-51](https://tracker.mender.io/browse/QA-51)
+- 3 weeks debugging **master-agent connectivity issues** [QA-51](https://northerntech.atlassian.net/browse/QA-51)
     - 100% builds broken in 5 mins
     - accidental success by replacing JClouds with the GCE plugin
     - still no definite answer
