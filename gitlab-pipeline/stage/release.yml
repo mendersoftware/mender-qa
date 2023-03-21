@@ -19,16 +19,17 @@
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apk --update add git python3 py3-pip
+    - apk --update add git python3 py3-pip xz
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar.gz
+    - xz -d /tmp/workspace.tar.xz
+    - tar -xf /tmp/workspace.tar
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
@@ -66,16 +67,17 @@ release_docker_images:automatic:
   image: debian:buster
   before_script:
     # Install dependencies
-    - apt update && apt install -yyq awscli git wget python3 python3-pip
+    - apt update && apt install -yyq awscli git wget python3 python3-pip xz-utils
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar.gz
+    - xz -d /tmp/workspace.tar.xz
+    - tar -xf /tmp/workspace.tar
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
   script:
     # Publish boards artifacts and sdimg (when not qemu board).
@@ -326,16 +328,17 @@ release_board_artifacts:raspberrypi4:automatic:
   before_script:
     - *publish_helper_functions
     # Install dependencies
-    - apt update && apt install -yyq awscli git wget python3 python3-pip
+    - apt update && apt install -yyq awscli git wget python3 python3-pip xz-utils
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar.gz
+    - xz -d /tmp/workspace.tar.xz
+    - tar -xf /tmp/workspace.tar
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
   script:
     # mender-cli
@@ -428,16 +431,17 @@ release_binary_tools:automatic:
     - build:mender-monitor:package
   before_script:
     # Install dependencies
-    - apt update && apt install -yyq awscli git wget python3 python3-pip
+    - apt update && apt install -yyq awscli git wget python3 python3-pip xz-utils
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz stage-artifacts /tmp
+    - mv workspace.tar.xz stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar.gz
+    - xz -d /tmp/workspace.tar.xz
+    - tar -xf /tmp/workspace.tar
     - mv /tmp/stage-artifacts .
   script:
     - mender_monitor_version=$($WORKSPACE/integration/extra/release_tool.py --version-of monitor-client --in-integration-version $INTEGRATION_REV)
@@ -469,7 +473,9 @@ release_mender-monitor:automatic:
     - build:mender-gateway:package
   before_script:
     # Early exit when building an integration version without mender-gateway
-    - tar -tf workspace.tar.gz
+    - apt update && apt install -yyq xz-utils
+    - xz -d workspace.tar.xz
+    - tar -tf workspace.tar
         ./go/src/github.com/mendersoftware/mender-gateway  >/dev/null 2>/dev/null || exit 0
     # Install dependencies
     - apt update && apt install -yyq awscli git wget python3 python3-pip
@@ -477,11 +483,11 @@ release_mender-monitor:automatic:
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz stage-artifacts /tmp
+    - mv workspace.tar stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar.gz
+    - tar -xf /tmp/workspace.tar
     - mv /tmp/stage-artifacts .
   script:
     - mender_gateway_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-gateway --in-integration-version $INTEGRATION_REV)
@@ -522,16 +528,17 @@ release_docker_images:automatic:client-only:
     # Check correct dind setup
     - docker version
     # Install dependencies
-    - apk --update add git python3 py3-pip
+    - apk --update add git python3 py3-pip xz
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar.gz
+    - xz -d /tmp/workspace.tar.xz
+    - tar -xf /tmp/workspace.tar
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}

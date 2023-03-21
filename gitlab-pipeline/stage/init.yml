@@ -17,7 +17,7 @@ init:workspace:
       trap handle_exit EXIT
 
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - apk --update add git openssh bash python3 curl py3-pip jq
+    - apk --update add git openssh bash python3 curl py3-pip jq xz
 
     # release_tool.py dependencies
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
@@ -136,8 +136,9 @@ init:workspace:
     - cat ${CI_PROJECT_DIR}/build_revisions.env
 
     # Save artifact the rest of the pipeline
-    - tar -czf /tmp/workspace.tar.gz .
-    - mv /tmp/workspace.tar.gz ${CI_PROJECT_DIR}/workspace.tar.gz
+    - tar -cf /tmp/workspace.tar .
+    - xz -${WORKSPACE_XZ_LEVEL:-1} ${WORKSPACE_XZ_ARGS} /tmp/workspace.tar
+    - mv /tmp/workspace.tar.xz ${CI_PROJECT_DIR}/workspace.tar.xz
 
     # Always keep this at the end of the script stage
     - echo "success" > /JOB_RESULT.txt
@@ -151,5 +152,5 @@ init:workspace:
   artifacts:
     expire_in: 2w
     paths:
-      - workspace.tar.gz
+      - workspace.tar.xz
       - build_revisions.env
