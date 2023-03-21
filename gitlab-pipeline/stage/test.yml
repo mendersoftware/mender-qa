@@ -30,16 +30,17 @@ test:backend-integration:open_source:
 
     - docker version
     - apk --update add bash git py-pip gcc make python2-dev
-      libc-dev libffi-dev openssl-dev python3 curl jq sysstat
+      libc-dev libffi-dev openssl-dev python3 curl jq sysstat xz
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar.gz
+    - xz -d /tmp/workspace.tar.xz
+    - tar -xf /tmp/workspace.tar
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
     # Load all docker images except client
@@ -208,11 +209,13 @@ test:backend-integration:azblob:enterprise:
 
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.gz build_revisions.env stage-artifacts /tmp
+    - apk add xz
+    - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar.gz
+    - xz -d /tmp/workspace.tar.xz
+    - tar -xf /tmp/workspace.tar
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
     # Dependencies for post job status and io stats

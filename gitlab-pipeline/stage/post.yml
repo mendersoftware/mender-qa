@@ -38,9 +38,10 @@ mender-qa:failure:
   dependencies:
     - init:workspace
   before_script:
-    - apk --update add git
+    - apk --update add git xz
     # Get mender source
-    - tar xf ${CI_PROJECT_DIR}/workspace.tar.gz ./go/src/github.com/mendersoftware/${REPO_NAME}
+    - xz -d ${CI_PROJECT_DIR}/workspace.tar.xz
+    - tar xf ${CI_PROJECT_DIR}/workspace.tar ./go/src/github.com/mendersoftware/${REPO_NAME}
     - mv go/src/github.com/mendersoftware/${REPO_NAME} ${CI_PROJECT_DIR}/${REPO_NAME}
     - cd ${CI_PROJECT_DIR}/${REPO_NAME}
   script:
