@@ -57,8 +57,6 @@
 
     - if [ -d ${CI_PROJECT_DIR}/acceptance-tests-coverage/mender-artifact ]; then
     # Get mender-artifact source
-    -   apk --update add xz
-    -   xz -d ${CI_PROJECT_DIR}/workspace.tar.xz
     -   tar xf ${CI_PROJECT_DIR}/workspace.tar ./go/src/github.com/mendersoftware/mender-artifact
     -   mv go/src/github.com/mendersoftware/mender-artifact ${CI_PROJECT_DIR}/mender-artifact
     -   cd ${CI_PROJECT_DIR}/mender-artifact
