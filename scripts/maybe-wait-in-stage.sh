@@ -11,6 +11,6 @@ if [ "$(eval echo \"\$$1\")" = "true" ]; then
 fi
 
 while [ -f "$2" ]; do
-    echo "Waiting indefinitely until $2 is removed."
+    echo "Waiting indefinitely until $2 is removed. Hostname: $(hostname)"
     sleep 10
 done
