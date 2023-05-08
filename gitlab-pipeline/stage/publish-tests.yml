@@ -42,7 +42,7 @@
       -debug
       -repotoken ${MENDER_COVERALLS_TOKEN}
       -service gitlab-ci
-      -jobid $(git rev-parse HEAD)
+      -jobid ${CI_PIPELINE_ID}
       -covermode set
       -flagname acceptance-${JOB_BASE_NAME}
       -parallel
@@ -64,7 +64,7 @@
         -debug
         -repotoken ${MENDER_ARTIFACT_COVERALLS_TOKEN}
         -service gitlab-ci
-        -jobid $(git rev-parse HEAD)
+        -jobid ${CI_PIPELINE_ID}
         -covermode set
         -flagname acceptance-${JOB_BASE_NAME}
         -parallel
