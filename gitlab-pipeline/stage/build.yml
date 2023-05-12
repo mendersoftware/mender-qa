@@ -316,7 +316,7 @@ build:generate-delta-worker:docker:
     - build:mender-artifact
   allow_failure: false
   before_script:
-    - apk --update --no-cache add bash curl aws-cli xz
+    - apk --update --no-cache add bash curl aws-cli xz py3-yaml
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.xz /tmp
     - mkdir -p "${WORKSPACE}"
