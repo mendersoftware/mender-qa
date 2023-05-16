@@ -73,3 +73,12 @@ coverage:finish-build:mender-artifact:
   variables:
       COVERALLS_TOKEN: ${MENDER_ARTIFACT_COVERALLS_TOKEN}
       REPO_NAME: "mender-artifact"
+
+trigger:mantra:
+  trigger:
+    branch: master
+    project: Northern.tech/Mender/mantra
+    strategy: depend
+  rules:
+    - if: $NIGHTLY_BUILD == "true"
+      when: always
