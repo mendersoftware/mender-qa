@@ -219,7 +219,7 @@ test:backend-integration:azblob:enterprise:
     - mv /tmp/build_revisions.env /tmp/stage-artifacts .
 
     # Dependencies for post job status and io stats
-    - apk --update add curl jq sysstat hdparm
+    - apk --update add curl jq sysstat hdparm bind-tools
 
     # Make sure docker clients (cli and python) interacts with dockerd via socket
     - unset DOCKER_HOST
