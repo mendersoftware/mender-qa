@@ -32,7 +32,7 @@ test:backend-integration:open_source:
     - apk --update add bash git py-pip gcc make python2-dev
       libc-dev libffi-dev openssl-dev python3 curl jq sysstat xz
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
-    - pip3 install -r requirements.txt
+    - pip3 install PyYAML==5.3.1
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
