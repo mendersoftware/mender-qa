@@ -26,18 +26,17 @@ Create an empty repository in GitHub and push the OS version of it. Notable chan
 
 ## GitLab: project
 
-> NOTE: It may happen that the mender-test-bot has already created the GitLab
-> project for you. In this case, you can move straight to point 5 below.
+> NOTE: It may happen that the `mender-test-bot` has already created the GitLab
+> project for you. In this case, you can move straight to point 4 below.
 > **However**, if the repository should be public, make sure you reconfigure
 > the project visibility in GitLab.
 
 To create the project in GitLab:
 
 1. Open an incognito window in your browser
-2. Log into GitHub as `mender-test-bot`, credentials are in `mystiko`
-3. Log into GitLab, using OAuth from GitHub. If asked for the token, use the one in `mystiko`
-4. New project > Create blank GitLab project
-5. Configure branches, permissions, etc, but let the bot do the syncing.
+2. Log into GitLab as `mender-test-bot`, credentials are in `mystiko`
+3. New project > Create blank GitLab project
+4. Configure visibility, branch protections, etc, but let the bot do the syncing from GitHub.
 
 ## Fork GitHub project for mender-test-bot
 
