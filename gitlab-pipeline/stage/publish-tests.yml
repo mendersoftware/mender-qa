@@ -5,19 +5,13 @@
 .template_publish_acceptance_coverage:
   tags:
     - mender-qa-worker-generic-light
-  only:
-    variables:
-      - $MENDER_REV =~ /pull\/.*\/head/
-      - $MENDER_ARTIFACT_REV =~ /pull\/.*\/head/
-      - $NIGHTLY_BUILD == "true"
+  rules:
+    - if: $MENDER_REV =~ /pull\/.*\/head/ || $MENDER_ARTIFACT_REV =~ /pull\/.*\/head/ || $NIGHTLY_BUILD == "true"
   stage: publish:tests
   needs:
     - init:workspace
-  image: golang:1.15-alpine3.12
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:goveralls-master
   before_script:
-    - apk --update add git
-    # Run go get out of the repo to not modify go.mod
-    - cd / && go get github.com/mattn/goveralls && cd -
     # Coveralls env variables:
     #  According to https://docs.coveralls.io/supported-ci-services
     #  we should set CI_NAME, CI_BUILD_NUMBER, etc. But according
