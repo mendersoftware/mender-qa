@@ -67,9 +67,8 @@
 
 publish:tests:acceptance:qemux86_64:uefi_grub:
   extends: .template_publish_acceptance_coverage
-  except:
-    variables:
-      - $TEST_QEMUX86_64_UEFI_GRUB != "true"
+  rules:
+    - if: $TEST_QEMUX86_64_UEFI_GRUB == "true"
   needs:
     - init:workspace
     - test:acceptance:qemux86_64:uefi_grub
@@ -78,9 +77,8 @@ publish:tests:acceptance:qemux86_64:uefi_grub:
 
 publish:tests:acceptance:qemux86_64:uefi_grub:cross-platform:
   extends: .template_publish_acceptance_coverage
-  except:
-    variables:
-      - $TEST_QEMUX86_64_UEFI_GRUB != "true"
+  rules:
+    - if: $TEST_QEMUX86_64_UEFI_GRUB == "true"
   needs:
     - init:workspace
     - test:acceptance:qemux86_64:uefi_grub:cross-platform
@@ -90,9 +88,8 @@ publish:tests:acceptance:qemux86_64:uefi_grub:cross-platform:
 
 publish:tests:acceptance:vexpress_qemu:
   extends: .template_publish_acceptance_coverage
-  except:
-    variables:
-      - $TEST_VEXPRESS_QEMU != "true"
+  rules:
+    - if: $TEST_VEXPRESS_QEMU == "true"
   needs:
     - init:workspace
     - test:acceptance:vexpress_qemu
@@ -101,9 +98,8 @@ publish:tests:acceptance:vexpress_qemu:
 
 publish:tests:acceptance:qemux86_64:bios_grub:
   extends: .template_publish_acceptance_coverage
-  except:
-    variables:
-      - $TEST_QEMUX86_64_BIOS_GRUB != "true"
+  rules:
+    - if: $TEST_QEMUX86_64_BIOS_GRUB == "true"
   needs:
     - init:workspace
     - test:acceptance:qemux86_64:bios_grub
@@ -112,9 +108,8 @@ publish:tests:acceptance:qemux86_64:bios_grub:
 
 publish:tests:acceptance:qemux86_64:bios_grub_gpt:
   extends: .template_publish_acceptance_coverage
-  except:
-    variables:
-      - $TEST_QEMUX86_64_BIOS_GRUB_GPT != "true"
+  rules:
+    - if: $TEST_QEMUX86_64_BIOS_GRUB_GPT == "true"
   needs:
     - init:workspace
     - test:acceptance:qemux86_64:bios_grub_gpt
@@ -123,9 +118,8 @@ publish:tests:acceptance:qemux86_64:bios_grub_gpt:
 
 publish:tests:acceptance:vexpress_qemu:uboot_uefi_grub:
   extends: .template_publish_acceptance_coverage
-  except:
-    variables:
-      - $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB != "true"
+  rules:
+    - if: $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
   needs:
     - init:workspace
     - test:acceptance:vexpress_qemu:uboot_uefi_grub
@@ -134,9 +128,8 @@ publish:tests:acceptance:vexpress_qemu:uboot_uefi_grub:
 
 publish:tests:acceptance:vexpress_qemu:flash:
   extends: .template_publish_acceptance_coverage
-  except:
-    variables:
-      - $TEST_VEXPRESS_QEMU_FLASH != "true"
+  rules:
+    - if: $TEST_VEXPRESS_QEMU_FLASH == "true"
   needs:
     - init:workspace
     - test:acceptance:vexpress_qemu:flash
