@@ -32,6 +32,8 @@ variables:
   MTLS_AMBASSADOR_REV: "master"
   DEVICECONNECT_REV: "master"
   MENDER_CONNECT_REV: "master"
+  MENDER_SETUP_REV: "master"
+  MENDER_SNAPSHOT_REV: "master"
   DEVICECONFIG_REV: "master"
   DEVICEMONITOR_REV: "master"
   MONITOR_CLIENT_REV: "master"
