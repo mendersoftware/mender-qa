@@ -147,6 +147,8 @@ prepare_build_config() {
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
     local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
     local mender_connect_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-connect --in-integration-version HEAD)
+    local mender_setup_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-setup --in-integration-version HEAD)
+    local mender_snapshot_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-snapshot --in-integration-version HEAD)
 
     local sep="$(bitbake_override_separator)"
 
@@ -221,6 +223,8 @@ EXTERNALSRC${sep}pn-mender-client-native = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-artifact = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-artifact-native = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-connect= "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-setup= "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-snapshot= "$WORKSPACE/go"
 
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS${sep}remove = "do_patch"
@@ -255,6 +259,14 @@ EOF
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender-connect && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONNECT_REV"$ ) || \
         mender_connect_on_exact_tag=
+    local mender_setup_on_exact_tag=$(test "$MENDER_SETUP_REV" != "master" && \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-setup && \
+        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SETUP_REV"$ ) || \
+        mender_setup_on_exact_tag=
+    local mender_snapshot_on_exact_tag=$(test "$MENDER_SNAPSHOT_REV" != "master" && \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot && \
+        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SNAPSHOT_REV"$ ) || \
+        mender_snapshot_on_exact_tag=
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
@@ -298,6 +310,26 @@ EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION${sep}pn-mender-connect = "$mender_connect_version-git%"
+EOF
+    fi
+
+    if [ -n "$mender_setup_on_exact_tag" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION${sep}pn-mender-setup = "$mender_setup_on_exact_tag"
+EOF
+    else
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION${sep}pn-mender-setup = "$mender_setup_version-git%"
+EOF
+    fi
+
+    if [ -n "$mender_snapshot_on_exact_tag" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION${sep}pn-mender-snapshot = "$mender_snapshot_on_exact_tag"
+EOF
+    else
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION${sep}pn-mender-snapshot = "$mender_snapshot_version-git%"
 EOF
     fi
 }

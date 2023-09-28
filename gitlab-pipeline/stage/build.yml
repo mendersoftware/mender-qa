@@ -55,6 +55,7 @@ build:client:docker:
     -   docker build
         --build-arg MENDER_CLIENT_REV=$MENDER_REV
         --build-arg MENDER_CONNECT_REV=$MENDER_CONNECT_REV
+        --build-arg MENDER_SETUP_REV=$MENDER_SETUP_REV
         --tag $docker_url:pr
         .
     -   mkdir -p ${CI_PROJECT_DIR}/stage-artifacts
