@@ -16,6 +16,9 @@ test:backend-integration:open_source:
     - build:servers
     - build:mender-artifact
     - build:generate-delta-worker:docker
+  allow_failure:
+    exit_codes:
+      - 42
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -76,6 +79,7 @@ test:backend-integration:open_source:
       trap handle_exit EXIT
 
     - INTEGRATION_TEST_SUITE=$(integration/extra/release_tool.py --select-test-suite || echo "all")
+    - echo "DEBUG - INTEGRATION_TEST_SUITE: ${INTEGRATION_TEST_SUITE}"
 
     - if [ "$INTEGRATION_TEST_SUITE" = "$TEST_SUITE" ] || [ "$INTEGRATION_TEST_SUITE" = "all" ]; then
         # Post job status
@@ -100,6 +104,8 @@ test:backend-integration:open_source:
     -   echo "success" > /JOB_RESULT.txt
     - else
     -   echo "skipped" > /JOB_RESULT.txt
+    -   echo "DEBUG - integration test skipped"
+    -   exit 42
     - fi
 
     - ")"
