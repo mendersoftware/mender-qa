@@ -1,10 +1,15 @@
+variables:
+  IMAGE_CURL_VERISON:
+    value: "8.3.0"
+    description: |-
+      The version of the `alpine/curl` container image used for jobs.
 
 mender-qa:start:
   tags:
     - mender-qa-worker-generic-light
   stage: .pre
   # Keep overhead low by using a small image with curl preinstalled.
-  image: appropriate/curl
+  image: "alpine/curl:${IMAGE_CURL_VERSION}"
   before_script:
     - apk --update add jq
   script:
