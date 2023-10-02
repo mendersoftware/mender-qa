@@ -1,3 +1,16 @@
+variables:
+  IMAGE_DOCKER_VERSION:
+    value: "24.0.6"
+    description: |-
+      The version of the `docker` container image (-cli & -dind) used for jobs.
+  IMAGE_ALPINE_VERISON:
+    value: "3.18.4"
+    description: |-
+      The version of the `alpine` container image used for jobs.
+  IMAGE_GOLANG_ALPINE_VERISON:
+    value: "1.21-alpine3.18"
+    description: |-
+      The version of the `golang` (-alpine) container image used for jobs.
 
 include:
   - project: 'Northern.tech/Mender/mender-gateway'
@@ -19,9 +32,9 @@ build:client:docker:
   needs:
     - init:workspace
   allow_failure: false
-  image: docker
+  image: "docker:${IMAGE_DOCKER_VERSION}-cli"
   services:
-    - docker:dind
+    - "docker:${IMAGE_DOCKER_VERSION}-dind"
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -85,9 +98,9 @@ build:servers:
   needs:
     - init:workspace
   allow_failure: false
-  image: docker
+  image: "docker:${IMAGE_DOCKER_VERSION}-cli"
   services:
-    - docker:dind
+    - "docker:${IMAGE_DOCKER_VERSION}-dind"
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -139,7 +152,7 @@ build:mender-cli:
       - $BUILD_SERVERS == "true"
       - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
-  image: golang:1.18-alpine3.15
+  image: "golang:${IMAGE_GOLANG_ALPINE}"
   needs:
     - init:workspace
   allow_failure: false
@@ -199,9 +212,9 @@ build:mender-artifact:
       - $RUN_INTEGRATION_TESTS == "true"
   variables:
     DOCKER_BUILDKIT: 1
-  image: docker
+  image: "docker:${IMAGE_DOCKER_VERSION}-cli"
   services:
-    - docker:dind
+    - "docker:${IMAGE_DOCKER_VERSION}-dind"
   needs:
     - init:workspace
   allow_failure: false
@@ -250,7 +263,7 @@ build:mender-monitor:package:
   tags:
     - mender-qa-worker-generic-light
   stage: build
-  image: alpine:3.12
+  image: "alpine:${IMAGE_ALPINE_VERSION}"
   needs: []
   allow_failure: false
   before_script:

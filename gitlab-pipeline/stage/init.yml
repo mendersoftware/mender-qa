@@ -1,9 +1,14 @@
+variables:
+  IMAGE_ALPINE_VERISON:
+    value: "3.18.4"
+    description: |-
+      The version of the `alpine` container image used for jobs.
 
 init:workspace:
   tags:
     - mender-qa-worker-generic-light
   stage: init
-  image: alpine:3.12
+  image: "alpine:${IMAGE_ALPINE_VERSION}"
   script:
     # Traps only work if executed in a sub shell.
     - "("

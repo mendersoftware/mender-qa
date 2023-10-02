@@ -1,3 +1,8 @@
+variables:
+  IMAGE_DOCKER_VERSION:
+    value: "24.0.6"
+    description: |-
+      The version of the `docker` container image (cli and dind) used for jobs.
 
 test:backend-integration:open_source:
   tags:
@@ -6,11 +11,11 @@ test:backend-integration:open_source:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
     when: always
   stage: test
-  image: docker/compose:alpine-1.27.4
+  image: "docker:${IMAGE_DOCKER_VERSION}-cli"
   variables:
     TEST_SUITE: "open"
   services:
-    - docker:dind
+    - "docker:${IMAGE_DOCKER_VERSION}-dind"
   needs:
     - init:workspace
     - build:servers
@@ -187,7 +192,7 @@ test:backend-integration:azblob:enterprise:
   # when with used by GitLab network driver network connection between those
   # containers is denied (it might work locally on Linux host because of the
   # default bridge driver).
-  image: docker:dind
+  image: "docker:${IMAGE_DOCKER_VERISON}-cli"
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300

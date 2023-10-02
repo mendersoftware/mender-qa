@@ -1,3 +1,8 @@
+variables:
+  IMAGE_DOCKER_VERSION:
+    value: "24.0.6"
+    description: |-
+      The version of the `docker` container image (-cli & -dind) used for jobs.
 
 variables:
   MANTRA_ID_accep_qemux86_64_uefi_grub: "1"
@@ -19,7 +24,7 @@ build:client:qemu:
   stage: yocto:build-n-test
   extends: .template_build_test_acc
   services:
-    - docker:dind
+    - docker:${IMAGE_DOCKER_VERSION}-dind
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
     ONLY_BUILD: "true"
