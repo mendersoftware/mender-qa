@@ -284,7 +284,11 @@ test:backend-integration:azblob:enterprise:
     # Other dependencies
     - install stage-artifacts/mender-artifact-linux /usr/local/bin/mender-artifact
     - install stage-artifacts/mender-cli.linux.amd64 /usr/local/bin/mender-cli
-    - make -C ${WORKSPACE}/go/src/github.com/mendersoftware/mender install-modules-gen
+    # Install the artifact module generators
+    - |-
+      make -C ${WORKSPACE}/go/src/github.com/mendersoftware/mender install-modules-gen || \
+      cmake -S ${WORKSPACE}/go/src/github.com/mendersoftware/mender -B ${WORKSPACE}/go/src/github.com/mendersoftware/mender/build && \
+      cmake --build ${WORKSPACE}/go/src/github.com/mendersoftware/mender/build --target install-modules-gen
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
