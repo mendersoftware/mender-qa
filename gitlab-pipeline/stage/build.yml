@@ -307,6 +307,8 @@ build:generate-delta-worker:docker:
   tags:
     - mender-qa-worker-generic-light
   stage: build
+  variables:
+    MULTIPLATFORM_PLATFORMS: "linux/amd64"
   only:
     variables:
       - $BUILD_SERVERS == "true"
@@ -332,6 +334,11 @@ build:generate-delta-worker:docker:
 
     - repository=$(basename ${DOCKER_REPOSITORY})
     - cd "go/src/github.com/mendersoftware/$repository"
-    - cp "${CI_PROJECT_DIR}/stage-artifacts/mender-artifact-linux" mender-artifact
+    - cp "${CI_PROJECT_DIR}/stage-artifacts/mender-artifact-linux" mender-artifact-amd64 # we're using multiplatform build
     - FORCE_DOCKER_BUILD_TAG=pr
-
+  after_script:
+    - regctl image export ${GITLAB_REGISTRY_TAG} "${CI_PROJECT_DIR}/stage-artifacts/${repository}.tar --platform 'linux/amd64'
+  artifacts:
+    expire_in: 2w
+    paths:
+      - stage-artifacts/
