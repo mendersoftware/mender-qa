@@ -1,102 +1,339 @@
 variables:
   # Versions of components used for integration tests
-  MENDER_REV: "master"
-  META_MENDER_REV: "master"
-  POKY_REV: "kirkstone"
-  MENDER_QA_REV: "master"
-  MENDER_ARTIFACT_REV: "master"
-  MENDER_CONDUCTOR_REV: "master"
-  MENDER_CONDUCTOR_ENTERPRISE_REV: "master"
-  IOT_MANAGER_REV: "master"
-  MENDER_AUTH_AZURE_IOT_REV: "master"
-  DEPLOYMENTS_REV: "master"
-  DEPLOYMENTS_ENTERPRISE_REV: "master"
-  DEVICEAUTH_REV: "master"
-  DEVICEAUTH_ENTERPRISE_REV: "master"
-  GUI_REV: "master"
-  INVENTORY_REV: "master"
-  INVENTORY_ENTERPRISE_REV: "master"
-  USERADM_REV: "master"
-  USERADM_ENTERPRISE_REV: "master"
-  MENDER_API_GATEWAY_DOCKER_REV: "master"
-  MENDER_CLI_REV: "master"
-  INTEGRATION_REV: "master"
-  TENANTADM_REV: "master"
-  WORKFLOWS_REV: "master"
-  WORKFLOWS_ENTERPRISE_REV: "master"
-  CREATE_ARTIFACT_WORKER_REV: "master"
-  MENDER_STRESS_TEST_CLIENT_REV: "master"
-  META_OPENEMBEDDED_REV: "kirkstone"
-  META_RASPBERRYPI_REV: "kirkstone"
-  AUDITLOGS_REV: "master"
-  MTLS_AMBASSADOR_REV: "master"
-  DEVICECONNECT_REV: "master"
-  MENDER_CONNECT_REV: "master"
-  MENDER_SETUP_REV: "master"
-  MENDER_SNAPSHOT_REV: "master"
-  DEVICECONFIG_REV: "master"
-  DEVICEMONITOR_REV: "master"
-  MONITOR_CLIENT_REV: "master"
-  REPORTING_REV: "master"
-  MENDER_GATEWAY_REV: "master"
-  GENERATE_DELTA_WORKER_REV: "master"
-  MENDER_CI_WORKFLOWS_REV: "master"
+  MENDER_REV:
+    value: "master"
+    description: |-
+      Version of mender
+  META_MENDER_REV:
+    value: "master"
+    description: |-
+      Version of meta-mender
+  POKY_REV:
+    value: "kirkstone"
+    description: |-
+      Version of poky
+  MENDER_QA_REV:
+    value: "master"
+    description: |-
+      Version of mender-qa
+  MENDER_ARTIFACT_REV:
+    value: "master"
+    description: |-
+      Version of mender-artifact
+  MENDER_CONDUCTOR_REV:
+    value: "master"
+    description: |-
+      Version of mender-conductor
+  MENDER_CONDUCTOR_ENTERPRISE_REV:
+    value: "master"
+    description: |-
+      Version of mender-conductor-enterprise
+  IOT_MANAGER_REV:
+    value: "master"
+    description: |-
+      Version of iot-manager
+  MENDER_AUTH_AZURE_IOT_REV:
+    value: "master"
+    description: |-
+      Version of mender-auth-azure-iot
+  DEPLOYMENTS_REV:
+    value: "master"
+    description: |-
+      Version of deployments
+  DEPLOYMENTS_ENTERPRISE_REV:
+    value: "master"
+    description: |-
+      Version of deployments-enterprise
+  DEVICEAUTH_REV:
+    value: "master"
+    description: |-
+      Version of deviceauth
+  DEVICEAUTH_ENTERPRISE_REV:
+    value: "master"
+    description: |-
+      Version of deviceauth-enterprise
+  GUI_REV:
+    value: "master"
+    description: |-
+      Version of gui
+  INVENTORY_REV:
+    value: "master"
+    description: |-
+      Version of inventory
+  INVENTORY_ENTERPRISE_REV:
+    value: "master"
+    description: |-
+      Version of inventory-enterprise
+  USERADM_REV:
+    value: "master"
+    description: |-
+      Version of useradm
+  USERADM_ENTERPRISE_REV:
+    value: "master"
+    description: |-
+      Version of useradm-enterprise
+  MENDER_API_GATEWAY_DOCKER_REV:
+    value: "master"
+    description: |-
+      Version of mender-api-gateway-docker
+  MENDER_CLI_REV:
+    value: "master"
+    description: |-
+      Version of mender-cli
+  INTEGRATION_REV:
+    value: "master"
+    description: |-
+      Version of integration
+  TENANTADM_REV:
+    value: "master"
+    description: |-
+      Version of tenantadm
+  WORKFLOWS_REV:
+    value: "master"
+    description: |-
+      Version of workflows
+  WORKFLOWS_ENTERPRISE_REV:
+    value: "master"
+    description: |-
+      Version of workflows-enterprise
+  CREATE_ARTIFACT_WORKER_REV:
+    value: "master"
+    description: |-
+      Version of create-artifact-worker
+  MENDER_STRESS_TEST_CLIENT_REV:
+    value: "master"
+    description: |-
+      Version of mender-stress-test-client
+  META_OPENEMBEDDED_REV:
+    value: "kirkstone"
+    description: |-
+      Version of meta-openembedded
+  META_RASPBERRYPI_REV:
+    value: "kirkstone"
+    description: |-
+      Version of meta-raspberrypi
+  AUDITLOGS_REV:
+    value: "master"
+    description: |-
+      Version of auditlogs
+  MTLS_AMBASSADOR_REV:
+    value: "master"
+    description: |-
+      Version of mtls-ambassador
+  DEVICECONNECT_REV:
+    value: "master"
+    description: |-
+      Version of deviceconnect
+  MENDER_CONNECT_REV:
+    value: "master"
+    description: |-
+      Version of mender-connect
+  MENDER_SETUP_REV:
+    value: "master"
+    description: |-
+      Version of mender-setup
+  MENDER_SNAPSHOT_REV:
+    value: "master"
+    description: |-
+      Version of mender-snapshot
+  DEVICECONFIG_REV:
+    value: "master"
+    description: |-
+      Version of deviceconfig
+  DEVICEMONITOR_REV:
+    value: "master"
+    description: |-
+      Version of devicemonitor
+  MONITOR_CLIENT_REV:
+    value: "master"
+    description: |-
+      Version of monitor-client
+  REPORTING_REV:
+    value: "master"
+    description: |-
+      Version of reporting
+  MENDER_GATEWAY_REV:
+    value: "master"
+    description: |-
+      Version of mender-gateway
+  GENERATE_DELTA_WORKER_REV:
+    value: "master"
+    description: |-
+      Version of generate-delta-worker
+  MENDER_CI_WORKFLOWS_REV:
+    value: "master"
+    description: |-
+      Version of mender-ci-workflows
 
   # Versions of independent components
-  MENDER_BINARY_DELTA_VERSION: "latest"
-  MENDER_CONFIGURE_MODULE_VERSION: "latest"
+  MENDER_BINARY_DELTA_VERSION:
+    value: "latest"
+    description: |-
+      Version of mender-binary-delta
+  MENDER_CONFIGURE_MODULE_VERSION:
+    value: "latest"
+    description: |-
+      Version of mender-configure-module
 
   # Build stage
-  BUILD_CLIENT: "true"
-  BUILD_SERVERS: "true"
+  BUILD_CLIENT:
+    value: "true"
+    description: |-
+      Flag to build client for integration tests. False means use prebuilt client from upstream
+  BUILD_SERVERS:
+    value: "true"
+    description: |-
+      Flag to build micro-services for integration tests. Required for integration tests.
 
   # Client test stage
-  BUILD_QEMUX86_64_UEFI_GRUB: "true"
-  TEST_QEMUX86_64_UEFI_GRUB: "true"
-  BUILD_QEMUX86_64_BIOS_GRUB: "true"
-  TEST_QEMUX86_64_BIOS_GRUB: "true"
-  BUILD_QEMUX86_64_BIOS_GRUB_GPT: "true"
-  TEST_QEMUX86_64_BIOS_GRUB_GPT: "true"
-  BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB: "true"
-  TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB: "true"
-  BUILD_VEXPRESS_QEMU: "true"
-  TEST_VEXPRESS_QEMU: "true"
-  BUILD_VEXPRESS_QEMU_FLASH: "true"
-  TEST_VEXPRESS_QEMU_FLASH: "true"
-  BUILD_BEAGLEBONEBLACK: "true"
-  BUILD_RASPBERRYPI3: "false"
-  BUILD_RASPBERRYPI4: "false"
-  SPECIFIC_ACCEPTANCE_TEST: ""
+  BUILD_QEMUX86_64_UEFI_GRUB:
+    value: "true"
+    description: |-
+      Flag to build configuration QEMUX86_64_UEFI_GRUB. Applicable for client acceptance tests
+  TEST_QEMUX86_64_UEFI_GRUB:
+    value: "true"
+    description: |-
+      Flag to test configuration QEMUX86_64_UEFI_GRUB. Applicable for client acceptance tests
+  BUILD_QEMUX86_64_BIOS_GRUB:
+    value: "true"
+    description: |-
+      Flag to build configuration QEMUX86_64_BIOS_GRUB. Applicable for client acceptance tests
+  TEST_QEMUX86_64_BIOS_GRUB:
+    value: "true"
+    description: |-
+      Flag to test configuration QEMUX86_64_BIOS_GRUB. Applicable for client acceptance tests
+  BUILD_QEMUX86_64_BIOS_GRUB_GPT:
+    value: "true"
+    description: |-
+      Flag to build configuration QEMUX86_64_BIOS_GRUB_GPT. Applicable for client acceptance tests
+  TEST_QEMUX86_64_BIOS_GRUB_GPT:
+    value: "true"
+    description: |-
+      Flag to test configuration QEMUX86_64_BIOS_GRUB_GPT. Applicable for client acceptance tests
+  BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:
+    value: "true"
+    description: |-
+      Flag to build configuration VEXPRESS_QEMU_UBOOT_UEFI_GRUB. Applicable for client acceptance tests
+  TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:
+    value: "true"
+    description: |-
+      Flag to test configuration VEXPRESS_QEMU_UBOOT_UEFI_GRUB. Applicable for client acceptance tests
+  BUILD_VEXPRESS_QEMU:
+    value: "true"
+    description: |-
+      Flag to build configuration VEXPRESS_QEMU. Applicable for client acceptance tests
+  TEST_VEXPRESS_QEMU:
+    value: "true"
+    description: |-
+      Flag to test configuration VEXPRESS_QEMU. Applicable for client acceptance tests
+  BUILD_VEXPRESS_QEMU_FLASH:
+    value: "true"
+    description: |-
+      Flag to build configuration VEXPRESS_QEMU_FLASH. Applicable for client acceptance tests
+  TEST_VEXPRESS_QEMU_FLASH:
+    value: "true"
+    description: |-
+      Flag to TEST_ configuration VEXPRESS_QEMU_FLASH. Applicable for client acceptance tests
+  BUILD_BEAGLEBONEBLACK:
+    value: "true"
+    description: |-
+      Flag to build configuration _BEAGLEBONEBLACK. Applicable for client acceptance tests
+  BUILD_RASPBERRYPI3:
+    value: "false"
+    description: |-
+      Flag to build configuration _RASPBERRYPI3. Applicable for client acceptance tests
+  BUILD_RASPBERRYPI4:
+    value: "false"
+    description: |-
+      Flag to build configuration _RASPBERRYPI4. Applicable for client acceptance tests
+  SPECIFIC_ACCEPTANCE_TEST:
+    value: ""
+    description: |-
+      Specify a subsets of tests to run. Applicable for client acceptance tests
 
   # Integration and backend integration tests
-  RUN_BACKEND_INTEGRATION_TESTS: "true"
-  RUN_INTEGRATION_TESTS: "true"
-  SPECIFIC_INTEGRATION_TEST: ""
+  RUN_BACKEND_INTEGRATION_TESTS:
+    value: "true"
+    description: |-
+      Flag to run integration tests
+  RUN_INTEGRATION_TESTS:
+    value: "true"
+    description: |-
+      Flag to run backend integration tests
+  SPECIFIC_INTEGRATION_TEST:
+    value: ""
+    description: |-
+      Specify a subsets of tests to run. Applicable for integration tests
 
   # Parallel factor for tests
-  TESTS_IN_PARALLEL_INTEGRATION: "4"
-  TESTS_IN_PARALLEL_BACKEND_INTEGRATION: "2"
-  TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE: "2"
+  TESTS_IN_PARALLEL_INTEGRATION:
+    value: "4"
+    description: |-
+      Set the parallel factor for integration tests
+  TESTS_IN_PARALLEL_BACKEND_INTEGRATION:
+    value: "2"
+    description: |-
+      Set the parallel factor for backend integration tests
+  TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE:
+    value: "2"
+    description: |-
+      Set the parallel factor for client acceptance tests
 
   # Child pipelines build and test
-  MENDER_CONVERT_REV: "master"
-  MENDER_DIST_PACKAGES_REV: "master"
-  BUILD_MENDER_DIST_PACKAGES: "false"
-  BUILD_MENDER_CONVERT: "false"
-  TEST_MENDER_DIST_PACKAGES: "false"
-  TEST_MENDER_CONVERT: "false"
+  MENDER_CONVERT_REV:
+    value: "master"
+    description: |-
+      Version of mender-convert
+  MENDER_DIST_PACKAGES_REV:
+    value: "master"
+    description: |-
+      Version of mender-dist-packages
+  BUILD_MENDER_DIST_PACKAGES:
+    value: "false"
+    description: |-
+      Flag to trigger child pipeline mender-dist-packages
+  BUILD_MENDER_CONVERT:
+    value: "false"
+    description: |-
+      Flag to trigger child pipeline mender-convert
+  TEST_MENDER_DIST_PACKAGES:
+    value: "false"
+    description: |-
+      Flag to run tests in child pipeline mender-dist-packages
+  TEST_MENDER_CONVERT:
+    value: "false"
+    description: |-
+      Flag to run tests in child pipeline mender-convert
 
   # Publication
-  PUBLISH_DOCKER_CLIENT_IMAGES: "false"
-  PUBLISH_RELEASE_AUTOMATIC: "false"
+  PUBLISH_DOCKER_CLIENT_IMAGES:
+    value: "false"
+    description: |-
+      Flat to publish Docker client images
+  PUBLISH_RELEASE_AUTOMATIC:
+    value: "false"
+    description: |-
+      Flag to publish all deliverables automatically. Publishes Docker images and binaries
 
   # Nightly build marker
-  NIGHTLY_BUILD: "false"
+  NIGHTLY_BUILD:
+    value: "false"
+    description: |-
+      Marker to identify nightly builds
 
   # Debugging options
-  WAIT_IN_STAGE_INIT: ""
-  WAIT_IN_STAGE_BUILD: ""
-  WAIT_IN_STAGE_TEST: ""
+  WAIT_IN_STAGE_INIT:
+    value: ""
+    description: |-
+      Marker to make the CI machines wait in stage INIT for remote debugging
+  WAIT_IN_STAGE_BUILD:
+    value: ""
+    description: |-
+      Marker to make the CI machines wait in stage BUILD for remote debugging
+  WAIT_IN_STAGE_TEST:
+    value: ""
+    description: |-
+      Marker to make the CI machines wait in stage TEST for remote debugging
 
 include:
   - local: "/gitlab-pipeline/internal-variables.yml"
