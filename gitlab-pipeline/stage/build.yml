@@ -308,7 +308,11 @@ build:generate-delta-worker:docker:
     - mender-qa-worker-generic-light
   stage: build
   variables:
+    DOCKER_BUILDKIT: 1
     MULTIPLATFORM_PLATFORMS: "linux/amd64"
+    MENDER_ARTIFACT_REV: "3.10.1"
+    DOCKER_REPOSITORY: registry.mender.io/mendersoftware/generate-delta-worker
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}:generate-delta-worker-${CI_PIPELINE_ID}'
   rules:
     - if: $BUILD_SERVERS == "true" || $RUN_BACKEND_INTEGRATION_TESTS == "true" || $RUN_INTEGRATION_TESTS == "true"
   needs:
@@ -325,10 +329,10 @@ build:generate-delta-worker:docker:
     - xz -d /tmp/workspace.tar.xz
     - tar -xf /tmp/workspace.tar
 
-    - if ! "${WORKSPACE}/integration/extra/release_tool.py" -l | grep -qF generate-delta-worker; then
-        # Skip build on branches that don't include generate-delta-worker.
-    -   exit 0
-    - fi
+      #- if ! "${WORKSPACE}/integration/extra/release_tool.py" -l | grep -qF generate-delta-worker; then
+      #    # Skip build on branches that don't include generate-delta-worker.
+      #-   exit 0
+      #- fi
 
     - repository=$(basename ${DOCKER_REPOSITORY})
     - cd "go/src/github.com/mendersoftware/$repository"
@@ -365,7 +369,8 @@ build:generate-delta-worker:docker:
     - export DOCKER_BUILD_SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_BUILD_TAG}
     - export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
     - export DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
-    - regctl image export ${GITLAB_REGISTRY_TAG} "${CI_PROJECT_DIR}/stage-artifacts/${repository}.tar --platform 'linux/amd64'
+  after_script:
+    - regctl image export ${GITLAB_REGISTRY_TAG} "${CI_PROJECT_DIR}/stage-artifacts/${repository}.tar" --platform 'linux/amd64' --name generate-delta-worker:pr
   artifacts:
     expire_in: 2w
     paths:
