@@ -316,7 +316,8 @@ build:generate-delta-worker:docker:
     - build:mender-artifact
   allow_failure: false
   before_script:
-    - apk --update --no-cache add bash curl aws-cli xz py3-yaml
+    # mender-qa specific before_script
+    - apk --update --no-cache add bash curl aws-cli xz binutils python3
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.xz /tmp
     - mkdir -p "${WORKSPACE}"
@@ -333,7 +334,37 @@ build:generate-delta-worker:docker:
     - cd "go/src/github.com/mendersoftware/$repository"
     - cp "${CI_PROJECT_DIR}/stage-artifacts/mender-artifact-linux" mender-artifact-amd64 # we're using multiplatform build
     - FORCE_DOCKER_BUILD_TAG=pr
-  after_script:
+    # build:generate-delta-worker:docker original before_script
+    - if [[ "$MENDER_BINARY_DELTA_VERSION" == "latest" ]]; then MENDER_BINARY_DELTA_VERSION=master; fi
+    - echo "MENDER_ARTIFACT_REV=$MENDER_ARTIFACT_REV MENDER_BINARY_DELTA_VERSION=$MENDER_BINARY_DELTA_VERSION"
+    - export AWS_ACCESS_KEY_ID="$AWSRO_MENDER_BINARY_DELTA_AWS_ACCESS_KEY_ID"
+    - export AWS_SECRET_ACCESS_KEY="$AWSRO_MENDER_BINARY_DELTA_AWS_SECRET_ACCESS_KEY"
+    - aws s3 cp s3://mender-binaries/mender-binary-delta/$MENDER_BINARY_DELTA_VERSION/mender-binary-delta-$MENDER_BINARY_DELTA_VERSION.tar.xz .
+    - xz -cd mender-binary-delta-$MENDER_BINARY_DELTA_VERSION.tar.xz | tar xvf -;
+    - cp mender-binary-delta-$MENDER_BINARY_DELTA_VERSION/x86_64/mender-binary-delta-generator mender-binary-delta-generator-amd64
+    - cp mender-binary-delta-$MENDER_BINARY_DELTA_VERSION/aarch64/mender-binary-delta-generator mender-binary-delta-generator-arm64
+    - if [[ ! -f mender-artifact-amd64 ]]; then
+        tmpdir=$(mktemp -d);
+        wget "https://downloads.mender.io/repos/debian/pool/main/m/mender-artifact/mender-artifact_${MENDER_ARTIFACT_REV}-1%2Bdebian%2Bbullseye_amd64.deb" -O  ${tmpdir}/mender-artifact-amd64.deb;
+        ar --output ${tmpdir} -xvf ${tmpdir}/mender-artifact-amd64.deb data.tar.xz;
+        tar --directory ${tmpdir} -xvf ${tmpdir}/data.tar.xz ./usr/bin/mender-artifact;
+        mv ${tmpdir}/usr/bin/mender-artifact mender-artifact-amd64;
+        rm -rf ${tmpdir};
+      fi
+    - if [[ ! -f mender-artifact-arm64 ]]; then
+        tmpdir=$(mktemp -d);
+        wget "https://downloads.mender.io/repos/debian/pool/main/m/mender-artifact/mender-artifact_${MENDER_ARTIFACT_REV}-1%2Bdebian%2Bbullseye_arm64.deb" -O  ${tmpdir}/mender-artifact-arm64.deb;
+        ar --output ${tmpdir} -xvf ${tmpdir}/mender-artifact-arm64.deb data.tar.xz;
+        tar --directory ${tmpdir} -xvf ${tmpdir}/data.tar.xz ./usr/bin/mender-artifact;
+        mv ${tmpdir}/usr/bin/mender-artifact mender-artifact-arm64;
+        rm -rf ${tmpdir};
+      fi
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - export DOCKER_BUILD_TAG=${CI_COMMIT_REF_SLUG:-local}
+    - if [ "${FORCE_DOCKER_BUILD_TAG}" != "" ]; then DOCKER_BUILD_TAG="${FORCE_DOCKER_BUILD_TAG}"; fi
+    - export DOCKER_BUILD_SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_BUILD_TAG}
+    - export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
+    - export DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
     - regctl image export ${GITLAB_REGISTRY_TAG} "${CI_PROJECT_DIR}/stage-artifacts/${repository}.tar --platform 'linux/amd64'
   artifacts:
     expire_in: 2w
