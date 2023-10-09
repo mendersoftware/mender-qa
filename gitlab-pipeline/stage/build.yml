@@ -309,11 +309,8 @@ build:generate-delta-worker:docker:
   stage: build
   variables:
     MULTIPLATFORM_PLATFORMS: "linux/amd64"
-  only:
-    variables:
-      - $BUILD_SERVERS == "true"
-      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
-      - $RUN_INTEGRATION_TESTS == "true"
+  rules:
+    - if: $BUILD_SERVERS == "true" || $RUN_BACKEND_INTEGRATION_TESTS == "true" || $RUN_INTEGRATION_TESTS == "true"
   needs:
     - init:workspace
     - build:mender-artifact
