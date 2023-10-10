@@ -237,15 +237,15 @@ variables:
   BUILD_BEAGLEBONEBLACK:
     value: "true"
     description: |-
-      Flag to build configuration _BEAGLEBONEBLACK. Applicable for client acceptance tests
+      Flag to build configuration BEAGLEBONEBLACK. Applicable for client acceptance tests
   BUILD_RASPBERRYPI3:
     value: "false"
     description: |-
-      Flag to build configuration _RASPBERRYPI3. Applicable for client acceptance tests
+      Flag to build configuration RASPBERRYPI3. Applicable for client acceptance tests
   BUILD_RASPBERRYPI4:
     value: "false"
     description: |-
-      Flag to build configuration _RASPBERRYPI4. Applicable for client acceptance tests
+      Flag to build configuration RASPBERRYPI4. Applicable for client acceptance tests
   SPECIFIC_ACCEPTANCE_TEST:
     value: ""
     description: |-
