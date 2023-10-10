@@ -5,6 +5,16 @@ set -e -x -E
 
 echo "WORKSPACE=$WORKSPACE"
 
+get_mender_binary_delta_version() {
+    local recipe
+    if [ -z "$MENDER_BINARY_DELTA_VERSION" -o "$MENDER_BINARY_DELTA_VERSION" = "latest" ]; then
+        recipe=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort -V | tail -n1)
+    else
+        recipe=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*$MENDER_BINARY_DELTA_VERSION*.bb)
+    fi
+    echo $recipe | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?'
+}
+
 build_servers_repositories() {
     # Use release tool to query for available docker names.
     for docker in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
@@ -23,6 +33,15 @@ build_servers_repositories() {
                     ;;
 
                 generate-delta-worker)
+                    local version=$(get_mender_binary_delta_version)
+                    export AWS_ACCESS_KEY_ID="$AWSRO_MENDER_BINARY_DELTA_AWS_ACCESS_KEY_ID"
+                    export AWS_SECRET_ACCESS_KEY="$AWSRO_MENDER_BINARY_DELTA_AWS_SECRET_ACCESS_KEY"
+                    aws s3 cp s3://mender-binaries/mender-binary-delta/${version}/mender-binary-delta-${version}.tar.xz .
+                    xz -cd mender-binary-delta-${version}.tar.xz | tar xvf -
+                    cp mender-binary-delta-${version}/x86_64/mender-binary-delta-generator mender-binary-delta-generator-amd64
+                    cp mender-binary-delta-${version}/aarch64/mender-binary-delta-generator mender-binary-delta-generator-arm64
+                    docker build -t $docker_url:pr .
+                    $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                     ;;
 
                 workflows-worker|workflows-enterprise-worker)
