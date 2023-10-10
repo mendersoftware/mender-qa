@@ -34,7 +34,7 @@ def getStableMetaMender():
     with urllib.request.urlopen(
         "https://raw.githubusercontent.com/mendersoftware/mender-qa/master/.gitlab-ci.yml"
     ) as stream:
-        return yaml.safe_load(stream)["variables"]["POKY_REV"]
+        return yaml.safe_load(stream)["variables"]["POKY_REV"]["value"]
 
 
 def generate(integration_repo, args):
