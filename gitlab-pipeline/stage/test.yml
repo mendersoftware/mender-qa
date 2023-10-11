@@ -283,12 +283,15 @@ test:backend-integration:azblob:enterprise:
     # Other dependencies
     - install stage-artifacts/mender-artifact-linux /usr/local/bin/mender-artifact
     - install stage-artifacts/mender-cli.linux.amd64 /usr/local/bin/mender-cli
+
+    - ( cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender && git submodule update --init )
     # New-style C++ client build. If this fails for any reason, then the next line should also fail,
     # so using `|| true` should be ok. With the Golang client, this will always fail, but it has its
     # own Makefile which will be picked up on the next line.
     - cmake -S ${WORKSPACE}/go/src/github.com/mendersoftware/mender -B ${WORKSPACE}/go/src/github.com/mendersoftware/mender || true
     # Install the artifact module generators
     - make -C ${WORKSPACE}/go/src/github.com/mendersoftware/mender install-modules-gen
+
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
