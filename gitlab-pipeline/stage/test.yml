@@ -288,7 +288,7 @@ test:backend-integration:azblob:enterprise:
     # New-style C++ client build. If this fails for any reason, then the next line should also fail,
     # so using `|| true` should be ok. With the Golang client, this will always fail, but it has its
     # own Makefile which will be picked up on the next line.
-    - cmake -S ${WORKSPACE}/go/src/github.com/mendersoftware/mender -B ${WORKSPACE}/go/src/github.com/mendersoftware/mender || true
+    - cmake -S ${WORKSPACE}/go/src/github.com/mendersoftware/mender -B ${WORKSPACE}/go/src/github.com/mendersoftware/mender -D MENDER_NO_BUILD=1 || true
     # Install the artifact module generators
     - make -C ${WORKSPACE}/go/src/github.com/mendersoftware/mender install-modules-gen
 
