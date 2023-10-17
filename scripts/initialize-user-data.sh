@@ -44,10 +44,13 @@ copy_key() {
     && chmod 600         /home/jenkins/.ssh/$1 \
     && cp /root/mender-qa/data/$privkeybase.pub /home/jenkins/.ssh/$1.pub
 }
-copy_key id_rsa
+copy_key id_rsa || true # as of 2023 Oct it should be optional because sftp keys will come from jenkins credentials in testing-pr job
 copy_key id_ed25519 || true # as of 2022 June this can be optional
 cp /root/mender-qa/data/known_hosts                    /home/jenkins/.ssh/known_hosts
 
+
+# add authorized_keys file before chowning, so that initialize-build-host.sh can manage
+touch /home/jenkins/.ssh/authorized_keys
 
 # Make sure everything in jenkins' folder has right owner.
 chown -R jenkins:jenkins /home/jenkins
