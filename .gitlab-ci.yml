@@ -180,6 +180,10 @@ variables:
     value: "true"
     description: |-
       Flag to build client for integration tests. False means use prebuilt client from upstream
+  BUILD_CPP_CLIENT:
+    value: "false"
+    description: |-
+      Tweak the build system for a Mender C++ client build.
   BUILD_SERVERS:
     value: "true"
     description: |-
