@@ -49,10 +49,11 @@ init:workspace:
 
         repo_id=$(basename $clone_url .git | tr [a-z-] [A-Z_])
 
-        git clone $clone_url $clone_path || return 1
+        git init $clone_path || return 1
 
         (
           cd $clone_path &&
+          git remote add origin $clone_url &&
           git fetch -u -f origin ${clone_rev}:pr &&
           git checkout pr ||
           git checkout -f -b pr ${clone_rev}
@@ -127,10 +128,25 @@ init:workspace:
     - done
 
     # Add other repositories.
-    - checkout_repo https://github.com/mendersoftware/meta-mender meta-mender $META_MENDER_REV
     - checkout_repo https://github.com/mendersoftware/mender-stress-test-client go/src/github.com/mendersoftware/mender-stress-test-client $MENDER_STRESS_TEST_CLIENT_REV
     - checkout_repo git://git.openembedded.org/meta-openembedded.git meta-openembedded $META_OPENEMBEDDED_REV
     - checkout_repo https://github.com/agherzan/meta-raspberrypi.git meta-raspberrypi $META_RASPBERRYPI_REV
+
+    # For meta-mender we need the full git history for this logic to work:
+    # https://github.com/mendersoftware/meta-mender/blob/dd0f848f260810e08b98d2a1915f734bf02a64b1/tests/acceptance/test_uboot_automation.py#L68-L83
+    - git clone git@github.com:mendersoftware/meta-mender meta-mender
+    - (
+        cd meta-mender &&
+        git fetch -u -f origin $META_MENDER_REV:pr &&
+        git checkout pr ||
+        git checkout -f -b pr $META_MENDER_REV
+      )
+    - (
+        cd meta-mender
+        echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
+        echo "export META_MENDER_REV=$META_MENDER_REV" >> ${CI_PROJECT_DIR}/build_revisions.env
+        echo "export META_MENDER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+      )
 
     # Print for debug purposes
     - cat ${CI_PROJECT_DIR}/build_revisions.env
