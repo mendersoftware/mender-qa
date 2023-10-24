@@ -183,7 +183,7 @@ ISTQB equivalent | System testing and Acceptance testing
 Test object      | The Mender product, as a whole, excluding GUI
 Source code      | [integration/tests](https://github.com/mendersoftware/integration/tree/master/tests)
 How to run       | [`./run.sh`](https://github.com/mendersoftware/integration/blob/master/tests/run.sh)
-Dependencies     | Docker, docker-compose, Python 3, [Python packages](https://github.com/mendersoftware/integration/blob/master/tests/requirements/python-requirements.txt)
+Dependencies     | Docker, docker-compose, Python 3, [Python packages](https://github.com/mendersoftware/integration/blob/master/tests/requirements-python/python-requirements.txt)
 
 The integration test suite verifies Mender as a product, including both the
 server and the client, but excluding the GUI. Different scenarios and
