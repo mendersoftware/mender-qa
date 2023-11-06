@@ -213,6 +213,10 @@ EOF
 PREFERRED_PROVIDER_virtual/mender-client = "mender"
 PREFERRED_PROVIDER_virtual/mender-client-native = "mender-native"
 EOF
+        # Remove after MEN-6279
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-flash = "master-git%"
+EOF
     fi
 
     cat >> $BUILDDIR/conf/local.conf <<EOF
