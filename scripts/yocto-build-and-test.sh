@@ -206,7 +206,7 @@ PREFERRED_VERSION${sep}pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
 EOF
     fi
 
-    if [ -n "${BUILD_CPP_CLIENT}" ]; then
+    if [ "${BUILD_CPP_CLIENT}" = "true" ]; then
         BUILD_CPP_CLIENT_PATH=/src/github.com/mendersoftware/mender
         ( cd ${WORKSPACE}/go/${BUILD_CPP_CLIENT_PATH} && git submodule update --init )
         cat >> $BUILDDIR/conf/local.conf <<EOF
