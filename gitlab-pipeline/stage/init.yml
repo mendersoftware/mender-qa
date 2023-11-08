@@ -140,13 +140,13 @@ init:workspace:
         git fetch -u -f origin $META_MENDER_REV:pr &&
         git checkout pr ||
         git checkout -f -b pr $META_MENDER_REV
-      )
+      ) || return 1
     - (
-        cd meta-mender
-        echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
-        echo "export META_MENDER_REV=$META_MENDER_REV" >> ${CI_PROJECT_DIR}/build_revisions.env
-        echo "export META_MENDER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
-      )
+    -   cd meta-mender
+    -   echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "export META_MENDER_REV=$META_MENDER_REV" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "export META_MENDER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    - )
 
     # Print for debug purposes
     - cat ${CI_PROJECT_DIR}/build_revisions.env
