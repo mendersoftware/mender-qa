@@ -5,8 +5,6 @@
 .template_publish_acceptance_coverage:
   tags:
     - mender-qa-worker-generic-light
-  rules:
-    - if: $MENDER_REV =~ /pull\/.*\/head/ || $MENDER_ARTIFACT_REV =~ /pull\/.*\/head/ || $NIGHTLY_BUILD == "true"
   stage: publish:tests
   needs:
     - init:workspace
@@ -68,6 +66,9 @@
 publish:tests:acceptance:qemux86_64:uefi_grub:
   extends: .template_publish_acceptance_coverage
   rules:
+    # Ticket: QA-636
+    - if: $BUILD_CPP_CLIENT == "true"
+      when: never
     - if: $TEST_QEMUX86_64_UEFI_GRUB == "true"
   needs:
     - init:workspace
@@ -78,6 +79,9 @@ publish:tests:acceptance:qemux86_64:uefi_grub:
 publish:tests:acceptance:qemux86_64:uefi_grub:cross-platform:
   extends: .template_publish_acceptance_coverage
   rules:
+    # Ticket: QA-636
+    - if: $BUILD_CPP_CLIENT == "true"
+      when: never
     - if: $TEST_QEMUX86_64_UEFI_GRUB == "true"
   needs:
     - init:workspace
@@ -89,6 +93,9 @@ publish:tests:acceptance:qemux86_64:uefi_grub:cross-platform:
 publish:tests:acceptance:vexpress_qemu:
   extends: .template_publish_acceptance_coverage
   rules:
+    # Ticket: QA-636
+    - if: $BUILD_CPP_CLIENT == "true"
+      when: never
     - if: $TEST_VEXPRESS_QEMU == "true"
   needs:
     - init:workspace
@@ -99,6 +106,9 @@ publish:tests:acceptance:vexpress_qemu:
 publish:tests:acceptance:qemux86_64:bios_grub:
   extends: .template_publish_acceptance_coverage
   rules:
+    # Ticket: QA-636
+    - if: $BUILD_CPP_CLIENT == "true"
+      when: never
     - if: $TEST_QEMUX86_64_BIOS_GRUB == "true"
   needs:
     - init:workspace
@@ -109,6 +119,9 @@ publish:tests:acceptance:qemux86_64:bios_grub:
 publish:tests:acceptance:qemux86_64:bios_grub_gpt:
   extends: .template_publish_acceptance_coverage
   rules:
+    # Ticket: QA-636
+    - if: $BUILD_CPP_CLIENT == "true"
+      when: never
     - if: $TEST_QEMUX86_64_BIOS_GRUB_GPT == "true"
   needs:
     - init:workspace
@@ -119,6 +132,9 @@ publish:tests:acceptance:qemux86_64:bios_grub_gpt:
 publish:tests:acceptance:vexpress_qemu:uboot_uefi_grub:
   extends: .template_publish_acceptance_coverage
   rules:
+    # Ticket: QA-636
+    - if: $BUILD_CPP_CLIENT == "true"
+      when: never
     - if: $TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
   needs:
     - init:workspace
@@ -129,6 +145,9 @@ publish:tests:acceptance:vexpress_qemu:uboot_uefi_grub:
 publish:tests:acceptance:vexpress_qemu:flash:
   extends: .template_publish_acceptance_coverage
   rules:
+    # Ticket: QA-636
+    - if: $BUILD_CPP_CLIENT == "true"
+      when: never
     - if: $TEST_VEXPRESS_QEMU_FLASH == "true"
   needs:
     - init:workspace
