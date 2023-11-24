@@ -152,9 +152,8 @@ init:workspace:
     - cat ${CI_PROJECT_DIR}/build_revisions.env
 
     # Save artifact the rest of the pipeline
-    - tar -cf /tmp/workspace.tar .
-    - xz -${WORKSPACE_XZ_LEVEL:-1} ${WORKSPACE_XZ_ARGS} /tmp/workspace.tar
-    - mv /tmp/workspace.tar.xz ${CI_PROJECT_DIR}/workspace.tar.xz
+    - time tar -czf /tmp/workspace.tar.gz .
+    - mv /tmp/workspace.tar.gz ${CI_PROJECT_DIR}/workspace.tar.gz
 
     # Always keep this at the end of the script stage
     - echo "success" > /JOB_RESULT.txt
@@ -168,5 +167,5 @@ init:workspace:
   artifacts:
     expire_in: 2w
     paths:
-      - workspace.tar.xz
+      - workspace.tar.gz
       - build_revisions.env
