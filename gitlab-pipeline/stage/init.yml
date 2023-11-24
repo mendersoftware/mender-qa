@@ -152,8 +152,7 @@ init:workspace:
     - cat ${CI_PROJECT_DIR}/build_revisions.env
 
     # Save artifact the rest of the pipeline
-    - tar -cf /tmp/workspace.tar .
-    - xz -${WORKSPACE_XZ_LEVEL:-1} ${WORKSPACE_XZ_ARGS} /tmp/workspace.tar
+    - time tar -cJf /tmp/workspace.tar.xz .
     - mv /tmp/workspace.tar.xz ${CI_PROJECT_DIR}/workspace.tar.xz
 
     # Always keep this at the end of the script stage
