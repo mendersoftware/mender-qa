@@ -413,11 +413,6 @@ init_environment() {
         sudo rm -rf /mnt/sstate-cache/*
     fi
 
-    # Handle meta-mender sub modules.
-    cd $WORKSPACE/meta-mender
-    git submodule update --init --recursive
-    cd $WORKSPACE
-
     # Get mender-binary-delta tarball and add the generator to the PATH
     if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
         local version=$(get_mender_binary_delta_version)
