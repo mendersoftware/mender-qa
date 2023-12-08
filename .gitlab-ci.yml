@@ -180,10 +180,6 @@ variables:
     value: "true"
     description: |-
       Flag to build client for integration tests. False means use prebuilt client from upstream
-  BUILD_CPP_CLIENT:
-    value: "false"
-    description: |-
-      Tweak the build system for a Mender C++ client build.
   BUILD_SERVERS:
     value: "true"
     description: |-
@@ -349,7 +345,6 @@ include:
   - local: "/gitlab-pipeline/stage/build.yml"
   - local: "/gitlab-pipeline/stage/yocto-build-n-test.yml"
   - local: "/gitlab-pipeline/stage/test.yml"
-  - local: "/gitlab-pipeline/stage/publish-tests.yml"
   - local: "/gitlab-pipeline/stage/trigger-packages.yml"
   - local: "/gitlab-pipeline/stage/trigger-images.yml"
   - local: "/gitlab-pipeline/stage/release.yml"
@@ -364,7 +359,6 @@ stages:
   - build
   - yocto:build-n-test
   - test
-  - publish:tests
   - release
   - trigger:packages
   - trigger:images

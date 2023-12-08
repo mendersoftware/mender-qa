@@ -206,22 +206,14 @@ PREFERRED_VERSION${sep}pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
 EOF
     fi
 
-    if [ "${BUILD_CPP_CLIENT}" = "true" ]; then
-        BUILD_CPP_CLIENT_PATH=/src/github.com/mendersoftware/mender
-        ( cd ${WORKSPACE}/go/${BUILD_CPP_CLIENT_PATH} && git submodule update --init )
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_PROVIDER_virtual/mender-client = "mender"
-PREFERRED_PROVIDER_virtual/mender-client-native = "mender-native"
-EOF
-        # Remove after MEN-6279
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+    # Remove after MEN-6279
+    cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-flash = "master-git%"
 EOF
-    fi
 
     cat >> $BUILDDIR/conf/local.conf <<EOF
-EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go${BUILD_CPP_CLIENT_PATH:-}"
-EXTERNALSRC${sep}pn-mender-native = "$WORKSPACE/go${BUILD_CPP_CLIENT_PATH:-}"
+EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
+EXTERNALSRC${sep}pn-mender-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
 EXTERNALSRC${sep}pn-mender-client = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-client-native = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-artifact = "$WORKSPACE/go"
@@ -272,6 +264,12 @@ EOF
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SNAPSHOT_REV"$ ) || \
         mender_snapshot_on_exact_tag=
 
+    local is_mender_golang_client=$( \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender && \
+        git merge-base --is-ancestor 3dfc9a02478d6e0fd8b8cb53b9f8255eb9225021 HEAD && \
+	echo false || \
+	echo true)
+
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
     # influence which version Yocto and the binaries will show.
@@ -281,6 +279,7 @@ EOF
 # But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
 PREFERRED_VERSION${sep}pn-mender = "$mender_on_exact_tag"
+PREFERRED_VERSION${sep}pn-mender-native = "$mender_on_exact_tag"
 PREFERRED_VERSION${sep}pn-mender-client = "$mender_on_exact_tag"
 PREFERRED_VERSION${sep}pn-mender-client-native = "$mender_on_exact_tag"
 EOF
@@ -290,8 +289,23 @@ EOF
 # But the "mender" reference has to be kept for backwards compatibility
 # with 2.1.x, 2.2.x, and 2.3.x
 PREFERRED_VERSION${sep}pn-mender = "$client_version-git%"
+PREFERRED_VERSION${sep}pn-mender-native = "$client_version-git%"
 PREFERRED_VERSION${sep}pn-mender-client = "$client_version-git%"
 PREFERRED_VERSION${sep}pn-mender-client-native = "$client_version-git%"
+EOF
+    fi
+
+    if $is_mender_golang_client; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_PROVIDER_mender-native  = "mender-client-native"
+PREFERRED_RPROVIDER_mender-auth   = "mender-client"
+PREFERRED_RPROVIDER_mender-update = "mender-client"
+EOF
+    else
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_PROVIDER_mender-native  = "mender-native"
+PREFERRED_RPROVIDER_mender-auth   = "mender"
+PREFERRED_RPROVIDER_mender-update = "mender"
 EOF
     fi
 
@@ -412,11 +426,6 @@ init_environment() {
     then
         sudo rm -rf /mnt/sstate-cache/*
     fi
-
-    # Handle meta-mender sub modules.
-    cd $WORKSPACE/meta-mender
-    git submodule update --init --recursive
-    cd $WORKSPACE
 
     # Get mender-binary-delta tarball and add the generator to the PATH
     if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then

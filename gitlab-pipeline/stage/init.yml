@@ -61,6 +61,19 @@ init:workspace:
 
         (
           cd $clone_path
+          # This is a no-op for repositories that don't have submodules. The `--depth=1` needs
+          # server support, and not all sources we clone submodules from support that, so let's try
+          # first, to get as much space saving as we can, but fall back on full clone.
+          git submodule update --init --recursive --depth=1 ||
+          (
+            git submodule deinit --all --force &&
+            rm -rf .git/modules/* &&
+            git submodule update --init --recursive
+          )
+        ) || return 1
+
+        (
+          cd $clone_path
           echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
           echo "export ${repo_id}_REV=$clone_rev" >> ${CI_PROJECT_DIR}/build_revisions.env
           echo "export ${repo_id}_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
@@ -135,11 +148,13 @@ init:workspace:
     # For meta-mender we need the full git history for this logic to work:
     # https://github.com/mendersoftware/meta-mender/blob/dd0f848f260810e08b98d2a1915f734bf02a64b1/tests/acceptance/test_uboot_automation.py#L68-L83
     - git clone git@github.com:mendersoftware/meta-mender meta-mender
-    - (
+    - |
+      (
         cd meta-mender &&
         git fetch -u -f origin $META_MENDER_REV:pr &&
         git checkout pr ||
         git checkout -f -b pr $META_MENDER_REV
+        git submodule update --init
       ) || return 1
     - (
     -   cd meta-mender
