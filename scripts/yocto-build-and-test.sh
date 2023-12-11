@@ -206,11 +206,6 @@ PREFERRED_VERSION${sep}pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
 EOF
     fi
 
-    # Remove after MEN-6279
-    cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-flash = "master-git%"
-EOF
-
     cat >> $BUILDDIR/conf/local.conf <<EOF
 EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
 EXTERNALSRC${sep}pn-mender-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
