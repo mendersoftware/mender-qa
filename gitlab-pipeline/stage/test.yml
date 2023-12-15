@@ -253,10 +253,10 @@ test:backend-integration:azblob:enterprise:
     # Get and install the integration test requirements
     - if [ -d ${WORKSPACE}/integration/tests/requirements-python ]; then
     -   apk add $(cat ${WORKSPACE}/integration/tests/requirements-system/apk-requirements.txt)
-    -   pip install -r ${WORKSPACE}/integration/tests/requirements-python/python-requirements.txt
+    -   pip install --break-system-packages -r ${WORKSPACE}/integration/tests/requirements-python/python-requirements.txt
     - else
     -   apk add $(cat ${WORKSPACE}/integration/tests/requirements/apk-requirements.txt)
-    -   pip install -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
+    -   pip install --break-system-packages -r ${WORKSPACE}/integration/tests/requirements/python-requirements.txt
     - fi
 
     # Load all docker images, and the client images depending on $BUILD_CLIENT

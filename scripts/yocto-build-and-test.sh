@@ -672,7 +672,7 @@ build_and_test_client() {
             fi
 
             # install test dependencies
-            sudo pip3 install -r $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt
+            sudo pip3 install --break-system-packages -r $WORKSPACE/meta-mender/tests/acceptance/requirements_py3.txt
 
             echo "MENDER_FEATURES_ENABLE$(bitbake_override_separator)append = \" mender-testing-enabled\"" >> $BUILDDIR/conf/local.conf
 
