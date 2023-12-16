@@ -186,7 +186,7 @@ test:backend-integration:azblob:enterprise:
   # when with used by GitLab network driver network connection between those
   # containers is denied (it might work locally on Linux host because of the
   # default bridge driver).
-  image: docker:dind
+  image: docker:24.0.7-dind-alpine3.18
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300
