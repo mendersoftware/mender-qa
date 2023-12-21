@@ -53,22 +53,6 @@ release_docker_images:manual:
   extends: .template_release_docker_images
 
 
-release_docker_multiplatform_images:manual:
-  when: manual
-  extends: .template_release_docker_images
-  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
-  script:
-    # for pre 2.4.x releases, omit --version-type
-    - if $WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
-    -   VERSION_TYPE_PARAMS="--version-type docker"
-    - fi
-    # Load, tag and push Docker images
-    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV);
-        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
-        regctl copy registry.gitlab.com/northern.tech/mender/${image}:${version} $docker_url:${version};
-      done
-
 release_docker_images:automatic:
   only:
     variables:
