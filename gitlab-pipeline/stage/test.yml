@@ -60,6 +60,11 @@ test:backend-integration:open_source:
     - mv stage-artifacts/mender-artifact-linux integration/backend-tests/downloaded-tools/mender-artifact
     # copy for pre 2.4.x releases
     - cp integration/backend-tests/downloaded-tools/mender-artifact integration/backend-tests/mender-artifact
+    - if [ -n "$MENDER_TEST_CONTAINERS_CANDIDATE_TAG" ]; then
+    -   sed -i.bak -e "s,mendersoftware/mender-test-containers:backend-integration-testing,$MENDER_TEST_CONTAINERS_CANDIDATE_TAG," integration/backend-tests/docker/docker-compose.backend-tests.yml
+    -   diff -u integration/backend-tests/docker/docker-compose.backend-tests.yml.bak integration/backend-tests/docker/docker-compose.backend-tests.yml || true
+    -   echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+    - fi
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
