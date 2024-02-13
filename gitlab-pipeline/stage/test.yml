@@ -1,7 +1,8 @@
 
 test:backend-integration:open_source:
   tags:
-    - mender-qa-worker-backend-integration-tests
+    #- mender-qa-worker-backend-integration-tests
+    - hetzner-arm
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
     when: always
