@@ -264,6 +264,10 @@ variables:
     value: ""
     description: |-
       Specify a subsets of tests to run. Applicable for integration tests
+  RUN_BACKEND_INTEGRATION_TESTS_ARM:
+    value: "true"
+    description: |-
+      Flag to run integration tests on ARM
 
   # Parallel factor for tests
   TESTS_IN_PARALLEL_INTEGRATION:
