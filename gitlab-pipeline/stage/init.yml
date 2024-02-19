@@ -1,7 +1,7 @@
 
 init:workspace:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: init
   image: alpine:3.12
   script:

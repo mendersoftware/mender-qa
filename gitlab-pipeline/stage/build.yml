@@ -6,7 +6,7 @@ include:
 
 build:client:docker:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: build
   only:
     variables:
@@ -69,7 +69,7 @@ build:client:docker:
 
 build:servers:
   tags:
-    - mender-qa-worker-generic-heavy
+    - hetzner-amd-beefy
   stage: build
   only:
     variables:
@@ -128,7 +128,7 @@ build:servers:
 
 build:mender-cli:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: build
   only:
     variables:
@@ -186,7 +186,7 @@ build:mender-cli:
 
 build:mender-artifact:
   tags:
-    - mender-qa-worker-generic
+    - hetzner-amd-beefy
   stage: build
   only:
     variables:
@@ -244,7 +244,7 @@ build:mender-artifact:
 
 build:mender-monitor:package:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: build
   image: alpine:3.12
   needs: []
@@ -277,7 +277,7 @@ build:mender-monitor:package:
 
 build:mender-gateway:package:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: build
   needs:
     - init:workspace
