@@ -1,17 +1,16 @@
 
 test:backend-integration:open_source:
   tags:
-    - hetzner-amd-beefy-shell
+    - hetzner-amd-beefy
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
     when: always
   stage: test
-    #image: docker/compose:alpine-1.27.4
+  image: docker/compose:alpine-1.27.4
   variables:
     TEST_SUITE: "open"
   services:
-    - docker/compose:alpine-1.27.4
-      #- docker:dind
+    - docker:dind
   needs:
     - init:workspace
     - build:servers
@@ -183,8 +182,7 @@ test:backend-integration:azblob:enterprise:
 
 .integration_setup_template:
   tags:
-    #- hetzner-amd-cpx51
-    - hetzner-amd-beefy-shell
+    - hetzner-amd-beefy
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
   # run dockerd on the same host. It prevents us from using GitLab service,
