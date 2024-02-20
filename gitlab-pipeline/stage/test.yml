@@ -1,16 +1,17 @@
 
 test:backend-integration:open_source:
   tags:
-    - hetzner-amd-cpx51
+    - hetzner-amd-beefy-shell
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
     when: always
   stage: test
-  image: docker/compose:alpine-1.27.4
+    #image: docker/compose:alpine-1.27.4
   variables:
     TEST_SUITE: "open"
   services:
-    - docker:dind
+    - docker/compose:alpine-1.27.4
+      #- docker:dind
   needs:
     - init:workspace
     - build:servers
@@ -182,7 +183,8 @@ test:backend-integration:azblob:enterprise:
 
 .integration_setup_template:
   tags:
-    - hetzner-amd-cpx51
+    #- hetzner-amd-cpx51
+    - hetzner-amd-beefy-shell
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
   # run dockerd on the same host. It prevents us from using GitLab service,
@@ -191,7 +193,7 @@ test:backend-integration:azblob:enterprise:
   # when with used by GitLab network driver network connection between those
   # containers is denied (it might work locally on Linux host because of the
   # default bridge driver).
-  image: docker:24.0.7-dind-alpine3.18
+  #image: docker:24.0.7-dind-alpine3.18
   variables:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300
