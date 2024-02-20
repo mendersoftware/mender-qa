@@ -1,7 +1,7 @@
 
 test:backend-integration:open_source:
   tags:
-    - hetzner-amd-beefy
+    - hetzner-amd-cpx51
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
     when: always
@@ -182,7 +182,7 @@ test:backend-integration:azblob:enterprise:
 
 .integration_setup_template:
   tags:
-    - hetzner-amd-beefy
+    - hetzner-amd-cpx51
   stage: test
   # Integration tests depends on running ssh to containers, we're forced to
   # run dockerd on the same host. It prevents us from using GitLab service,
