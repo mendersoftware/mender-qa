@@ -34,8 +34,6 @@ build_servers_repositories() {
 
                 generate-delta-worker)
                     local version=$(get_mender_binary_delta_version)
-                    export AWS_ACCESS_KEY_ID="$AWSRO_MENDER_BINARY_DELTA_AWS_ACCESS_KEY_ID"
-                    export AWS_SECRET_ACCESS_KEY="$AWSRO_MENDER_BINARY_DELTA_AWS_SECRET_ACCESS_KEY"
                     aws s3 cp s3://mender-binaries/mender-binary-delta/${version}/mender-binary-delta-${version}.tar.xz .
                     xz -cd mender-binary-delta-${version}.tar.xz | tar xvf -
                     cp mender-binary-delta-${version}/x86_64/mender-binary-delta-generator mender-binary-delta-generator-amd64
