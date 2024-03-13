@@ -78,12 +78,16 @@ build:servers:
       - $RUN_INTEGRATION_TESTS == "true"
   variables:
     DOCKER_BUILDKIT: 1
+    ROLE_ARN: "arn:aws:iam::175683096866:role/nt-cicd-mender-binary-delta-ro"
   needs:
     - init:workspace
   allow_failure: false
   image: docker
   services:
     - docker:dind
+  id_tokens:
+    AWS_OIDC_TOKEN:
+      aud: https://gitlab.com
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -102,6 +106,18 @@ build:servers:
     - cd ${WORKSPACE}
     - xz -d /tmp/workspace.tar.xz
     - tar -xf /tmp/workspace.tar
+    # Gitlab AWS OIDC mapping auth
+    # To get s3://mender-binaries/mender-binary-delta objects
+    - >
+      export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s"
+      $(aws sts assume-role-with-web-identity
+      --role-arn ${ROLE_ARN}
+      --role-session-name "GitLabRunner-${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+      --web-identity-token ${AWS_OIDC_TOKEN}
+      --duration-seconds ${AWS_OIDC_TOKEN_TIMEOUT:-3600}
+      --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
+      --output text))
+    - aws sts get-caller-identity
   script:
     - ${WORKSPACE}/mender-qa/scripts/servers-build.sh
     - echo "success" > /JOB_RESULT.txt
