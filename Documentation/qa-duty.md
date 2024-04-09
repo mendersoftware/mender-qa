@@ -1,7 +1,7 @@
-# Build Master role
+# QA duty
 
-In the Mender team, we have a weekly rotative role known as "Build Master". This
-is a person in the team responsible for:
+In the Mender team, we have a weekly rotating responsibility for QA, known as "QA duty".
+This is a person in the team responsible for:
 
 * Monotiring the health of the Build System
 * Doing early investigation on issues
@@ -19,10 +19,10 @@ This is the Google calendar that shows who takes this role when.
 
 Link: https://qastatus.mender.io/stats
 
-The unstable tests should be known to the Build Master so that it can be detected when
+The unstable tests should be known to the person on QA duty so that it can be detected when
 test failures are genuine or spurious.
 
-By the end of the Build Master period, all failed tests in nightly builds (link above)
+By the end of the QA duty period, all failed tests in nightly builds (link above)
 should either be fixed or reported in JIRA tasks to follow-up in the next period.
 
 ### Nightly Mender QA build
@@ -44,7 +44,7 @@ Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipelines?page=1&sco
 Every Monday evening, at 9 PM UTC, we run the Mender integration tests targeting
 the Mender staging environment.
 
-On Tuesday morning, the Build Master must check the status of the pipeline and
+On Tuesday morning, the person on QA duty must check the status of the pipeline and
 do a short investigation before asking for help from others in the team in
 case of failures.
 
@@ -65,3 +65,9 @@ All should be green. If a pipeline is broken, ping the corresponding team.
 
 They get build after every merge to master on the corresponding repository, and
 on weekly basis every Tuesday evening, at 9 PM UTC.
+
+### More information
+
+More information about roles and responsibilities can be found in the internal document:
+
+https://docs.google.com/document/d/1pFJbGVM248UoynsMbNox47whrzIfVUrK4hO_xiIWHzA/edit
