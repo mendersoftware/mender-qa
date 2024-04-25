@@ -334,7 +334,7 @@ test:backend-integration:azblob:enterprise:
         fi
     -   source ${CI_PROJECT_DIR}/build_revisions.env
     -   cd integration/tests
-    -   ./run.sh --no-download --machine-name qemux86-64
+    -   ./run.sh --no-download -- --machine-name qemux86-64
 
         # Always keep this at the end of the script stage
     -   echo "success" > /JOB_RESULT.txt
