@@ -1,7 +1,7 @@
 
 test:backend-integration:open_source:
   tags:
-    - mender-qa-worker-backend-integration-tests
+    - hetzner-amd-beefy
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true"'
     when: always
@@ -155,11 +155,15 @@ test:backend-integration:open_source:
 
 test:backend-integration:enterprise:
   extends: test:backend-integration:open_source
+  tags:
+    - mender-qa-worker-backend-integration-tests
   variables:
     TEST_SUITE: "enterprise"
 
 test:backend-integration:azblob:open:
   extends: test:backend-integration:open_source
+  tags:
+    - mender-qa-worker-backend-integration-tests
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true" && $CI_PIPELINE_SOURCE == "schedule"'
     when: always
@@ -171,6 +175,8 @@ test:backend-integration:azblob:open:
 
 test:backend-integration:azblob:enterprise:
   extends: test:backend-integration:enterprise
+  tags:
+    - mender-qa-worker-backend-integration-tests
   rules:
   - if: '$RUN_BACKEND_INTEGRATION_TESTS == "true" && $CI_PIPELINE_SOURCE == "schedule"'
     when: always
