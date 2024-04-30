@@ -53,6 +53,29 @@ release_docker_images:manual:
   extends: .template_release_docker_images
 
 
+release_docker_multiplatform_images:manual:
+  when: manual
+  extends: .template_release_docker_images
+  # We only need init:workspace to inhering the environment - we retag upstream images from the same Git sha
+  dependencies:
+    - init:workspace
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
+  script:
+    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
+        if echo $image | grep -q -E 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
+            echo "Skipping client image $image";
+            continue;
+        fi;
+        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
+        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --version-type docker --in-integration-version $INTEGRATION_REV);
+        git_repo=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image git);
+        cicd_tag_base="$(echo ${version} | sed -r 's/(mender-[1-9]+\.[1-9]+\.).*/\1x/')";
+        cicd_tag_git="$(echo ${git_repo^^} | tr - _)_REV_GIT_SHA";
+        cicd_tag="${cicd_tag_base}_${!cicd_tag_git}";
+        echo "Copying image ${docker_url}:${cicd_tag} into ${docker_url}:${version}";
+        regctl image copy ${docker_url}:${cicd_tag} ${docker_url}:${version};
+      done
+
 release_docker_images:automatic:
   only:
     variables:
