@@ -309,3 +309,12 @@ build:mender-gateway:package:
     - tar -xf /tmp/workspace.tar
     # Move into component path
     - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-gateway
+
+build:dummy:
+  tags:
+    - mender-qa-worker-generic-light
+  stage: build
+  needs:
+    - init:workspace
+  script:
+    - env | grep REV
