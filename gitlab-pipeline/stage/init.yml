@@ -74,9 +74,7 @@ init:workspace:
 
         (
           cd $clone_path
-          echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
-          echo "export ${repo_id}_REV=$clone_rev" >> ${CI_PROJECT_DIR}/build_revisions.env
-          echo "export ${repo_id}_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+          echo "${repo_id}_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
         ) || return 1
       }
 
@@ -96,9 +94,7 @@ init:workspace:
     - git init . && git remote add origin https://github.com/mendersoftware/poky
     - git fetch && git checkout -f origin/${POKY_REV}
     - (
-    -   echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
-    -   echo "export POKY_REV=$POKY_REV" >> ${CI_PROJECT_DIR}/build_revisions.env
-    -   echo "export POKY_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "POKY_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
     - )
 
     # Add MENDER_QA_REV, which is special, since it is this repository.
@@ -109,9 +105,7 @@ init:workspace:
       fi
     - (
     -   cd mender-qa
-    -   echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
-    -   echo "export MENDER_QA_REV=$MENDER_QA_REV" >> ${CI_PROJECT_DIR}/build_revisions.env
-    -   echo "export MENDER_QA_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "MENDER_QA_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
     - )
 
     - checkout_repo https://github.com/mendersoftware/integration integration $INTEGRATION_REV
@@ -160,9 +154,7 @@ init:workspace:
       ) || return 1
     - (
     -   cd meta-mender
-    -   echo "# $(git log -n1 --oneline)" >> ${CI_PROJECT_DIR}/build_revisions.env
-    -   echo "export META_MENDER_REV=$META_MENDER_REV" >> ${CI_PROJECT_DIR}/build_revisions.env
-    -   echo "export META_MENDER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
+    -   echo "META_MENDER_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
     - )
 
     # Print for debug purposes
@@ -186,4 +178,6 @@ init:workspace:
     expire_in: 2w
     paths:
       - workspace.tar.xz
-      - build_revisions.env
+    reports:
+      dotenv:
+        - build_revisions.env
