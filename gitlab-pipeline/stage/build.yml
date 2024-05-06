@@ -127,7 +127,7 @@ build:servers:
 
     - mkdir -p stage-artifacts
     - for image in $(${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker); do
-    -   if ! echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway'; then
+    -   if ! echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
     -     docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker $image docker_url)
     -     docker save $docker_url:pr -o stage-artifacts/${image}.tar
     -   fi

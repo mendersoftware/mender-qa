@@ -27,7 +27,7 @@ build_servers_repositories() {
             cd go/src/github.com/mendersoftware/$repo
 
             case "$docker" in
-                iot-manager|deployments|deployments-enterprise|deviceauth|deviceauth-enterprise|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig|devicemonitor|reporting|mender-ci-tools)
+                iot-manager|deployments|deployments-enterprise|deviceauth|deviceauth-enterprise|inventory|inventory-enterprise|tenantadm|useradm|useradm-enterprise|workflows|workflows-enterprise|create-artifact-worker|auditlogs|mtls-ambassador|deviceconnect|deviceconfig|devicemonitor|reporting|mender-ci-tools|mender-gateway)
                     docker build -t $docker_url:pr .
                     $WORKSPACE/integration/extra/release_tool.py --set-version-of $docker --version pr
                     ;;
