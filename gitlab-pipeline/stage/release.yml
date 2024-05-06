@@ -78,11 +78,12 @@ release_docker_multiplatform_images:manual:
   after_script:
     - echo "Manually trigger release_docker_images:client-only:manual for the virtual device images"
 
-release_docker_images:automatic:
-  only:
-    variables:
-      - $PUBLISH_RELEASE_AUTOMATIC == "true"
-  extends: .template_release_docker_images
+# Job disabled to prevent a single platform release of a Mender 3.7 series. For other series use the manual job
+# release_docker_images:automatic:
+#   only:
+#     variables:
+#       - $PUBLISH_RELEASE_AUTOMATIC == "true"
+#   extends: .template_release_docker_images
 
 .template_release_board_artifacts:
   tags:
