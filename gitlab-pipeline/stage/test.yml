@@ -34,13 +34,13 @@ test:backend-integration:open_source:
     - pip3 install -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
+    - mv workspace.tar.xz stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
     - xz -d /tmp/workspace.tar.xz
     - tar -xf /tmp/workspace.tar
-    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
+    - mv /tmp/stage-artifacts .
 
     # Load all docker images except client
     - for image in $(integration/extra/release_tool.py -l docker); do
@@ -214,13 +214,13 @@ test:backend-integration:azblob:enterprise:
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - apk add xz
-    - mv workspace.tar.xz build_revisions.env stage-artifacts /tmp
+    - mv workspace.tar.xz stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
     - xz -d /tmp/workspace.tar.xz
     - tar -xf /tmp/workspace.tar
-    - mv /tmp/build_revisions.env /tmp/stage-artifacts .
+    - mv /tmp/stage-artifacts .
 
     # Dependencies for post job status and io stats
     - apk --update add curl jq sysstat hdparm
@@ -332,7 +332,6 @@ test:backend-integration:azblob:enterprise:
               export SPECIFIC_INTEGRATION_TEST="not Enterprise";;
           esac
         fi
-    -   source ${CI_PROJECT_DIR}/build_revisions.env
     -   cd integration/tests
     -   ./run.sh --no-download -- --machine-name qemux86-64
 
