@@ -42,8 +42,13 @@
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
         version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV);
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
-        docker load -i stage-artifacts/${image}.tar;
-        docker tag $docker_url:pr $docker_url:${version};
+        if echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
+          docker pull ${GITLAB_REGISTRY_PREFIX}-${image};
+          docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${docker_url}:${version};
+        else
+          docker load -i stage-artifacts/${image}.tar;
+          docker tag ${docker_url}:pr ${docker_url}:${version};
+        fi;
         docker push $docker_url:${version};
       done
 
@@ -571,8 +576,8 @@ release_mender-gateway:automatic:
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | egrep 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'); do
         version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV);
         docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
-        docker load -i stage-artifacts/${image}.tar;
-        docker tag $docker_url:pr $docker_url:${version};
+        docker pull ${GITLAB_REGISTRY_PREFIX}-${image};
+        docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${docker_url}:${version};
         docker push $docker_url:${version};
       done
 
