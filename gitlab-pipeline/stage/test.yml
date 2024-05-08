@@ -196,6 +196,7 @@ test:backend-integration:azblob:enterprise:
     DOCKER_CLIENT_TIMEOUT: 300
     COMPOSE_HTTP_TIMEOUT: 300
     TEST_SUITE: "open"
+    GITLAB_REGISTRY_PREFIX: "${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}"
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
@@ -265,15 +266,18 @@ test:backend-integration:azblob:enterprise:
     - fi
 
     # Load all docker images, and the client images depending on $BUILD_CLIENT
+    - echo ${CI_REGISTRY_PASSWORD} | docker login --username ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
     - for image in $(integration/extra/release_tool.py -l docker); do
     -   if echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
     -     if [ "${BUILD_CLIENT}" = "true" ]; then
-    -       docker load -i stage-artifacts/${image}.tar
+    -       docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
+    -       docker tag ${GITLAB_REGISTRY_PREFIX}-${image} $(integration/extra/release_tool.py --map docker $image docker_url):pr
     -     else
     -       continue
     -     fi
+    -   else
+    -     docker load -i stage-artifacts/${image}.tar
     -   fi
-    -   docker load -i stage-artifacts/${image}.tar
     - done
 
     # Login for private repos
