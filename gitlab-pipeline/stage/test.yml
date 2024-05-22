@@ -290,7 +290,7 @@ test:backend-integration:azblob:enterprise:
     -       continue
     -     fi
     -   fi
-    -   integration/extra/release_tool.py --set-version-of $image --version pr
+    -   integration/extra/release_tool.py --set-version-of $image --version-type docker --version pr
     - done
     # Other dependencies
     - install stage-artifacts/mender-artifact-linux /usr/local/bin/mender-artifact
