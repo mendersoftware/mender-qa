@@ -286,9 +286,7 @@ test:backend-integration:azblob:enterprise:
     # Set testing versions to PR
     - for image in $(integration/extra/release_tool.py -l docker); do
     -   if echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
-    -     if [ "${BUILD_CLIENT}" = "true" ]; then
-    -       integration/extra/release_tool.py --set-version-of $image --version pr
-    -     else
+    -     if [ "${BUILD_CLIENT}" != "true" ]; then
     -       continue
     -     fi
     -   fi
