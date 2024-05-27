@@ -48,15 +48,6 @@ On Tuesday morning, the person on QA duty must check the status of the pipeline 
 do a short investigation before asking for help from others in the team in
 case of failures.
 
-### SaaS deploy pipeline(s)
-
-Link: https://gitlab.com/Northern.tech/MenderSaaS/saas/pipelines
-
-On Mondays, it is important to check that the weekly scheduled pipelines
-succeeed (marked with "Scheduled" tag). For the rest of the week, it is also
-good to keep an eye on the CI/CD related pipelines, specially if this is a week
-where a new Hosted Mender release is planned.
-
 ### Individual pipelines
 
 Link: https://qastatus.mender.io/build-status
