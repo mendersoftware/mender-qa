@@ -20,7 +20,7 @@
     # Install dependencies
     - apk --update add git python3 py3-pip xz
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
-    - pip3 install -r requirements.txt
+    - pip3 install --break-system-packages -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - mv workspace.tar.xz stage-artifacts /tmp
