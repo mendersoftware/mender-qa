@@ -40,17 +40,17 @@
     - fi
     # Load, tag and push Docker images
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV);
-        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
-        if echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
-          docker pull ${GITLAB_REGISTRY_PREFIX}-${image};
-          docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${docker_url}:${version};
-        else
-          docker load -i stage-artifacts/${image}.tar;
-          docker tag ${docker_url}:pr ${docker_url}:${version};
-        fi;
-        docker push $docker_url:${version};
-      done
+    -   version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV)
+    -   docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
+    -   if echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
+    -     docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
+    -     docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${docker_url}:${version}
+    -   else
+    -     docker load -i stage-artifacts/${image}.tar
+    -     docker tag ${docker_url}:pr ${docker_url}:${version}
+    -   fi
+    -   docker push $docker_url:${version}
+    - done
 
 
 release_docker_images:manual:
@@ -67,19 +67,19 @@ release_docker_multiplatform_images:manual:
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   script:
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker); do
-        if echo $image | grep -q -E 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
-            echo "Skipping client image $image";
-            continue;
-        fi;
-        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --version-type docker --in-integration-version $INTEGRATION_REV);
-        git_repo=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image git);
-        cicd_tag_base="$(echo ${version} | sed -r 's/(mender-[1-9]+\.[1-9]+\.).*/\1x/')";
-        cicd_tag_git="$(echo ${git_repo^^} | tr - _)_REV_GIT_SHA";
-        cicd_tag="${cicd_tag_base}_${!cicd_tag_git}";
-        echo "Copying image ${docker_url}:${cicd_tag} into ${docker_url}:${version}";
-        regctl image copy ${docker_url}:${cicd_tag} ${docker_url}:${version};
-      done
+    -   if echo $image | grep -q -E 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
+    -       echo "Skipping client image $image"
+    -       continue
+    -   fi
+    -   docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
+    -   version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --version-type docker --in-integration-version $INTEGRATION_REV)
+    -   git_repo=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image git)
+    -   cicd_tag_base="$(echo ${version} | sed -r 's/(mender-[1-9]+\.[1-9]+\.).*/\1x/')"
+    -   cicd_tag_git="$(echo ${git_repo^^} | tr - _)_REV_GIT_SHA"
+    -   cicd_tag="${cicd_tag_base}_${!cicd_tag_git}"
+    -   echo "Copying image ${docker_url}:${cicd_tag} into ${docker_url}:${version}"
+    -   regctl image copy ${docker_url}:${cicd_tag} ${docker_url}:${version}
+    - done
   after_script:
     - echo "Manually trigger release_docker_images:client-only:manual for the virtual device images"
 
@@ -574,12 +574,12 @@ release_mender-gateway:automatic:
     - fi
     # Load, tag and push mender-client-* images
     - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | egrep 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'); do
-        version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV);
-        docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url);
-        docker pull ${GITLAB_REGISTRY_PREFIX}-${image};
-        docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${docker_url}:${version};
-        docker push $docker_url:${version};
-      done
+    -   version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image $VERSION_TYPE_PARAMS --in-integration-version $INTEGRATION_REV)
+    -   docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
+    -   docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
+    -   docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${docker_url}:${version}
+    -   docker push $docker_url:${version}
+    - done
 
 # This job allows mender repo to publish the related Docker client images on
 # merges to master or release branches.
