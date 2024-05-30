@@ -23,13 +23,18 @@
     - pip3 install --break-system-packages -r requirements.txt
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.xz stage-artifacts /tmp
+    - mv workspace.tar.xz /tmp
+    - if [ -e stage-artifacts ]; then
+    -   mv stage-artifacts /tmp
+    - fi
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
     - xz -d /tmp/workspace.tar.xz
     - tar -xf /tmp/workspace.tar
-    - mv /tmp/stage-artifacts .
+    - if [ -e /tmp/stage-artifacts ]; then
+    -   mv /tmp/stage-artifacts .
+    - fi
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
