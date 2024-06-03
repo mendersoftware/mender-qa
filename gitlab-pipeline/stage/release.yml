@@ -80,8 +80,9 @@ release_docker_multiplatform_images:manual:
     -   version=$($WORKSPACE/integration/extra/release_tool.py --version-of $image --version-type docker --in-integration-version $INTEGRATION_REV)
     -   git_repo=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image git)
     -   cicd_tag_base="$(echo ${version} | sed -r 's/(mender-[1-9]+\.[1-9]+\.).*/\1x/')"
-    -   cicd_tag_git="$(echo ${git_repo^^} | tr - _)_REV_GIT_SHA"
-    -   cicd_tag="${cicd_tag_base}_${!cicd_tag_git}"
+    -   cicd_tag_git="$(echo ${git_repo} | tr '[a-z]-' '[A-Z]_')_REV_GIT_SHA"
+    # Expand variable name inside cicd_tag_git.
+    -   eval cicd_tag="\"${cicd_tag_base}_\$${cicd_tag_git}\""
     -   echo "Copying image ${docker_url}:${cicd_tag} into ${docker_url}:${version}"
     -   regctl image copy ${docker_url}:${cicd_tag} ${docker_url}:${version}
     - done
