@@ -39,6 +39,11 @@
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+
+
+release_docker_images:manual:
+  when: manual
+  extends: .template_release_docker_images
   script:
     # for pre 2.4.x releases, omit --version-type
     - if $WORKSPACE/integration/extra/release_tool.py --help | grep -e --version-type; then
@@ -57,11 +62,6 @@
     -   fi
     -   docker push $docker_url:${version}
     - done
-
-
-release_docker_images:manual:
-  when: manual
-  extends: .template_release_docker_images
 
 
 release_docker_multiplatform_images:manual:
