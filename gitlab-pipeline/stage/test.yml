@@ -51,6 +51,7 @@ test:backend-integration:open_source:
     # Login for private repos
     - docker login -u menderbuildsystem -p ${DOCKER_HUB_PASSWORD}
     - docker login -u ntadm_menderci -p ${REGISTRY_MENDER_IO_PASSWORD} registry.mender.io
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
     # Set testing versions to PR
     - for repo in `integration/extra/release_tool.py -l docker`; do
         integration/extra/release_tool.py --set-version-of $repo --version pr;
@@ -63,7 +64,6 @@ test:backend-integration:open_source:
     - if [ -n "$MENDER_TEST_CONTAINERS_CANDIDATE_TAG" ]; then
     -   sed -i.bak -e "s,mendersoftware/mender-test-containers:backend-integration-testing,$MENDER_TEST_CONTAINERS_CANDIDATE_TAG," integration/backend-tests/docker/docker-compose.backend-tests.yml
     -   diff -u integration/backend-tests/docker/docker-compose.backend-tests.yml.bak integration/backend-tests/docker/docker-compose.backend-tests.yml || true
-    -   echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
     - fi
     # sysstat monitoring suite for Alpine Linux
     # collect cpu, load avg, memory and io usage every 2 secs forever
