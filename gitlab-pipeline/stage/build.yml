@@ -13,7 +13,6 @@ build:client:docker:
       - $BUILD_CLIENT == "true"
   variables:
     DOCKER_BUILDKIT: 1
-    GITLAB_REGISTRY_PREFIX: "${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}"
   needs:
     - init:workspace
   allow_failure: false
