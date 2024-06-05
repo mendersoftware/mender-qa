@@ -6,7 +6,7 @@
     variables:
       - ($BUILD_SERVERS == "true" && $BUILD_CLIENT == "true") || $RUN_INTEGRATION_TESTS == "true"
   stage: release
-  image: docker:19.03
+  image: docker
   services:
     - docker:dind
   dependencies:
