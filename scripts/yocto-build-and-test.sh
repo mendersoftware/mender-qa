@@ -149,6 +149,7 @@ prepare_build_config() {
     local mender_connect_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-connect --in-integration-version HEAD)
     local mender_setup_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-setup --in-integration-version HEAD)
     local mender_snapshot_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-snapshot --in-integration-version HEAD)
+    local mender_configure_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-configure-module --in-integration-version HEAD)
 
     local sep="$(bitbake_override_separator)"
 
@@ -200,12 +201,6 @@ PREFERRED_VERSION${sep}pn-mender-gateway = "$mender_gateway_version"
 EOF
     fi
 
-    if [ "$MENDER_CONFIGURE_MODULE_VERSION" != "latest" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION${sep}pn-mender-configure = "$MENDER_CONFIGURE_MODULE_VERSION"
-EOF
-    fi
-
     cat >> $BUILDDIR/conf/local.conf <<EOF
 EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
 EXTERNALSRC${sep}pn-mender-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
@@ -216,6 +211,7 @@ EXTERNALSRC${sep}pn-mender-artifact-native = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-connect= "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-setup= "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-snapshot= "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-configure = "$WORKSPACE/go/src/github.com/mendersoftware/mender-configure-module"
 
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS${sep}remove = "do_patch"
@@ -258,6 +254,10 @@ EOF
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SNAPSHOT_REV"$ ) || \
         mender_snapshot_on_exact_tag=
+    local mender_configure_on_exact_tag=$(test "$MENDER_CONFIGURE_MODULE_REV" != "master" && \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-configure-module && \
+        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONFIGURE_MODULE_REV"$ ) || \
+        mender_configure_on_exact_tag=
 
     local is_mender_golang_client=$( \
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender && \
@@ -343,6 +343,16 @@ EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION${sep}pn-mender-snapshot = "$mender_snapshot_version-git%"
+EOF
+    fi
+
+    if [ -n "$mender_configure_on_exact_tag" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION${sep}pn-mender-configure = "$mender_configure_on_exact_tag"
+EOF
+    else
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION${sep}pn-mender-configure = "$mender_configure_version-git%"
 EOF
     fi
 }

@@ -164,16 +164,16 @@ variables:
     value: "master"
     description: |-
       Version of mender-ci-workflows
+  MENDER_CONFIGURE_MODULE_REV:
+    value: "master"
+    description: |-
+      Version of mender-configure-module
 
   # Versions of independent components
   MENDER_BINARY_DELTA_VERSION:
     value: "latest"
     description: |-
       Version of mender-binary-delta
-  MENDER_CONFIGURE_MODULE_VERSION:
-    value: "latest"
-    description: |-
-      Version of mender-configure-module
 
   # Build stage
   BUILD_CLIENT:
