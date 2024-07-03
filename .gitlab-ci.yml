@@ -9,7 +9,7 @@ variables:
     description: |-
       Version of meta-mender
   POKY_REV:
-    value: "kirkstone"
+    value: "scarthgap"
     description: |-
       Version of poky
   MENDER_QA_REV:
@@ -105,13 +105,13 @@ variables:
     description: |-
       Version of mender-stress-test-client
   META_OPENEMBEDDED_REV:
-    value: "kirkstone"
+    value: "scarthgap"
     description: |-
       Version of meta-openembedded
   META_RASPBERRYPI_REV:
     value: "kirkstone"
     description: |-
-      Version of meta-raspberrypi
+      Version of meta-raspberrypi. Only applicable for kirkstone or older
   AUDITLOGS_REV:
     value: "master"
     description: |-
