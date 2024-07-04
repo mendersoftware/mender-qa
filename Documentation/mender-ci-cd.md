@@ -290,15 +290,18 @@ docs](https://cloud.google.com/compute/docs/general-purpose-machines).
 NOTE: Check GitLab UI and/or `/etc/gitlab-runner/config.toml` on the master's machine for the source
 of truth.
 
-| Runner's name                | GPC machine type | Pipeline tags |
-| ---------------------------- | ---------------- | ------------------------------------------ |
-| mender-runner-n2-standard-16 | n2-standard-16   | mender-qa-worker-integration-tests,mender-qa-worker-client-acceptance-tests |
-| mender-runner-n2-highcpu-16  | n2-highcpu-16    | mender-qa-worker-backend-integration-tests,mender-qa-worker-gui-tests,mender-qa-worker-mender-convert-tests |
-| mender-runner-n2-standard-8  | n2-standard-8    | _currently not in use_                     |
-| mender-runner-n2d-standard-8 | n2d-standard-8   | _currently not in use_                     |
-| mender-runner-n2d-standard-4 | n2d-standard-4   | mender-qa-worker-generic-heavy             |
-| mender-runner-n2d-standard-2 | n2d-standard-2   | mender-qa-worker-generic,mender-qa-worker-generic-light |
-| mender-runner-n1-standard-1  | n1-standard-1    | _currently not in use_                     |
+| Runner's name                | machine type         | Pipeline tags                                                                                               | Privileged |
+| ---------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- |
+| mender-runner-n2-standard-16 | GCP n2-standard-16   | mender-qa-worker-integration-tests,mender-qa-worker-client-acceptance-tests                                 | true       |
+| mender-runner-n2-highcpu-16  | GCP n2-highcpu-16    | mender-qa-worker-backend-integration-tests,mender-qa-worker-gui-tests,mender-qa-worker-mender-convert-tests | true       |
+| mender-runner-n2-standard-8  | GCP n2-standard-8    | _currently not in use_                                                                                      | true       |
+| mender-runner-n2d-standard-8 | GCP n2d-standard-8   | _currently not in use_                                                                                      | true       |
+| mender-runner-n2d-standard-4 | GCP n2d-standard-4   | mender-qa-worker-generic-heavy                                                                              | true       |
+| mender-runner-n2d-standard-2 | GCP n2d-standard-2   | mender-qa-worker-generic,mender-qa-worker-generic-light                                                     | true       |
+| mender-runner-n1-standard-1  | GCP n1-standard-1    | _currently not in use_                                                                                      | true       |
+| hetzner-amd-beefy            | Hetzner EX130-R      | hetzner-amd-beefy                                                                                           | false      |
+| hetzner-amd-beefy-privileged | Hetzner AX41-NVMe    | hetzner-amd-beefy-privileged                                                                                | true       |
+| hetzner-arm                  | Hetzner CAX21        | hetzner-arm                                                                                                 | false      |
 
 
 ## Installing systemd services and timers
