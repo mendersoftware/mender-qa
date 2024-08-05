@@ -426,12 +426,6 @@ init_environment() {
         exit 1
     fi
 
-    # Clean up build slave.
-    if [ "$CLEAN_BUILD_CACHE" = "true" ]
-    then
-        sudo rm -rf /mnt/sstate-cache/*
-    fi
-
     # Get mender-binary-delta tarball and add the generator to the PATH
     if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
         local version=$(get_mender_binary_delta_version)
