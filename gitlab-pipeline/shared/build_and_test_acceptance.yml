@@ -2,7 +2,7 @@
 .template_build_test_acc:
   tags:
     - mender-qa-worker-client-acceptance-tests
-  image: mendersoftware/mender-test-containers:mender-client-acceptance-testing
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:mender-client-acceptance-testing-1410501063
   variables:
     DOCKER_BUILDKIT: 1
   needs:
