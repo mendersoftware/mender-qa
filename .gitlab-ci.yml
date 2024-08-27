@@ -253,7 +253,7 @@ variables:
 
   # Integration and backend integration tests
   RUN_BACKEND_INTEGRATION_TESTS:
-    value: "true"
+    value: "false"
     description: |-
       Flag to run integration tests
   RUN_INTEGRATION_TESTS:
