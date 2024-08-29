@@ -125,12 +125,9 @@ Set a weekly schedule to build master pipeline for every Tuesday evening, at 9 P
 
 ## mender-qa
 
-1. Modify Mender QA Pipeline:
+If the repository is going to be part of the client bundle, modify Mender QA Pipeline:
   * ref https://github.com/mendersoftware/mender-qa/blob/master/.gitlab-ci.yml
   * Add new repo into `variables`
-2. Modify `servers-build.sh`
-  * ref https://github.com/mendersoftware/mender-qa/blob/master/scripts/servers-build.sh
-  * Add the new Docker images, if applicable, to `Build server repositories.`
 
 ## mender-test-bot (integration-test-runner)
 
