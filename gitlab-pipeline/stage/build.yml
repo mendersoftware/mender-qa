@@ -61,88 +61,12 @@ build:client:docker:
   after_script:
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
-build:servers:
-  tags:
-    - mender-qa-worker-generic-heavy
-  stage: build
-  only:
-    variables:
-      - $BUILD_SERVERS == "true"
-      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
-      - $RUN_INTEGRATION_TESTS == "true"
-  variables:
-    DOCKER_BUILDKIT: 1
-    ROLE_ARN: "arn:aws:iam::175683096866:role/nt-cicd-mender-binary-delta-ro"
-  needs:
-    - init:workspace
-  allow_failure: false
-  image: docker
-  services:
-    - docker:dind
-  id_tokens:
-    AWS_OIDC_TOKEN:
-      aud: https://gitlab.com
-  before_script:
-    # Default value, will later be overwritten if successful
-    - echo "failure" > /JOB_RESULT.txt
-    # Dependencies
-    - apk --update --no-cache add bash git make python3 py-pip curl jq xz
-    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
-    - pip3 install --break-system-packages -r requirements.txt
-    - pip3 install --break-system-packages awscli
-    # Post job status
-    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
-    # Prepare workspace
-    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.xz /tmp
-    - rm -rf ${WORKSPACE}
-    - mkdir -p ${WORKSPACE}
-    - cd ${WORKSPACE}
-    - xz -d /tmp/workspace.tar.xz
-    - tar -xf /tmp/workspace.tar
-    # Gitlab AWS OIDC mapping auth
-    # To get s3://mender-binaries/mender-binary-delta objects
-    - >
-      export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s"
-      $(aws sts assume-role-with-web-identity
-      --role-arn ${ROLE_ARN}
-      --role-session-name "GitLabRunner-${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
-      --web-identity-token ${AWS_OIDC_TOKEN}
-      --duration-seconds ${AWS_OIDC_TOKEN_TIMEOUT:-3600}
-      --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
-      --output text))
-    - aws sts get-caller-identity
-  script:
-    - ${WORKSPACE}/mender-qa/scripts/servers-build.sh
-    - echo "success" > /JOB_RESULT.txt
-  after_script:
-    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - if [ "$(cat /JOB_RESULT.txt)" != "success" ]; then ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"; fi
-
-    - mkdir -p stage-artifacts
-    - for image in $(${CI_PROJECT_DIR}/../integration/extra/release_tool.py -l docker); do
-    -   if ! echo $image | egrep -q 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'; then
-    -     docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker $image docker_url)
-    -     docker save $docker_url:pr -o stage-artifacts/${image}.tar
-    -   fi
-    - done
-
-    - ls -lh stage-artifacts/
-    # Post job status
-    - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
-
-  artifacts:
-    expire_in: 2w
-    paths:
-      - stage-artifacts/
-
 build:mender-cli:
   tags:
     - mender-qa-worker-generic-light
   stage: build
   only:
     variables:
-      - $BUILD_SERVERS == "true"
       - $RUN_BACKEND_INTEGRATION_TESTS == "true"
       - $RUN_INTEGRATION_TESTS == "true"
   image: golang:1.20-alpine3.18
@@ -282,6 +206,48 @@ build:mender-monitor:package:
   artifacts:
     paths:
       - stage-artifacts
+
+build:mender-gateway:docker:
+  tags:
+    - mender-qa-worker-generic-light
+  variables:
+    DOCKER_BUILDKIT: 1
+  stage: build
+  needs:
+    - init:workspace
+  allow_failure: false
+  image: docker
+  services:
+    - docker:dind
+  before_script:
+    # Dependencies
+    - apk --update --no-cache add bash git make python3 py-pip curl jq xz
+    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
+    - pip3 install --break-system-packages -r requirements.txt
+    # Prepare workspace
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mv workspace.tar.xz /tmp
+    - rm -rf ${WORKSPACE}
+    - mkdir -p ${WORKSPACE}
+    - cd ${WORKSPACE}
+    - xz -d /tmp/workspace.tar.xz
+    - tar -xf /tmp/workspace.tar
+  script:
+    - docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker mender-gateway docker_url)
+    - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-gateway
+    - docker build -t $docker_url:pr .
+    - $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-gateway --version pr
+  after_script:
+    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+    - mkdir -p stage-artifacts
+    - docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker mender-gateway docker_url)
+    - docker save $docker_url:pr -o stage-artifacts/mender-gateway.tar
+    - ls -lh stage-artifacts/
+
+  artifacts:
+    expire_in: 2w
+    paths:
+      - stage-artifacts/
 
 build:mender-gateway:package:
   tags:

@@ -20,62 +20,6 @@ variables:
     value: "master"
     description: |-
       Version of mender-artifact
-  MENDER_CONDUCTOR_REV:
-    value: "master"
-    description: |-
-      Version of mender-conductor
-  MENDER_CONDUCTOR_ENTERPRISE_REV:
-    value: "master"
-    description: |-
-      Version of mender-conductor-enterprise
-  IOT_MANAGER_REV:
-    value: "master"
-    description: |-
-      Version of iot-manager
-  MENDER_AUTH_AZURE_IOT_REV:
-    value: "master"
-    description: |-
-      Version of mender-auth-azure-iot
-  DEPLOYMENTS_REV:
-    value: "master"
-    description: |-
-      Version of deployments
-  DEPLOYMENTS_ENTERPRISE_REV:
-    value: "master"
-    description: |-
-      Version of deployments-enterprise
-  DEVICEAUTH_REV:
-    value: "master"
-    description: |-
-      Version of deviceauth
-  DEVICEAUTH_ENTERPRISE_REV:
-    value: "master"
-    description: |-
-      Version of deviceauth-enterprise
-  GUI_REV:
-    value: "master"
-    description: |-
-      Version of gui
-  INVENTORY_REV:
-    value: "master"
-    description: |-
-      Version of inventory
-  INVENTORY_ENTERPRISE_REV:
-    value: "master"
-    description: |-
-      Version of inventory-enterprise
-  USERADM_REV:
-    value: "master"
-    description: |-
-      Version of useradm
-  USERADM_ENTERPRISE_REV:
-    value: "master"
-    description: |-
-      Version of useradm-enterprise
-  MENDER_API_GATEWAY_DOCKER_REV:
-    value: "master"
-    description: |-
-      Version of mender-api-gateway-docker
   MENDER_CLI_REV:
     value: "master"
     description: |-
@@ -84,26 +28,6 @@ variables:
     value: "master"
     description: |-
       Version of integration
-  TENANTADM_REV:
-    value: "master"
-    description: |-
-      Version of tenantadm
-  WORKFLOWS_REV:
-    value: "master"
-    description: |-
-      Version of workflows
-  WORKFLOWS_ENTERPRISE_REV:
-    value: "master"
-    description: |-
-      Version of workflows-enterprise
-  CREATE_ARTIFACT_WORKER_REV:
-    value: "master"
-    description: |-
-      Version of create-artifact-worker
-  MENDER_STRESS_TEST_CLIENT_REV:
-    value: "master"
-    description: |-
-      Version of mender-stress-test-client
   META_OPENEMBEDDED_REV:
     value: "scarthgap"
     description: |-
@@ -116,14 +40,6 @@ variables:
     value: "master"
     description: |-
       Version of auditlogs
-  MTLS_AMBASSADOR_REV:
-    value: "master"
-    description: |-
-      Version of mtls-ambassador
-  DEVICECONNECT_REV:
-    value: "master"
-    description: |-
-      Version of deviceconnect
   MENDER_CONNECT_REV:
     value: "master"
     description: |-
@@ -136,30 +52,14 @@ variables:
     value: "master"
     description: |-
       Version of mender-snapshot
-  DEVICECONFIG_REV:
-    value: "master"
-    description: |-
-      Version of deviceconfig
-  DEVICEMONITOR_REV:
-    value: "master"
-    description: |-
-      Version of devicemonitor
   MONITOR_CLIENT_REV:
     value: "master"
     description: |-
       Version of monitor-client
-  REPORTING_REV:
-    value: "master"
-    description: |-
-      Version of reporting
   MENDER_GATEWAY_REV:
     value: "master"
     description: |-
       Version of mender-gateway
-  GENERATE_DELTA_WORKER_REV:
-    value: "master"
-    description: |-
-      Version of generate-delta-worker
   MENDER_CI_WORKFLOWS_REV:
     value: "master"
     description: |-
@@ -180,10 +80,6 @@ variables:
     value: "true"
     description: |-
       Flag to build client for integration tests. False means use prebuilt client from upstream
-  BUILD_SERVERS:
-    value: "true"
-    description: |-
-      Flag to build micro-services for integration tests. Required for integration tests.
 
   # Client test stage
   BUILD_QEMUX86_64_UEFI_GRUB:
@@ -251,11 +147,7 @@ variables:
     description: |-
       Specify a subsets of tests to run. Applicable for client acceptance tests
 
-  # Integration and backend integration tests
-  RUN_BACKEND_INTEGRATION_TESTS:
-    value: "true"
-    description: |-
-      Flag to run integration tests
+  # Integration tests
   RUN_INTEGRATION_TESTS:
     value: "true"
     description: |-
@@ -270,10 +162,6 @@ variables:
     value: "4"
     description: |-
       Set the parallel factor for integration tests
-  TESTS_IN_PARALLEL_BACKEND_INTEGRATION:
-    value: "2"
-    description: |-
-      Set the parallel factor for backend integration tests
   TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE:
     value: "2"
     description: |-
