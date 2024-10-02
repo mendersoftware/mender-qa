@@ -223,6 +223,7 @@ test:integration:prebuilt_client:open_source:
     - init:workspace
     - build:mender-artifact
     - build:mender-cli
+    - build:mender-gateway:docker
 
 
 test:integration:prebuilt_client:enterprise:
