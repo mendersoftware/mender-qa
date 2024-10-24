@@ -374,11 +374,8 @@ clean_build_config() {
 
 # restore the changes made by clean_build_config and to build the regular images
 # regular being the ones that run on the devices initially
-# the bitbake mannder-artifact-info part is needed to pickup the MENDER_ARTIFACT_NAME
-# change
 restore_build_config() {
     mv -fv "${BUILDDIR}/conf/local.conf.backup" "${BUILDDIR}/conf/local.conf"
-    bitbake mender-artifact-info
 }
 
 # copies and returns the file path to the clean image, used later in the tests to update to
