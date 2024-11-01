@@ -147,21 +147,7 @@ variables:
     description: |-
       Specify a subsets of tests to run. Applicable for client acceptance tests
 
-  # Integration tests
-  RUN_INTEGRATION_TESTS:
-    value: "true"
-    description: |-
-      Flag to run backend integration tests
-  SPECIFIC_INTEGRATION_TEST:
-    value: ""
-    description: |-
-      Specify a subsets of tests to run. Applicable for integration tests
-
   # Parallel factor for tests
-  TESTS_IN_PARALLEL_INTEGRATION:
-    value: "4"
-    description: |-
-      Set the parallel factor for integration tests
   TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE:
     value: "2"
     description: |-
@@ -232,7 +218,6 @@ include:
   - local: "/gitlab-pipeline/stage/init.yml"
   - local: "/gitlab-pipeline/stage/build.yml"
   - local: "/gitlab-pipeline/stage/yocto-build-n-test.yml"
-  - local: "/gitlab-pipeline/stage/test.yml"
   - local: "/gitlab-pipeline/stage/trigger-packages.yml"
   - local: "/gitlab-pipeline/stage/trigger-images.yml"
   - local: "/gitlab-pipeline/stage/release.yml"

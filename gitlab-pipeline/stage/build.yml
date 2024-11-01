@@ -65,10 +65,6 @@ build:mender-cli:
   tags:
     - mender-qa-worker-generic-light
   stage: build
-  only:
-    variables:
-      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
-      - $RUN_INTEGRATION_TESTS == "true"
   image: golang:1.20-alpine3.18
   needs:
     - init:workspace
@@ -124,8 +120,6 @@ build:mender-artifact:
   only:
     variables:
       - $BUILD_CLIENT == "true"
-      - $RUN_BACKEND_INTEGRATION_TESTS == "true"
-      - $RUN_INTEGRATION_TESTS == "true"
   variables:
     DOCKER_BUILDKIT: 1
   image: docker
