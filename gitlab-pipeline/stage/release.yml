@@ -262,7 +262,7 @@ release_board_artifacts:raspberrypi4:automatic:
   # for "init:workspace", "build:mender-cli" and "build:mender-artifact".
   only:
     variables:
-      - ($BUILD_SERVERS == "true" && $BUILD_CLIENT == "true") || $RUN_INTEGRATION_TESTS == "true"
+      - $BUILD_SERVERS == "true" && $BUILD_CLIENT == "true"
   stage: release
   image: debian:buster
   before_script:
