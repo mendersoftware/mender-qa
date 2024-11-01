@@ -13,7 +13,6 @@
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
     - service sysstat start && sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
-    - apt update && apt install -yyq xz-utils
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Export required yocto-build script variables
@@ -33,12 +32,11 @@
     - mount.nfs4 ${SSTATE_CACHE_INTRNL_ADDR}:/sstate-cache /mnt/sstate-cache
     # Traps only work if executed in a sub shell.
     - "("
-    - mv workspace.tar.xz stage-artifacts /tmp
+    - mv workspace.tar.gz stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - xz -d /tmp/workspace.tar.xz
-    - tar -xf /tmp/workspace.tar
+    - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/stage-artifacts .
 
     - function handle_exit() {

@@ -33,13 +33,11 @@
 
     # Restore workspace from init stage
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - apk add xz
-    - mv workspace.tar.xz stage-artifacts /tmp
+    - mv workspace.tar.gz stage-artifacts /tmp
     - rm -rf ${WORKSPACE}
     - mkdir -p ${WORKSPACE}
     - cd ${WORKSPACE}
-    - xz -d /tmp/workspace.tar.xz
-    - tar -xf /tmp/workspace.tar
+    - tar -xf /tmp/workspace.tar.gz
     - mv /tmp/stage-artifacts .
 
     # Dependencies for post job status and io stats
