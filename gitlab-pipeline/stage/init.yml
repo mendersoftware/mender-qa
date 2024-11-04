@@ -161,7 +161,7 @@ init:workspace:
 
     # Save artifact the rest of the pipeline
     - tar -cf /tmp/workspace.tar .
-    - xz -${WORKSPACE_XZ_LEVEL:-1} ${WORKSPACE_XZ_ARGS} /tmp/workspace.tar
+    - xz -${WORKSPACE_XZ_LEVEL:-0} ${WORKSPACE_XZ_ARGS} /tmp/workspace.tar
     - mv /tmp/workspace.tar.xz ${CI_PROJECT_DIR}/workspace.tar.xz
 
     # Always keep this at the end of the script stage
