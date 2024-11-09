@@ -41,7 +41,7 @@
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
 
 
-release_docker_images:manual:
+release:mender-3.6:docker:all-images:manual:
   when: manual
   extends: .template_release_docker_images
   script:
@@ -64,7 +64,7 @@ release_docker_images:manual:
     - done
 
 
-release_docker_multiplatform_images:manual:
+release:mender-3.7:docker:server-images:manual:
   when: manual
   extends: .template_release_docker_images
   # We only need init:workspace to inhering the environment - we retag upstream images from the same Git sha
@@ -590,13 +590,13 @@ release_mender-gateway:automatic:
 
 # This job allows mender repo to publish the related Docker client images on
 # merges to master or release branches.
-release_docker_images:client-only:manual:
+release:mender-3.7:docker:client-images:manual:
   when: manual
   extends: .template_release_docker_images:client-only
 
 # This job allows a release to publish only the client images. Specifically designed for Mender 3.7
 # series, to complement job release_docker_multiplatform_images:manual
-release_docker_images:client-only:automatic:
+release:mender-3.7:docker:client-images:automatic:
   only:
     variables:
       - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
