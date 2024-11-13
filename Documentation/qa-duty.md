@@ -25,10 +25,26 @@ test failures are genuine or spurious.
 By the end of the QA duty period, all failed tests in nightly builds (link above)
 should either be fixed or reported in JIRA tasks to follow-up in the next period.
 
-### Nightly Mender QA build
+### Nightly Mender QA build (client only)
 
 Link: https://qastatus.mender.io/nightlies
 Link: https://gitlab.com/Northern.tech/Mender/mender-qa/-/pipelines?page=1&scope=all&source=schedule
+
+There is no golden rule on what to do when the "Last Pipeline" in the link above
+is not green.
+
+The general advise is to do a short investigation before asking for help from
+others in the team. For obvious test infra errors we can just re-run the jobs;
+for actual test failures we need to asses if it might be a regression or not.
+
+### Nightly Mender Server Integration tests
+
+Link: *qastatus link pending*
+Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipeline_schedules
+Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipelines?page=1&scope=all&source=schedule
+ 
+These tests are related to the Mender Server monorepo artifacts from `main`, 
+tesing it over the current Mender client artifacts `master`.
 
 There is no golden rule on what to do when the "Last Pipeline" in the link above
 is not green.
