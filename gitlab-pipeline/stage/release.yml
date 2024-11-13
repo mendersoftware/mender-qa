@@ -79,9 +79,6 @@ release:testing-boards:beagleboneblack:automatic:
     - mender-qa-worker-generic-light
   # Jobs including this template must set either "dependencies" or "needs"
   # for "init:workspace", "build:mender-cli" and "build:mender-artifact".
-  only:
-    variables:
-      - $BUILD_SERVERS == "true" && $BUILD_CLIENT == "true"
   stage: release
   image: debian:12
   before_script:
