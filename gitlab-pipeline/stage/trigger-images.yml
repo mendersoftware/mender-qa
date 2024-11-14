@@ -32,7 +32,7 @@ trigger:mender-convert:automatic:
   needs:
     - job: trigger:mender-dist-packages
       artifacts: false
-    - job: release_binary_tools:automatic
+    - job: release:mender-cli-artifact:automatic
       artifacts: false
   rules:
     - if: '$BUILD_MENDER_CONVERT == "true" && $PUBLISH_RELEASE_AUTOMATIC == "true"'

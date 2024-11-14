@@ -33,142 +33,7 @@
           --key ${client_version}/${PUBLISH_BOARD_NAME}/mender-${PUBLISH_BOARD_NAME}_${client_version}.sdimg.gz
     - fi
 
-release_board_artifacts:qemux86-64-uefi-grub:manual:
-  variables:
-    PUBLISH_BOARD_NAME: qemux86-64-uefi-grub
-  dependencies:
-    - init:workspace
-    - test:acceptance:qemux86_64:uefi_grub
-  when: manual
-  only:
-    variables:
-      - $BUILD_QEMUX86_64_UEFI_GRUB == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:qemux86-64-uefi-grub:automatic:
-  variables:
-    PUBLISH_BOARD_NAME: qemux86-64-uefi-grub
-  dependencies:
-    - init:workspace
-    - test:acceptance:qemux86_64:uefi_grub
-  only:
-    variables:
-      - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_QEMUX86_64_UEFI_GRUB == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:vexpress-qemu:manual:
-  variables:
-    PUBLISH_BOARD_NAME: vexpress-qemu
-  dependencies:
-    - init:workspace
-    - test:acceptance:vexpress_qemu
-  when: manual
-  only:
-    variables:
-      - $BUILD_VEXPRESS_QEMU == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:vexpress-qemu:automatic:
-  variables:
-    PUBLISH_BOARD_NAME: vexpress-qemu
-  dependencies:
-    - init:workspace
-    - test:acceptance:vexpress_qemu
-  only:
-    variables:
-      - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_VEXPRESS_QEMU == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:qemux86-64-bios-grub-gpt:manual:
-  variables:
-    PUBLISH_BOARD_NAME: qemux86-64-bios-grub-gpt
-  dependencies:
-    - init:workspace
-    - test:acceptance:qemux86_64:bios_grub_gpt
-  when: manual
-  only:
-    variables:
-      - $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:qemux86-64-bios-grub-gpt:automatic:
-  variables:
-    PUBLISH_BOARD_NAME: qemux86-64-bios-grub-gpt
-  dependencies:
-    - init:workspace
-    - test:acceptance:qemux86_64:bios_grub_gpt
-  only:
-    variables:
-      - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_QEMUX86_64_BIOS_GRUB_GPT == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:qemux86-64-bios-grub:manual:
-  variables:
-    PUBLISH_BOARD_NAME: qemux86-64-bios-grub
-  dependencies:
-    - init:workspace
-    - test:acceptance:qemux86_64:bios_grub
-  when: manual
-  only:
-    variables:
-      - $BUILD_QEMUX86_64_BIOS_GRUB == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:qemux86-64-bios-grub:automatic:
-  variables:
-    PUBLISH_BOARD_NAME: qemux86-64-bios-grub
-  dependencies:
-    - init:workspace
-    - test:acceptance:qemux86_64:bios_grub
-  only:
-    variables:
-      - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_QEMUX86_64_BIOS_GRUB == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:vexpress-qemu-uboot-uefi-grub:manual:
-  variables:
-    PUBLISH_BOARD_NAME: vexpress-qemu-uboot-uefi-grub
-  dependencies:
-    - init:workspace
-    - test:acceptance:vexpress_qemu:uboot_uefi_grub
-  when: manual
-  only:
-    variables:
-      - $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:vexpress-qemu-uboot-uefi-grub:automatic:
-  variables:
-    PUBLISH_BOARD_NAME: vexpress-qemu-uboot-uefi-grub
-  dependencies:
-    - init:workspace
-    - test:acceptance:vexpress_qemu:uboot_uefi_grub
-  only:
-    variables:
-      - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB == "true"
-  extends: .template_release_board_artifacts
-
-# NOTE: vexpress-qemu-flash has no artifacts to publish
-# release_board_artifacts:vexpress-qemu-flash:manual:
-#   dependencies:
-#     - init:workspace
-#     - test:acceptance:vexpress_qemu:flash
-#   when: manual
-#   only:
-#     variables:
-#       - $BUILD_VEXPRESS_QEMU_FLASH == "true"
-#   extends: .template_release_board_artifacts
-
-# release_board_artifacts:vexpress-qemu-flash:automatic:
-#   dependencies:
-#     - init:workspace
-#     - test:acceptance:vexpress_qemu:flash
-#   only:
-#     variables:
-#       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_VEXPRESS_QEMU_FLASH == "true"
-#   extends: .template_release_board_artifacts
-
-release_board_artifacts:beagleboneblack:manual:
+release:testing-boards:beagleboneblack:manual:
   variables:
     PUBLISH_BOARD_NAME: beagleboneblack
   dependencies:
@@ -180,7 +45,7 @@ release_board_artifacts:beagleboneblack:manual:
       - $BUILD_BEAGLEBONEBLACK == "true"
   extends: .template_release_board_artifacts
 
-release_board_artifacts:beagleboneblack:automatic:
+release:testing-boards:beagleboneblack:automatic:
   variables:
     PUBLISH_BOARD_NAME: beagleboneblack
   dependencies:
@@ -189,52 +54,6 @@ release_board_artifacts:beagleboneblack:automatic:
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_BEAGLEBONEBLACK == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:raspberrypi3:manual:
-  variables:
-    PUBLISH_BOARD_NAME: raspberrypi3
-  dependencies:
-    - init:workspace
-    - build:acceptance:raspberrypi3
-  when: manual
-  only:
-    variables:
-      - $BUILD_RASPBERRYPI3 == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:raspberrypi3:automatic:
-  variables:
-    PUBLISH_BOARD_NAME: raspberrypi3
-  dependencies:
-    - init:workspace
-    - build:acceptance:raspberrypi3
-  only:
-    variables:
-      - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_RASPBERRYPI3 == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:raspberrypi4:manual:
-  variables:
-    PUBLISH_BOARD_NAME: raspberrypi4
-  dependencies:
-    - init:workspace
-    - build:acceptance:raspberrypi4
-  when: manual
-  only:
-    variables:
-      - $BUILD_RASPBERRYPI4 == "true"
-  extends: .template_release_board_artifacts
-
-release_board_artifacts:raspberrypi4:automatic:
-  variables:
-    PUBLISH_BOARD_NAME: raspberrypi4
-  dependencies:
-    - init:workspace
-    - build:acceptance:raspberrypi4
-  only:
-    variables:
-      - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_RASPBERRYPI4 == "true"
   extends: .template_release_board_artifacts
 
 .publish_helper_functions: &publish_helper_functions |
@@ -260,9 +79,6 @@ release_board_artifacts:raspberrypi4:automatic:
     - mender-qa-worker-generic-light
   # Jobs including this template must set either "dependencies" or "needs"
   # for "init:workspace", "build:mender-cli" and "build:mender-artifact".
-  only:
-    variables:
-      - $BUILD_SERVERS == "true" && $BUILD_CLIENT == "true"
   stage: release
   image: debian:12
   before_script:
@@ -340,7 +156,7 @@ release_board_artifacts:raspberrypi4:automatic:
 
 # Use "needs" for :manual to unlock mender-convert build in advance
 # or to trigger it despite mender-qa tests errors
-release_binary_tools:manual:
+release:mender-cli-artifact:manual:
   when: manual
   needs:
     - init:workspace
@@ -348,7 +164,7 @@ release_binary_tools:manual:
     - build:mender-artifact
   extends: .template_release_binary_tools
 
-release_binary_tools:automatic:
+release:mender-cli-artifact:automatic:
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
@@ -389,11 +205,11 @@ release_binary_tools:automatic:
     - echo "Publishing $mender_monitor_version version to s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_monitor_version/"
     - aws s3 cp stage-artifacts/mender-monitor-*.tar.gz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_monitor_version/
 
-release_mender-monitor:manual:
+release:mender-monitor:manual:
   when: manual
   extends: .template_release_mender-monitor
 
-release_mender-monitor:automatic:
+release:mender-monitor:automatic:
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
@@ -436,11 +252,11 @@ release_mender-monitor:automatic:
     - aws s3 cp stage-artifacts/mender-gateway-*.tar.xz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH_YOCTO/$mender_gateway_version/
     - aws s3 cp stage-artifacts/mender-gateway-examples-*.tar s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH_EXAMPLES/$mender_gateway_version/
 
-release_mender-gateway:manual:
+release:mender-gateway:manual:
   when: manual
   extends: .template_release_mender-gateway
 
-release_mender-gateway:automatic:
+release:mender-gateway:automatic:
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
@@ -488,13 +304,13 @@ release_mender-gateway:automatic:
 
 # This job allows mender repo to publish the related Docker client images on
 # merges to master or release branches.
-release_docker_images:client-only:manual:
+release:virtual-client:manual:
   when: manual
   extends: .template_release_docker_images:client-only
 
 # This job allows a release to publish only the client images. Specifically designed for Mender 3.7
 # series, to complement job release_docker_multiplatform_images:manual
-release_docker_images:client-only:automatic:
+release:virtual-client:automatic:
   only:
     variables:
       - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"

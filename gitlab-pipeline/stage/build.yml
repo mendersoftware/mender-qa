@@ -117,9 +117,6 @@ build:mender-artifact:
   tags:
     - mender-qa-worker-generic
   stage: build
-  only:
-    variables:
-      - $BUILD_CLIENT == "true"
   variables:
     DOCKER_BUILDKIT: 1
   image: docker
