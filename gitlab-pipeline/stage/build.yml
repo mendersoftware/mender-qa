@@ -198,48 +198,6 @@ build:mender-monitor:package:
     paths:
       - stage-artifacts
 
-build:mender-gateway:docker:
-  tags:
-    - mender-qa-worker-generic-light
-  variables:
-    DOCKER_BUILDKIT: 1
-  stage: build
-  needs:
-    - init:workspace
-  allow_failure: false
-  image: docker
-  services:
-    - docker:dind
-  before_script:
-    # Dependencies
-    - apk --update --no-cache add bash git make python3 py-pip curl jq xz
-    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
-    - pip3 install --break-system-packages -r requirements.txt
-    # Prepare workspace
-    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar.xz /tmp
-    - rm -rf ${WORKSPACE}
-    - mkdir -p ${WORKSPACE}
-    - cd ${WORKSPACE}
-    - xz -d /tmp/workspace.tar.xz
-    - tar -xf /tmp/workspace.tar
-  script:
-    - docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker mender-gateway docker_url)
-    - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-gateway
-    - docker build -t $docker_url:pr .
-    - $WORKSPACE/integration/extra/release_tool.py --set-version-of mender-gateway --version pr
-  after_script:
-    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mkdir -p stage-artifacts
-    - docker_url=$(${CI_PROJECT_DIR}/../integration/extra/release_tool.py --map-name docker mender-gateway docker_url)
-    - docker save $docker_url:pr -o stage-artifacts/mender-gateway.tar
-    - ls -lh stage-artifacts/
-
-  artifacts:
-    expire_in: 2w
-    paths:
-      - stage-artifacts/
-
 build:mender-gateway:package:
   tags:
     - mender-qa-worker-generic-light
