@@ -1,0 +1,21 @@
+.template:trigger:integration-tests:
+  stage: trigger:integration
+  inherit:
+    variables: false
+  variables:
+    MENDER_CLIENT_TAG: mender-$INTEGRATION_REV
+    MENDER_GATEWAY_QEMU_TAG: mender-$INTEGRATION_REV
+    MENDER_GATEWAY_TAG: $MENDER_GATEWAY_REV
+    RUN_TESTS_FULL_INTEGRATION: "true"
+    # TODO: remove these parallel 1 overrides whenever tests are stable
+    CI_JOBS_IN_PARALLEL_INTEGRATION: 1
+    XDIST_JOBS_IN_PARALLEL_INTEGRATION: 1
+  trigger:
+    project: Northern.tech/Mender/integration
+    branch: $INTEGRATION_REV
+    strategy: depend
+
+trigger:integration-tests:manual:
+  needs: []
+  when: manual
+  extends: .template:trigger:integration-tests

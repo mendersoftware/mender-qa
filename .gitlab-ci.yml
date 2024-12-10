@@ -220,6 +220,7 @@ include:
   - local: "/gitlab-pipeline/stage/yocto-build-n-test.yml"
   - local: "/gitlab-pipeline/stage/trigger-packages.yml"
   - local: "/gitlab-pipeline/stage/trigger-images.yml"
+  - local: "/gitlab-pipeline/stage/trigger-integration.yml"
   - local: "/gitlab-pipeline/stage/release.yml"
   - local: "/gitlab-pipeline/stage/post.yml"
 
@@ -235,4 +236,5 @@ stages:
   - release
   - trigger:packages
   - trigger:images
+  - trigger:integration
   - .post
