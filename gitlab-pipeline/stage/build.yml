@@ -6,19 +6,23 @@ include:
 
 build:client:docker:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: build
   only:
     variables:
       - $BUILD_CLIENT == "true"
   variables:
     DOCKER_BUILDKIT: 1
+    GIT_SUBMODULE_STRATEGY: recursive
+    GIT_SUBMODULE_DEPTH: 1
+    DOCKER_VERSION: "27.3"
   needs:
     - init:workspace
   allow_failure: false
-  image: docker
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:${DOCKER_VERSION}
   services:
-    - docker:dind
+    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:${DOCKER_VERSION}-dind
+      alias: docker
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
