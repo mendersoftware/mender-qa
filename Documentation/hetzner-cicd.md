@@ -41,3 +41,10 @@ in Hetzner hosts, both bare-metal and VMs.
   pass show mender/cicd/hetznercloud/ssh_key-01-priv.pem | ssh-add - \
   ssh -J root@49.13.211.148 root@192.168.84.3
   ```
+
+## Secrets
+
+The Hetzener hosts are using the Docker Hub user `northerntechreadonly` to pull
+the images. The password is stored in the `mender/cicd/docker.com/northerntechreadonly`
+mystiko entry.
+
