@@ -1,9 +1,9 @@
 
 init:workspace:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: init
-  image: alpine:3.12
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine:3.12
   script:
     # Traps only work if executed in a sub shell.
     - "("
