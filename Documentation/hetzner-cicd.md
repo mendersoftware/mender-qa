@@ -17,8 +17,8 @@ in Hetzner hosts, both bare-metal and VMs.
 * IP: 49.12.169.71
 * Connection string:
   ```bash
-  eval `ssh-agent` \
-  pass show mender/cicd/hetznercloud/gitlab-hetzner-ax41-runner-ssh_key-priv.pem | ssh-add - \
+  eval `ssh-agent` && \
+  pass show mender/cicd/hetznercloud/gitlab-hetzner-ax41-runner-ssh_key-priv.pem | ssh-add - && \
   ssh root@49.12.169.71
   ```
 
@@ -27,7 +27,7 @@ in Hetzner hosts, both bare-metal and VMs.
 * IP: 65.108.231.138 
 * Connection string:
   ```bash
-  eval `ssh-agent` \
+  eval `ssh-agent` && \
   pass show mender/cicd/hetznercloud/gitlab-hetzner-ax41-runner-ssh_key-priv.pem | ssh-add - && ssh root@65.108.231.138
   ```
 
@@ -37,8 +37,8 @@ in Hetzner hosts, both bare-metal and VMs.
 * Console access: https://console.hetzner.cloud/projects/2768387/servers
 * Connection string:
   ```bash
-  eval `ssh-agent` \
-  pass show mender/cicd/hetznercloud/ssh_key-01-priv.pem | ssh-add - \
+  eval `ssh-agent` && \
+  pass show mender/cicd/hetznercloud/ssh_key-01-priv.pem | ssh-add - && \
   ssh -J root@49.13.211.148 root@192.168.84.3
   ```
 
