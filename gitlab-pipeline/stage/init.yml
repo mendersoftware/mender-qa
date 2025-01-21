@@ -126,13 +126,21 @@ init:workspace:
     -   git fetch --tags origin
     - )
 
-    # Add Mender repositories.
+    # Add Mender Client repositories.
     - for repo in $(integration/extra/release_tool.py --list --only-client); do
     -   checkout_repo
           git@github.com:mendersoftware/$repo
           go/src/github.com/mendersoftware/$repo
           $(repo_to_rev $repo)
     - done
+
+    # Add mender-cli repo
+    - if [ ! -d go/src/github.com/mendersoftware/mender-cli ]; then
+    -   checkout_repo
+          git@github.com:mendersoftware/mender-cli
+          go/src/github.com/mendersoftware/mender-cli
+          $(repo_to_rev mender-cli)
+    - fi
 
     # Add other repositories.
     - checkout_repo git://git.openembedded.org/meta-openembedded.git meta-openembedded $META_OPENEMBEDDED_REV
