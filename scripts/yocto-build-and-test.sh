@@ -206,17 +206,31 @@ EXTERNALSRC${sep}pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender
 EXTERNALSRC${sep}pn-mender-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
 EXTERNALSRC${sep}pn-mender-client = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-client-native = "$WORKSPACE/go"
-EXTERNALSRC${sep}pn-mender-artifact = "$WORKSPACE/go"
-EXTERNALSRC${sep}pn-mender-artifact-native = "$WORKSPACE/go"
-EXTERNALSRC${sep}pn-mender-connect= "$WORKSPACE/go"
-EXTERNALSRC${sep}pn-mender-setup= "$WORKSPACE/go"
-EXTERNALSRC${sep}pn-mender-snapshot= "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-connect = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-configure = "$WORKSPACE/go/src/github.com/mendersoftware/mender-configure-module"
 
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS${sep}remove = "do_patch"
 
 EOF
+
+    # Conditionally add EXTERNALSRC for independent components
+    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+EXTERNALSRC${sep}pn-mender-artifact = "$WORKSPACE/go"
+EXTERNALSRC${sep}pn-mender-artifact-native = "$WORKSPACE/go"
+EOF
+    fi
+    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-setup" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+EXTERNALSRC${sep}pn-mender-setup = "$WORKSPACE/go"
+EOF
+    fi
+    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+EXTERNALSRC${sep}pn-mender-snapshot = "$WORKSPACE/go"
+EOF
+    fi
 
     # Use network cache if present, if not, use local cache.
     if [ -d /mnt/sstate-cache ]; then
