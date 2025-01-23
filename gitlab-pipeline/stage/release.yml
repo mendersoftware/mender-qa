@@ -78,7 +78,7 @@ release:testing-boards:beagleboneblack:automatic:
   tags:
     - mender-qa-worker-generic-light
   # Jobs including this template must set either "dependencies" or "needs"
-  # for "init:workspace", "build:mender-cli" and "build:mender-artifact".
+  # for "init:workspace" and "build:mender-cli".
   stage: release
   image: debian:12
   before_script:
@@ -133,45 +133,23 @@ release:testing-boards:beagleboneblack:automatic:
     -     aws s3api put-object-acl --acl public-read --bucket mender --key "${key}"
     -   fi
     - fi
-    # mender-artifact
-    - mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version $INTEGRATION_REV)
-    - is_build_or_final_tag=0
-    - if is_final_tag "${mender_artifact_version}" || is_build_tag "${mender_artifact_version}"; then
-    -   echo "mender-artifact v${mender_artifact_version} is final or build tag."
-    -   is_build_or_final_tag=1
-    - fi
-    - echo "=== mender-artifact $mender_artifact_version ==="
-    - for bin in mender-artifact-darwin mender-artifact-linux mender-artifact-windows.exe; do
-    -   platform=${bin#mender-artifact-}
-    -   platform=${platform%.*}
-    -   key="mender-artifact/${mender_artifact_version}/${platform}/mender-artifact"
-    -   if [ $is_build_or_final_tag -eq 1 ] && is_published "mender" "${key}"; then
-    -     echo "Not publishing ${key} as it exists and is final or build tag."
-    -   else
-    -     echo "Publishing ${mender_artifact_version} version for ${platform} to S3"
-    -     aws s3 cp stage-artifacts/${bin} "s3://mender/${key}"
-    -     aws s3api put-object-acl --acl public-read --bucket mender --key "${key}"
-    -   fi
-    - done
 
 # Use "needs" for :manual to unlock mender-convert build in advance
 # or to trigger it despite mender-qa tests errors
-release:mender-cli-artifact:manual:
+release:mender-cli:manual:
   when: manual
   needs:
     - init:workspace
     - build:mender-cli
-    - build:mender-artifact
   extends: .template_release_binary_tools
 
-release:mender-cli-artifact:automatic:
+release:mender-cli:automatic:
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
   dependencies:
     - init:workspace
     - build:mender-cli
-    - build:mender-artifact
   extends: .template_release_binary_tools
 
 .template_release_mender-monitor:
