@@ -58,15 +58,22 @@ else
 fi
 
 # Open SSH port on 222.
-if type iptables; then
+if command -v iptables >/dev/null; then
     iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
     iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
-else
+elif command -v yum >/dev/null; then
     # for RHEL8: change port number in sshd_config and allow it in SELinux policy
     yum -e 0 -d 0 -y install policycoreutils-python-utils
     semanage port -a -t ssh_port_t -p tcp 222
     sed -i '/Port 22/a Port 222' /etc/ssh/sshd_config
     systemctl restart sshd
+elif command -v apk >/dev/null; then
+    # alpine case, jenkins pipeline runners
+    sed -i '/Port 22/a Port 222' /etc/ssh/sshd_config
+    service sshd restart
+else
+  echo "Didn't see iptables, yum or apk commands so don't know how to reconfigure sshd to listen on port 222."
+  exit 1
 fi
 
 apt_get() {
