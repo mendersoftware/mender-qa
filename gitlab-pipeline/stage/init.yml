@@ -19,10 +19,6 @@ init:workspace:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
     - apk --update add git openssh bash python3 curl py3-pip jq xz
 
-    # release_tool.py dependencies
-    - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
-    - pip3 install -r requirements.txt
-
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status pending "Gitlab ${CI_JOB_NAME} started" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
@@ -115,6 +111,8 @@ init:workspace:
     # should not need it.
     - (
     -   cd integration
+    # release_tool.py dependencies
+    -   pip3 install -r extra/requirements.txt
     #   Rename the branch we're on, so that it's not in the way for the
     #   subsequent fetch. It's ok if this fails, it just means we're not on any
     #   branch.
