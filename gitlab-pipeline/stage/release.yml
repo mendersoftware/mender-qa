@@ -272,19 +272,15 @@ release:mender-gateway:automatic:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
   script:
     # Load, tag and push mender-client-* images
-    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | egrep 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'); do
-    #   Historical note,
-    #   The version here used to be determined by the release_tool, which could distinguish between
-    #   git repo version and container image version. Today this is kind of messy, as we moved out
-    #   the backend to a separate repo but we haven't done deep changes in the release process for
-    #   the rest, and "--version-of" option gives bogus results.
-    #   TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
-    -   version=mender-${INTEGRATION_REV}
-    -   docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
-    -   docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
-    -   docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${docker_url}:${version}
-    -   docker push $docker_url:${version}
-    - done
+    - |
+      version=mender-${INTEGRATION_REV}
+      images=("mender-client-docker" "mender-client-docker-addons" "mender-client-qemu" "mender-client-qemu-rofs" "mender-gateway-qemu-commercial" "mender-monitor-qemu-commercial" "mender-qemu-rofs-commercial")
+      for image in "${images[@]}"; do
+          docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
+          tagged_image=docker.io/mendersoftware/${image}:${version}
+          docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${tagged_image}
+          docker push ${tagged_image}
+      done
 
 # This job allows mender repo to publish the related Docker client images on
 # merges to master or release branches.
