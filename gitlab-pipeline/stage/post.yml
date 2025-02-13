@@ -6,7 +6,7 @@ mender-qa:success:
   dependencies: []
   when: on_success
   # Keep overhead low by using a small image with curl preinstalled.
-  image: curlimages/curl-base
+  image: curlimages/curl
   before_script:
     - apk --update add jq
   script:
@@ -19,7 +19,7 @@ mender-qa:failure:
   dependencies: []
   when: on_failure
   # Keep overhead low by using a small image with curl preinstalled.
-  image: curlimages/curl-base
+  image: curlimages/curl
   before_script:
     - apk --update add jq
   script:
@@ -34,7 +34,7 @@ mender-qa:failure:
   # See https://docs.coveralls.io/parallel-build-webhook
   variables:
     COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
-  image: curlimages/curl-base
+  image: curlimages/curl
   dependencies:
     - init:workspace
   before_script:
