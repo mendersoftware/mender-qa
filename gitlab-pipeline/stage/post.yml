@@ -1,7 +1,7 @@
 
 mender-qa:success:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: .post
   dependencies: []
   when: on_success
@@ -14,7 +14,7 @@ mender-qa:success:
 
 mender-qa:failure:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: .post
   dependencies: []
   when: on_failure
@@ -28,7 +28,7 @@ mender-qa:failure:
 
 .coveralls:finish-build:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: .post
   dependencies: []
   # See https://docs.coveralls.io/parallel-build-webhook
