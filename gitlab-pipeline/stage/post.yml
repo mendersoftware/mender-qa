@@ -1,12 +1,12 @@
 
 mender-qa:success:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: .post
   dependencies: []
   when: on_success
   # Keep overhead low by using a small image with curl preinstalled.
-  image: curlimages/curl
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine/curl
   before_script:
     - apk --update add jq
   script:
@@ -14,12 +14,12 @@ mender-qa:success:
 
 mender-qa:failure:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: .post
   dependencies: []
   when: on_failure
   # Keep overhead low by using a small image with curl preinstalled.
-  image: curlimages/curl
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine/curl
   before_script:
     - apk --update add jq
   script:
@@ -28,13 +28,13 @@ mender-qa:failure:
 
 .coveralls:finish-build:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: .post
   dependencies: []
   # See https://docs.coveralls.io/parallel-build-webhook
   variables:
     COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
-  image: curlimages/curl
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine/curl
   dependencies:
     - init:workspace
   before_script:
