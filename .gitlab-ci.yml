@@ -233,8 +233,8 @@ stages:
   - build
   - yocto:build-n-test
   - test
-  - release
   - trigger:packages
   - trigger:images
   - trigger:integration
+  - release
   - .post

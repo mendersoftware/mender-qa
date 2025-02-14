@@ -3,19 +3,59 @@
   inherit:
     variables: false
   variables:
-    MENDER_CLIENT_TAG: mender-$INTEGRATION_REV
-    MENDER_GATEWAY_QEMU_TAG: mender-$INTEGRATION_REV
-    MENDER_GATEWAY_TAG: $MENDER_GATEWAY_REV
+    MENDER_CLIENT_REGISTRY: registry.gitlab.com
+    MENDER_CLIENT_ENTERPRISE_REGISTRY: registry.gitlab.com
+    MENDER_CLIENT_REPOSITORY: northern.tech/mender
+
+    MENDER_CLIENT_DOCKER_IMAGE: mender-qa
+    MENDER_CLIENT_DOCKER_TAG: ${CI_PIPELINE_ID}-mender-client-docker
+
+    MENDER_CLIENT_DOCKER_ADDONS_IMAGE: mender-qa
+    MENDER_CLIENT_DOCKER_ADDONS_TAG: ${CI_PIPELINE_ID}-mender-client-docker-addons
+
+    MENDER_CLIENT_QEMU_IMAGE: mender-qa
+    MENDER_CLIENT_QEMU_TAG: ${CI_PIPELINE_ID}-mender-client-qemu
+
+    MENDER_CLIENT_QEMU_ROFS_IMAGE: mender-qa
+    MENDER_CLIENT_QEMU_ROFS_TAG: ${CI_PIPELINE_ID}-mender-client-qemu-rofs
+
+    MENDER_GATEWAY_QEMU_COMMERCIAL_IMAGE: mender-qa
+    MENDER_GATEWAY_QEMU_COMMERCIAL_TAG: ${CI_PIPELINE_ID}-mender-gateway-qemu-commercial
+
+    MENDER_MONITOR_QEMU_COMMERCIAL_IMAGE: mender-qa
+    MENDER_MONITOR_QEMU_COMMERCIAL_TAG: ${CI_PIPELINE_ID}-mender-monitor-qemu-commercial
+
+    MENDER_QEMU_ROFS_COMMERCIAL_IMAGE: mender-qa
+    MENDER_QEMU_ROFS_COMMERCIAL_TAG: ${CI_PIPELINE_ID}-mender-qemu-rofs-commercial
+
+    MENDER_GATEWAY_TAG: ${MENDER_GATEWAY_REV}
+
     RUN_TESTS_FULL_INTEGRATION: "true"
     # TODO: remove these parallel 1 overrides whenever tests are stable
     CI_JOBS_IN_PARALLEL_INTEGRATION: 1
     XDIST_JOBS_IN_PARALLEL_INTEGRATION: 1
+
+trigger:generate-gitlab-integration-rev:
+  stage: trigger:integration
+  script:
+  # Convert INTEGRATION_REV on format `pull/0000/head` to `pr_0000` to specify which gitlab branch to trigger
+  - |
+    GITLAB_INTEGRATION_REV=$INTEGRATION_REV
+    if [[ "$INTEGRATION_REV" =~ ^pull/([0-9]+)/head$ ]]; then
+      GITLAB_INTEGRATION_REV="pr_${BASH_REMATCH[1]}"
+    fi
+  - echo "GITLAB_INTEGRATION_REV=$GITLAB_INTEGRATION_REV" >> gitlab_integration_rev.env
+  artifacts:
+    reports:
+      dotenv: gitlab_integration_rev.env
+
+trigger:integration-tests:
+  extends: .template:trigger:integration-tests
+  needs:
+    - trigger:generate-gitlab-integration-rev
+    - build:client:qemu
+  when: always
   trigger:
     project: Northern.tech/Mender/integration
-    branch: $INTEGRATION_REV
+    branch: $GITLAB_INTEGRATION_REV
     strategy: depend
-
-trigger:integration-tests:manual:
-  needs: []
-  when: manual
-  extends: .template:trigger:integration-tests

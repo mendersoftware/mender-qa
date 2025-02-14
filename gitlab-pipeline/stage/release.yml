@@ -51,6 +51,7 @@ release:testing-boards:beagleboneblack:automatic:
   dependencies:
     - init:workspace
     - build:acceptance:beagleboneblack
+    - trigger:integration-tests
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_BEAGLEBONEBLACK == "true"
@@ -150,6 +151,7 @@ release:mender-cli:automatic:
   dependencies:
     - init:workspace
     - build:mender-cli
+    - trigger:integration-tests
   extends: .template_release_binary_tools
 
 .template_release_mender-monitor:
@@ -160,9 +162,6 @@ release:mender-cli:automatic:
   variables:
     S3_BUCKET_NAME: "mender-binaries"
     S3_BUCKET_PATH: "mender-monitor/yocto"
-  dependencies:
-    - init:workspace
-    - build:mender-monitor:package
   before_script:
     # Install dependencies
     - apt update && apt install -yyq awscli git wget python3 python3-pip xz-utils
@@ -184,10 +183,17 @@ release:mender-cli:automatic:
     - aws s3 cp stage-artifacts/mender-monitor-*.tar.gz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_monitor_version/
 
 release:mender-monitor:manual:
+  dependencies:
+    - init:workspace
+    - build:mender-monitor:package
   when: manual
   extends: .template_release_mender-monitor
 
 release:mender-monitor:automatic:
+  dependencies:
+    - init:workspace
+    - build:mender-monitor:package
+    - trigger:integration-tests
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
@@ -202,9 +208,6 @@ release:mender-monitor:automatic:
     S3_BUCKET_NAME: "mender-binaries"
     S3_BUCKET_PATH_YOCTO: "mender-gateway/yocto"
     S3_BUCKET_PATH_EXAMPLES: "mender-gateway/examples"
-  dependencies:
-    - init:workspace
-    - build:mender-gateway:package
   before_script:
     # Early exit when building an integration version without mender-gateway
     - apt update && apt install -yyq xz-utils
@@ -231,10 +234,17 @@ release:mender-monitor:automatic:
     - aws s3 cp stage-artifacts/mender-gateway-examples-*.tar s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH_EXAMPLES/$mender_gateway_version/
 
 release:mender-gateway:manual:
+  dependencies:
+    - init:workspace
+    - build:mender-gateway:package
   when: manual
   extends: .template_release_mender-gateway
 
 release:mender-gateway:automatic:
+  dependencies:
+    - init:workspace
+    - build:mender-gateway:package
+    - trigger:integration-tests
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
@@ -247,10 +257,6 @@ release:mender-gateway:automatic:
   image: docker
   services:
     - docker:dind
-  dependencies:
-    - init:workspace
-    - build:client:qemu
-    - build:client:docker
   before_script:
     # Check correct dind setup
     - docker version
@@ -272,29 +278,40 @@ release:mender-gateway:automatic:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
   script:
     # Load, tag and push mender-client-* images
-    - for image in $($WORKSPACE/integration/extra/release_tool.py --list docker | egrep 'mender-client|mender-qemu|mender-monitor|mender-gateway-qemu-commercial'); do
-    #   Historical note,
-    #   The version here used to be determined by the release_tool, which could distinguish between
-    #   git repo version and container image version. Today this is kind of messy, as we moved out
-    #   the backend to a separate repo but we haven't done deep changes in the release process for
-    #   the rest, and "--version-of" option gives bogus results.
-    #   TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
-    -   version=mender-${INTEGRATION_REV}
-    -   docker_url=$($WORKSPACE/integration/extra/release_tool.py --map-name docker $image docker_url)
-    -   docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
-    -   docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${docker_url}:${version}
-    -   docker push $docker_url:${version}
-    - done
+    # Historical note,
+    # The version here used to be determined by the release_tool, which could distinguish between
+    # git repo version and container image version. Today this is kind of messy, as we moved out
+    # the backend to a separate repo but we haven't done deep changes in the release process for
+    # the rest, and "--version-of" option gives bogus results.
+    # TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
+    - |
+      version=mender-${INTEGRATION_REV}
+      images="mender-client-docker mender-client-docker-addons mender-client-qemu mender-client-qemu-rofs mender-gateway-qemu-commercial mender-monitor-qemu-commercial mender-qemu-rofs-commercial"
+      for image in $images; do
+          docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
+          tagged_image=docker.io/mendersoftware/${image}:${version}
+          docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${tagged_image}
+          docker push ${tagged_image}
+      done
 
 # This job allows mender repo to publish the related Docker client images on
 # merges to master or release branches.
 release:virtual-client:manual:
+  dependencies:
+    - init:workspace
+    - build:client:qemu
+    - build:client:docker
   when: manual
   extends: .template_release_docker_images:client-only
 
 # This job allows a release to publish only the client images. Specifically designed for Mender 3.7
 # series, to complement job release_docker_multiplatform_images:manual
 release:virtual-client:automatic:
+  dependencies:
+    - init:workspace
+    - build:client:qemu
+    - build:client:docker
+    - trigger:integration-tests
   only:
     variables:
       - $PUBLISH_DOCKER_CLIENT_IMAGES == "true"
