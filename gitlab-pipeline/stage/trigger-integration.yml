@@ -31,9 +31,6 @@
     MENDER_GATEWAY_TAG: ${MENDER_GATEWAY_REV}
 
     RUN_TESTS_FULL_INTEGRATION: "true"
-    # TODO: remove these parallel 1 overrides whenever tests are stable
-    CI_JOBS_IN_PARALLEL_INTEGRATION: 1
-    XDIST_JOBS_IN_PARALLEL_INTEGRATION: 1
 
 trigger:generate-gitlab-integration-rev:
   stage: trigger:integration
