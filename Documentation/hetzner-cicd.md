@@ -42,6 +42,10 @@ in Hetzner hosts, both bare-metal and VMs.
   ssh -J root@49.13.211.148 root@192.168.84.3
   ```
 
+### Hetzner VM for Zephyr testing
+* [Internal documentation](https://github.com/NorthernTechHQ/sre-iac/tree/main/hetzner-zephyr-qa)
+
+
 ## Secrets
 
 The Hetzener hosts are using the Docker Hub user `northerntechreadonly` to pull
