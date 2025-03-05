@@ -35,6 +35,8 @@
 
 trigger:generate-gitlab-integration-rev:
   stage: trigger:integration
+  rules:
+    - if: $RUN_INTEGRATION_TESTS == "true"
   script:
   # Convert INTEGRATION_REV on format `pull/0000/head` to `pr_0000` to specify which gitlab branch to trigger
   - |
@@ -49,6 +51,8 @@ trigger:generate-gitlab-integration-rev:
 
 trigger:integration-tests:
   extends: .template:trigger:integration-tests
+  rules:
+    - if: $RUN_INTEGRATION_TESTS == "true"
   needs:
     - trigger:generate-gitlab-integration-rev
     - build:client:qemu
