@@ -178,6 +178,10 @@ variables:
     value: "false"
     description: |-
       Flag to run tests in child pipeline mender-convert
+  RUN_INTEGRATION_TESTS:
+    value: "true"
+    description: |-
+      Flag to run tests trigger child pipeline for integration tests
 
   # Publication
   PUBLISH_DOCKER_CLIENT_IMAGES:
