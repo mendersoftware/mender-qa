@@ -1,9 +1,37 @@
 variables:
-  # Versions of components used for integration tests
+
+  # Mender Client LTS. Subcomponents listed here:
+  # https://docs.mender.io/release-information/supported-releases#mender-client-subcomponents
   MENDER_REV:
     value: "master"
     description: |-
       Version of mender
+  MENDER_CONNECT_REV:
+    value: "master"
+    description: |-
+      Version of mender-connect
+  MENDER_CONFIGURE_MODULE_REV:
+    value: "master"
+    description: |-
+      Version of mender-configure-module
+  MONITOR_CLIENT_REV:
+    value: "master"
+    description: |-
+      Version of monitor-client
+  MENDER_BINARY_DELTA_VERSION:
+    value: "latest"
+    description: |-
+      Version of mender-binary-delta to be fetched from S3. It must be a tag or "latest"
+
+  # Mender Gateway LTS
+  # Currently build, tested and released together with the Client.
+  # To be moved out with MEN-XXXX
+  MENDER_GATEWAY_REV:
+    value: "master"
+    description: |-
+      Version of mender-gateway
+
+  # Yocto repositories
   META_MENDER_REV:
     value: "master"
     description: |-
@@ -12,22 +40,6 @@ variables:
     value: "scarthgap"
     description: |-
       Version of poky
-  MENDER_QA_REV:
-    value: "master"
-    description: |-
-      Version of mender-qa
-  MENDER_ARTIFACT_REV:
-    value: "master"
-    description: |-
-      Version of mender-artifact
-  MENDER_CLI_REV:
-    value: "master"
-    description: |-
-      Version of mender-cli
-  INTEGRATION_REV:
-    value: "master"
-    description: |-
-      Version of integration
   META_OPENEMBEDDED_REV:
     value: "scarthgap"
     description: |-
@@ -36,10 +48,24 @@ variables:
     value: "kirkstone"
     description: |-
       Version of meta-raspberrypi. Only applicable for kirkstone or older
-  MENDER_CONNECT_REV:
+
+  # This repository
+  # This variable is used only for status reports, as it is "check out" by GitLab already
+  MENDER_QA_REV:
     value: "master"
     description: |-
-      Version of mender-connect
+      Version of mender-qa
+
+  # Versions of independent components
+  # The build publish and release of all of these soon or later will be moved out of mender-qa
+  MENDER_ARTIFACT_REV:
+    value: "master"
+    description: |-
+      Version of mender-artifact
+  MENDER_CLI_REV:
+    value: "master"
+    description: |-
+      Version of mender-cli
   MENDER_SETUP_REV:
     value: "master"
     description: |-
@@ -48,32 +74,22 @@ variables:
     value: "master"
     description: |-
       Version of mender-snapshot
-  MONITOR_CLIENT_REV:
-    value: "master"
-    description: |-
-      Version of monitor-client
-  MENDER_GATEWAY_REV:
-    value: "master"
-    description: |-
-      Version of mender-gateway
-  MENDER_CONFIGURE_MODULE_REV:
-    value: "master"
-    description: |-
-      Version of mender-configure-module
 
-  # Versions of independent components
-  MENDER_BINARY_DELTA_VERSION:
-    value: "latest"
+  # Integration reposiroty. Its future is undefined, but currenly we use for two things:
+  # To relate the Mender Client subcomponents with one another
+  # To version the integration tests themselves.
+  INTEGRATION_REV:
+    value: "master"
     description: |-
-      Version of mender-binary-delta
+      Version of integration
 
-  # Build stage
+  # Build Virtual Client(s)
   BUILD_CLIENT:
     value: "true"
     description: |-
       Flag to build client for integration tests. False means use prebuilt client from upstream
 
-  # Client test stage
+  # Client Acceptance tests
   BUILD_QEMUX86_64_UEFI_GRUB:
     value: "true"
     description: |-
