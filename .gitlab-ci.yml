@@ -36,10 +36,6 @@ variables:
     value: "kirkstone"
     description: |-
       Version of meta-raspberrypi. Only applicable for kirkstone or older
-  AUDITLOGS_REV:
-    value: "master"
-    description: |-
-      Version of auditlogs
   MENDER_CONNECT_REV:
     value: "master"
     description: |-
@@ -60,10 +56,6 @@ variables:
     value: "master"
     description: |-
       Version of mender-gateway
-  MENDER_CI_WORKFLOWS_REV:
-    value: "master"
-    description: |-
-      Version of mender-ci-workflows
   MENDER_CONFIGURE_MODULE_REV:
     value: "master"
     description: |-
