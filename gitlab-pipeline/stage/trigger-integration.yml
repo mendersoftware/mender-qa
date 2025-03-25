@@ -37,6 +37,7 @@ trigger:generate-gitlab-integration-rev:
   stage: trigger:integration
   rules:
     - if: $RUN_INTEGRATION_TESTS == "true"
+  needs: []
   script:
   # Convert INTEGRATION_REV on format `pull/0000/head` to `pr_0000` to specify which gitlab branch to trigger
   - |
