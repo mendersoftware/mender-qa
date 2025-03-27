@@ -1,3 +1,10 @@
+#
+# Release jobs are based on a common template and come in two flavors:
+# - automatic: we use "dependencies" to make sure all previous stages completed
+# - and manual: we use "needs" to give the release coordinator the control, for example
+#   to publish artifacts in order to early start manual tests or to do it despite errors
+#   in previous stages. With great power comes great responsibility.
+#
 
 .template_release_board_artifacts:
   tags:
@@ -36,7 +43,7 @@
 release:testing-boards:beagleboneblack:manual:
   variables:
     PUBLISH_BOARD_NAME: beagleboneblack
-  dependencies:
+  needs:
     - init:workspace
     - build:acceptance:beagleboneblack
   when: manual
@@ -78,8 +85,6 @@ release:testing-boards:beagleboneblack:automatic:
 .template_release_binary_tools:
   tags:
     - mender-qa-worker-generic-light
-  # Jobs including this template must set either "dependencies" or "needs"
-  # for "init:workspace" and "build:mender-cli".
   stage: release
   image: debian:12
   before_script:
@@ -135,8 +140,6 @@ release:testing-boards:beagleboneblack:automatic:
     -   fi
     - fi
 
-# Use "needs" for :manual to unlock mender-convert build in advance
-# or to trigger it despite mender-qa tests errors
 release:mender-cli:manual:
   when: manual
   needs:
@@ -183,7 +186,7 @@ release:mender-cli:automatic:
     - aws s3 cp stage-artifacts/mender-monitor-*.tar.gz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$mender_monitor_version/
 
 release:mender-monitor:manual:
-  dependencies:
+  needs:
     - init:workspace
     - build:mender-monitor:package
   when: manual
@@ -234,7 +237,7 @@ release:mender-monitor:automatic:
     - aws s3 cp stage-artifacts/mender-gateway-examples-*.tar s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH_EXAMPLES/$mender_gateway_version/
 
 release:mender-gateway:manual:
-  dependencies:
+  needs:
     - init:workspace
     - build:mender-gateway:package
   when: manual
@@ -301,18 +304,17 @@ release:mender-gateway:automatic:
           docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${tagged_image}
           docker push ${tagged_image}
       done
-# This job allows mender repo to publish the related Docker client images on
-# merges to master or release branches.
+
 release:virtual-client:manual:
-  dependencies:
+  needs:
     - init:workspace
     - build:client:qemu
     - build:client:docker
   when: manual
   extends: .template_release_docker_images:client-only
 
-# This job allows a release to publish only the client images. Specifically designed for Mender 3.7
-# series, to complement job release_docker_multiplatform_images:manual
+# This job allows mender repo to publish the related Docker client images on
+# merges to master or release branches.
 release:virtual-client:automatic:
   dependencies:
     - init:workspace
