@@ -144,11 +144,9 @@ prepare_build_config() {
         return 1
     fi
 
+    # Mender Client LTS components
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
-    local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
     local mender_connect_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-connect --in-integration-version HEAD)
-    local mender_setup_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-setup --in-integration-version HEAD)
-    local mender_snapshot_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-snapshot --in-integration-version HEAD)
     local mender_configure_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-configure-module --in-integration-version HEAD)
 
     local sep="$(bitbake_override_separator)"
@@ -248,36 +246,63 @@ EOF
 MENDER_ARTIFACT_NAME = "mender-image-$client_version"
 EOF
 
+    # Mender Client LTS components
     local mender_on_exact_tag=$(test "$MENDER_REV" != "master" && \
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_REV"$ ) || \
         mender_on_exact_tag=
-    local mender_artifact_on_exact_tag=$(test "$MENDER_ARTIFACT_REV" != "master" && \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && \
-        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_ARTIFACT_REV"$ ) || \
-        mender_artifact_on_exact_tag=
+    local is_mender_golang_client=$( \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender && \
+        git merge-base --is-ancestor 3dfc9a02478d6e0fd8b8cb53b9f8255eb9225021 HEAD && \
+	    echo false || \
+	    echo true)
     local mender_connect_on_exact_tag=$(test "$MENDER_CONNECT_REV" != "master" && \
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender-connect && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONNECT_REV"$ ) || \
         mender_connect_on_exact_tag=
-    local mender_setup_on_exact_tag=$(test "$MENDER_SETUP_REV" != "master" && \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-setup && \
-        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SETUP_REV"$ ) || \
-        mender_setup_on_exact_tag=
-    local mender_snapshot_on_exact_tag=$(test "$MENDER_SNAPSHOT_REV" != "master" && \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot && \
-        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SNAPSHOT_REV"$ ) || \
-        mender_snapshot_on_exact_tag=
     local mender_configure_on_exact_tag=$(test "$MENDER_CONFIGURE_MODULE_REV" != "master" && \
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender-configure-module && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONFIGURE_MODULE_REV"$ ) || \
         mender_configure_on_exact_tag=
 
-    local is_mender_golang_client=$( \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender && \
-        git merge-base --is-ancestor 3dfc9a02478d6e0fd8b8cb53b9f8255eb9225021 HEAD && \
-	echo false || \
-	echo true)
+    # mender-artifact (can or cannot be checked out)
+    local mender_artifact_version=$MENDER_ARTIFACT_REV
+    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact" ]; then
+        local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
+        local mender_artifact_on_exact_tag=$(test "$MENDER_ARTIFACT_REV" != "master" && \
+            cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && \
+            git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_ARTIFACT_REV"$ ) || \
+            mender_artifact_on_exact_tag=
+    else
+        local mender_artifact_on_exact_tag=$(test "$MENDER_ARTIFACT_REV" != "master" && echo "$MENDER_ARTIFACT_REV") ||
+            mender_artifact_on_exact_tag=
+    fi
+
+    # mender-setup (can or cannot be checked out)
+    local mender_setup_version=$MENDER_SETUP_REV
+    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-setup" ]; then
+        local mender_setup_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-setup --in-integration-version HEAD)
+        local mender_setup_on_exact_tag=$(test "$MENDER_SETUP_REV" != "master" && \
+            cd $WORKSPACE/go/src/github.com/mendersoftware/mender-setup && \
+            git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SETUP_REV"$ ) || \
+            mender_setup_on_exact_tag=
+    else
+        local mender_setup_on_exact_tag=$(test "$MENDER_SETUP_REV" != "master" && echo "$MENDER_SETUP_REV") ||
+            mender_setup_on_exact_tag=
+    fi
+
+    # mender-snapshot (can or cannot be checked out)
+    local mender_snapshot_version=$MENDER_SNAPSHOT_REV
+    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot" ]; then
+        local mender_snapshot_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-snapshot --in-integration-version HEAD)
+        local mender_snapshot_on_exact_tag=$(test "$MENDER_SNAPSHOT_REV" != "master" && \
+            cd $WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot && \
+            git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SNAPSHOT_REV"$ ) || \
+            mender_snapshot_on_exact_tag=
+    else
+        local mender_snapshot_on_exact_tag=$(test "$MENDER_SNAPSHOT_REV" != "master" && echo "$MENDER_SNAPSHOT_REV") ||
+            mender_snapshot_on_exact_tag=
+    fi
 
     # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
     # since we are building the one that Jenkins has cloned, but it does
