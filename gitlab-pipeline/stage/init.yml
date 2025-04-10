@@ -134,14 +134,6 @@ init:workspace:
           $(repo_to_rev $repo)
     - done
 
-    # Add mender-cli repo
-    - if [ ! -d go/src/github.com/mendersoftware/mender-cli ]; then
-    -   checkout_repo
-          git@github.com:mendersoftware/mender-cli
-          go/src/github.com/mendersoftware/mender-cli
-          $(repo_to_rev mender-cli)
-    - fi
-
     # Add other repositories.
     - checkout_repo git@github.com:openembedded/meta-openembedded.git meta-openembedded $META_OPENEMBEDDED_REV
     - if [ "$BUILD_RASPBERRYPI3" = true ] || [ "$BUILD_RASPBERRYPI4" = true ]; then

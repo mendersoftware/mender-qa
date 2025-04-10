@@ -62,10 +62,6 @@ variables:
     value: "master"
     description: |-
       Version of mender-artifact
-  MENDER_CLI_REV:
-    value: "master"
-    description: |-
-      Version of mender-cli
   MENDER_SETUP_REV:
     value: "master"
     description: |-
