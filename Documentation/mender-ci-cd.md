@@ -302,6 +302,7 @@ of truth.
 | hetzner-amd-beefy            | Hetzner EX130-R      | hetzner-amd-beefy                                                                                           | false      |
 | hetzner-amd-beefy-privileged | Hetzner AX41-NVMe    | hetzner-amd-beefy-privileged                                                                                | true       |
 | hetzner-arm                  | Hetzner CAX21        | hetzner-arm                                                                                                 | false      |
+| hetzner-podman               | Hetzner CPX31        | hetzner-amd                                                                                                 | false      |
 
 
 ## Installing systemd services and timers
