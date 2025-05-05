@@ -3,40 +3,55 @@
 set -e
 set -x
 
-if [ -z "$3" ]; then
-    echo "Usage: $0 project-id build-name xml-file"
-    exit 1
+usage() {
+  echo "Usage:"
+  echo "  $0 --ensure <project-id> <build-name> <xml-file>"
+  echo "  $0          <project-id> <build-name> <xml-file>"
+  exit 1
+}
+
+[ "$#" -lt 3 ] && usage
+
+ensure=0
+if [ "$1" = "--ensure" ]; then
+    ensure=1
+    shift
 fi
 
-project_id=$1
+project_id=$1       # numeric project id
+build_name=$2       # human-readable name (nightly-YYYY-MM-DD or pullreq-…)
+results_file=$3     # JUnit XML to upload
 
-# TODO: we can add more fields like status or build_url
-request_body=$(cat <<EOF
-{
-  "name": "$2"
-}
-EOF
-)
+API="https://qastatus.mender.io/api/ci/projects/${project_id}"
+AUTH="-u ${MANTRA_USERNAME}:${MANTRA_PASSWORD}"
 
-results_file=$3
+if [ "$ensure" -eq 1 ]; then
+    # Try to find an existing build with that name
+    build_id=$(curl -sSf $AUTH "${API}/builds?name=${build_name}&limit=1" |
+               jq -r '.[0].id // empty')
 
-builds_endpoint=https://qastatus.mender.io/api/ci/projects/${project_id}/builds
+    if [ -z "$build_id" ]; then
+        # Not found; attempt to create (ignore errors if a parallel shard wins)
+        build_id=$(curl -sSf -H "Content-Type: application/json" $AUTH \
+                   -d "{\"name\":\"${build_name}\"}" \
+                   "${API}/builds" 2>/dev/null |
+                   jq -r .id || true)
 
-rm -f output
-curl -f --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
-        -H "Content-Type: application/json" \
-        -d "$request_body" \
-        -o output \
-        "$builds_endpoint"
+        # If we lost the race, request again to get the id that now exists
+        [ -z "$build_id" ] && build_id=$(curl -sSf $AUTH \
+             "${API}/builds?name=${build_name}&limit=1" |
+             jq -r '.[0].id')
+    fi
+else
+    # Previous behaviour: always create a fresh build
+    build_id=$(curl -sSf -H "Content-Type: application/json" $AUTH \
+               -d "{\"name\":\"${build_name}\"}" \
+               "${API}/builds" | jq -r .id)
+fi
 
-cat output
-echo
+[ -z "$build_id" ] && { echo "Could not obtain build id"; exit 1; }
 
-build_id=$(cat output | jq .id)
-
-results_endpoint=https://qastatus.mender.io/api/ci/projects/${project_id}/builds/${build_id}/results
-
-curl -f --user ${MANTRA_USERNAME}:${MANTRA_PASSWORD} \
-        -H "Content-Type: application/xml" \
-        --data-binary @$results_file \
-        "$results_endpoint"
+curl -fsS $AUTH \
+     -H "Content-Type: application/xml" \
+     --data-binary @"${results_file}" \
+     "${API}/builds/${build_id}/results"
