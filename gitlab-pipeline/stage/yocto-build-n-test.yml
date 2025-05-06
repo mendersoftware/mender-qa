@@ -1,21 +1,8 @@
 
-variables:
-  MANTRA_ID_accep_qemux86_64_uefi_grub: "1"
-  MANTRA_ID_accep_vexpress_qemu: "2"
-  MANTRA_ID_accep_qemux86_64_bios_grub: "3"
-  MANTRA_ID_accep_qemux86_64_bios_grub_gpt: "4"
-  MANTRA_ID_accep_vexpress_qemu_uboot_uefi_grub: "5"
-  MANTRA_ID_accep_vexpress_qemu_flash: "6"
-  MANTRA_ID_backend_integration_open_source: "7"
-  MANTRA_ID_backend_integration_enterprise: "8"
-  MANTRA_ID_full_integration_open_source: "9"
-  MANTRA_ID_full_integration_enterprise: "10"
-  MANTRA_ID_accep_qemux86_64_uefi_grub_cross_platform: "11"
-
 build:client:qemu:
   only:
     variables:
-      - $BUILD_CLIENT == "true"
+      - $BUILD_CLIENT == "true"``
   stage: yocto:build-n-test
   extends: .template_build_test_acc
   services:
@@ -91,7 +78,7 @@ test:acceptance:qemux86_64:uefi_grub:
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        $MANTRA_ID_accep_qemux86_64_uefi_grub
+        accep_qemux86_64_uefi_grub
         $build_name
         results_accep_qemux86_64_uefi_grub.xml || true
 
@@ -143,7 +130,7 @@ test:acceptance:qemux86_64:uefi_grub:cross-platform:
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        $MANTRA_ID_accep_qemux86_64_uefi_grub_cross_platform
+        accep_qemux86_64_uefi_grub_cross_platform
         $build_name
         results_accep_qemux86_64_uefi_grub_cross_platform.xml || true
 
@@ -196,7 +183,7 @@ test:acceptance:vexpress_qemu:
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        $MANTRA_ID_accep_vexpress_qemu
+        accep_vexpress_qemu
         $build_name
         results_accep_vexpress_qemu.xml || true
 
@@ -249,7 +236,7 @@ test:acceptance:qemux86_64:bios_grub:
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        $MANTRA_ID_accep_qemux86_64_bios_grub
+        accep_qemux86_64_bios_grub
         $build_name
         results_accep_qemux86_64_bios_grub.xml || true
 
@@ -302,7 +289,7 @@ test:acceptance:qemux86_64:bios_grub_gpt:
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        $MANTRA_ID_accep_qemux86_64_bios_grub_gpt
+        accep_qemux86_64_bios_grub_gpt
         $build_name
         results_accep_qemux86_64_bios_grub_gpt.xml || true
 
@@ -355,7 +342,7 @@ test:acceptance:vexpress_qemu:uboot_uefi_grub:
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        $MANTRA_ID_accep_vexpress_qemu_uboot_uefi_grub
+        accep_vexpress_qemu_uboot_uefi_grub
         $build_name
         results_accep_vexpress_qemu_uboot_uefi_grub.xml || true
 
@@ -411,7 +398,7 @@ test:acceptance:vexpress_qemu:flash:
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
     - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        $MANTRA_ID_accep_vexpress_qemu_flash
+        accep_vexpress_qemu_flash
         $build_name
         results_accep_vexpress_qemu_flash.xml || true
 

@@ -4,13 +4,24 @@ set -e
 set -x
 
 usage() {
-  echo "Usage:"
-  echo "  $0 --ensure <project-id> <build-name> <xml-file>"
-  echo "  $0          <project-id> <build-name> <xml-file>"
-  exit 1
+    echo "Usage:"
+    echo "  $0 --ensure <project-key> <build-name> <xml-file>"
+    echo "  $0          <project-key> <build-name> <xml-file>"
+    echo
+    echo "Project keys:"
+    echo "  accep_qemux86_64_uefi_grub"
+    echo "  accep_vexpress_qemu"
+    echo "  accep_qemux86_64_bios_grub"
+    echo "  accep_qemux86_64_bios_grub_gpt"
+    echo "  accep_vexpress_qemu_uboot_uefi_grub"
+    echo "  accep_vexpress_qemu_flash"
+    echo "  backend_integration_open_source"
+    echo "  backend_integration_enterprise"
+    echo "  full_integration"
+    echo "  full_integration_enterprise"
+    echo "  accep_qemux86_64_uefi_grub_cross_platform"
+    exit 1
 }
-
-[ "$#" -lt 3 ] && usage
 
 ensure=0
 if [ "$1" = "--ensure" ]; then
@@ -18,9 +29,27 @@ if [ "$1" = "--ensure" ]; then
     shift
 fi
 
-project_id=$1       # numeric project id
-build_name=$2       # human-readable name (nightly-YYYY-MM-DD or pullreq-…)
-results_file=$3     # JUnit XML to upload
+# we need at least 3 args now (after reading `--ensure`` flag): project-key, build-name, and results xml-file
+[ "$#" -lt 3 ] && usage
+
+project_key=$1 ; shift  # human readable project name
+build_name=$1  ; shift  # human-readable name (nightly-YYYY-MM-DD or pullreq-…)
+results_file=$1         # JUnit XML to upload
+
+case "$project_key" in
+    accep_qemux86_64_uefi_grub)                project_id=1  ;;
+    accep_vexpress_qemu)                       project_id=2  ;;
+    accep_qemux86_64_bios_grub)                project_id=3  ;;
+    accep_qemux86_64_bios_grub_gpt)            project_id=4  ;;
+    accep_vexpress_qemu_uboot_uefi_grub)       project_id=5  ;;
+    accep_vexpress_qemu_flash)                 project_id=6  ;;
+    backend_integration_open_source)           project_id=7  ;;
+    backend_integration_enterprise)            project_id=8  ;;
+    full_integration)                          project_id=9  ;;
+    full_integration_enterprise)               project_id=10 ;;
+    accep_qemux86_64_uefi_grub_cross_platform) project_id=11 ;;
+    *)  echo "FATAL: unknown Mantra project key '$project_key'" >&2; exit 2 ;;
+esac
 
 API="https://qastatus.mender.io/api/ci/projects/${project_id}"
 AUTH="-u ${MANTRA_USERNAME}:${MANTRA_PASSWORD}"
