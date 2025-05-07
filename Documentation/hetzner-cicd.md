@@ -10,6 +10,7 @@ in Hetzner hosts, both bare-metal and VMs.
     - [Hetzner CAX21](#hetzner-cax21)
     - [Hetzner VM Podman cpx31 gitlab-runner-podman-01](#hetzner-vm-podman-cpx31-gitlab-runner-podman-01)
     - [Hetzner VM for Zephyr testing](#hetzner-vm-for-zephyr-testing)
+    - [Hetzner AX42](#hetzner-ax42)
   - [Secrets](#secrets)
 
 
@@ -58,6 +59,16 @@ in Hetzner hosts, both bare-metal and VMs.
 
 ### Hetzner VM for Zephyr testing
 * [Internal documentation](https://github.com/NorthernTechHQ/sre-iac/tree/main/hetzner-zephyr-qa)
+
+
+### Hetzner AX42
+* Node type: bare-metal
+* IP: `5.9.120.171`
+* Connection string:
+  ```bash
+  eval `ssh-agent` && \
+  pass show mender/cicd/hetznercloud/gitlab-hetzner-ax41-runner-ssh_key-priv.pem | ssh-add - && ssh root@5.9.120.171
+  ```
 
 
 ## Secrets

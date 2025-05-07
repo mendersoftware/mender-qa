@@ -302,7 +302,10 @@ of truth.
 | hetzner-amd-beefy            | Hetzner EX130-R      | hetzner-amd-beefy                                                                                           | false      |
 | hetzner-amd-beefy-privileged | Hetzner AX41-NVMe    | hetzner-amd-beefy-privileged                                                                                | true       |
 | hetzner-arm                  | Hetzner CAX21        | hetzner-arm                                                                                                 | false      |
-| hetzner-podman               | Hetzner CPX31        | hetzner-amd                                                                                                 | false      |
+| hetzner-podman               | Hetzner CPX31        | hetzner-podman                                                                                              | false      |
+| hetzner-podman-ax42          | Hetzner AX42         | hetzner-podman-ax42                                                                                         | false      |
+| hetzner-amd-ax42             | Hetzner AX42         | hetzner-amd-ax42                                                                                            | false      |
+| k8s                          | AWS c7i.2xlarge      | k8s                                                                                                         | false      |
 
 
 ## Installing systemd services and timers
