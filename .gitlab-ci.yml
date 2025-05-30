@@ -22,6 +22,10 @@ variables:
     value: "latest"
     description: |-
       Version of mender-binary-delta to be fetched from S3. It must be a tag or "latest"
+  MENDER_FLASH_REV:
+    value: "master"
+    description: |-
+      Version of mender-flash
 
   # Mender Gateway LTS
   # Currently build, tested and released together with the Client.

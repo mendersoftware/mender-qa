@@ -148,6 +148,7 @@ prepare_build_config() {
     local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
     local mender_connect_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-connect --in-integration-version HEAD)
     local mender_configure_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-configure-module --in-integration-version HEAD)
+    local mender_flash_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-flash --in-integration-version HEAD)
 
     local sep="$(bitbake_override_separator)"
 
@@ -264,6 +265,10 @@ EOF
         cd $WORKSPACE/go/src/github.com/mendersoftware/mender-configure-module && \
         git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONFIGURE_MODULE_REV"$ ) || \
         mender_configure_on_exact_tag=
+    local mender_flash_on_exact_tag=$(test "$MENDER_FLASH_REV" != "master" && \
+        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-flash && \
+        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_FLASH_REV"$ ) || \
+        mender_flash_on_exact_tag=
 
     # mender-artifact (can or cannot be checked out)
     local mender_artifact_version=$MENDER_ARTIFACT_REV
@@ -392,6 +397,16 @@ EOF
     else
         cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION${sep}pn-mender-configure = "$mender_configure_version-git%"
+EOF
+    fi
+
+    if [ -n "$mender_flash_on_exact_tag" ]; then
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION${sep}pn-mender-flash = "$mender_flash_on_exact_tag"
+EOF
+    else
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION${sep}pn-mender-flash = "$mender_flash_version-git%"
 EOF
     fi
 }
