@@ -171,7 +171,7 @@ release:mender-monitor:automatic:
           docker push ${tagged_image}
       done
 
-      enterprise_images="mender-gateway-qemu-commercial mender-monitor-qemu-commercial mender-qemu-rofs-commercial"
+      enterprise_images="mender-monitor-qemu-commercial mender-qemu-rofs-commercial"
       for image in $enterprise_images; do
           docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
           tagged_image=registry.mender.io/mendersoftware/${image}:${version}
