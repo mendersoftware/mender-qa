@@ -20,9 +20,6 @@
     MENDER_CLIENT_QEMU_ROFS_IMAGE: mender-qa
     MENDER_CLIENT_QEMU_ROFS_TAG: ${CI_PIPELINE_ID}-mender-client-qemu-rofs
 
-    MENDER_GATEWAY_QEMU_COMMERCIAL_IMAGE: mender-qa
-    MENDER_GATEWAY_QEMU_COMMERCIAL_TAG: ${CI_PIPELINE_ID}-mender-gateway-qemu-commercial
-
     MENDER_MONITOR_QEMU_COMMERCIAL_IMAGE: mender-qa
     MENDER_MONITOR_QEMU_COMMERCIAL_TAG: ${CI_PIPELINE_ID}-mender-monitor-qemu-commercial
 
