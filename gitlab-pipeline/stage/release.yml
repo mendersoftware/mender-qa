@@ -186,7 +186,7 @@ release:virtual-client:manual:
     - build:client:docker
   rules:
     - if: $BUILD_CLIENT == "true"
-      when: manual
+  when: manual
   extends: .template_release_docker_images:client-only
 
 # This job allows mender repo to publish the related Docker client images on
