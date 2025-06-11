@@ -30,6 +30,15 @@
 
     RUN_TESTS_FULL_INTEGRATION: "true"
 
+
+    # debug
+    DOCKER_VERSION: "27.3"
+    GOLANG_VERSION: "1.24"
+
+    CI_JOBS_IN_PARALLEL_INTEGRATION: "4"
+    XDIST_JOBS_IN_PARALLEL_INTEGRATION: "4"
+    RUN_TESTS_STAGING: "false"
+
 trigger:generate-gitlab-integration-rev:
   stage: trigger:integration
   rules:
