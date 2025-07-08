@@ -134,26 +134,112 @@ repository](https://github.com/mendersoftware/mender-qa/blob/master/scripts/yoct
 The following recipe gives an example of how to build and test the
 `qemux86-64-uefi-grub` platform.
 
+Clone repositories and create the build directory:
 ```
-# Initialize a new Yocto build environment
-source oe-init-build-env build-qemux86-64-uefi-grub
-# Add meta-mender build layers
-bitbake-layers add-layer ../meta-mender/meta-mender-core
-bitbake-layers add-layer ../meta-mender/meta-mender-demo
-bitbake-layers add-layer ../meta-mender/meta-mender-qemu
-# Add meta-mender test layer
-bitbake-layers add-layer ../meta-mender/tests/meta-mender-ci
-# Take the default Yocto configuration for this platform
-cp ../meta-mender/tests/build-conf/qemux86-64-uefi-grub/local.conf conf/
-# Set MENDER_ARTIFACT_NAME
-cat >> conf/local.conf <<EOF
+git clone -b scarthgap https://github.com/mendersoftware/meta-mender.git
+git clone -b scarthgap https://git.yoctoproject.org/poky
+git clone -b scarthgap https://git.openembedded.org/meta-openembedded
+mkdir -p build/conf
+```
+Replace `scarthgap` with the Yocto series you want to use. As of now, Meta-mender
+supports `scarthgap` as the latest LTS version.
+
+Copy `.conf` files to the build directory:
+```
+cp meta-mender/tests/build-conf/qemux86-64-uefi-grub/* build/conf/
+```
+
+Adjust file paths in the `bblayers.conf` (assumes you are at your project's root 
+directory, eg `yocto-project/`):
+```
+CURRENT_DIR=$(pwd)
+sed -i "s|@WORKSPACE@|$CURRENT_DIR|g" build/conf/bblayers.conf
+sed -i "s#\(^.*${CURRENT_DIR}\/\)\(meta\|meta-poky\|meta-yocto-bsp\)\(\s\|$\)#\1poky/\2\3#g" build/conf/bblayers.conf
+```
+
+#### Configure Yocto caches (recommended)
+
+- `DL_DIR` (Download Directory): Stores source code tarballs, git repositories, 
+and other previously downloaded files.
+- `SSTATE_DIR` (Shared State Directory): Stores pre-built components and 
+intermediate build artifacts.
+
+Create the cache directories:
+```
+mkdir -p build/downloads build/sstate-cache
+```
+
+Add cache configuration to `local.conf`:
+```
+cat >> build/conf/local.conf <<EOF
+# Cache
+DL_DIR ?= "\${TOPDIR}/downloads"
+SSTATE_DIR ?= "\${TOPDIR}/sstate-cache"
+EOF
+```
+
+Note that the cache can grow quite large (several GB).
+
+Set artifact name:
+```
+cat >> build/conf/local.conf <<EOF
 MENDER_ARTIFACT_NAME = "mender-image-local"
 EOF
-# Build full image
+```
+
+Initialize a new Yocto build environment:
+```
+source poky/oe-init-build-env build
+```
+
+Check you have all layers:
+```
+bitbake-layers show-layers
+```
+
+You should see something like this:
+```
+NOTE: Starting bitbake server...
+layer                 path                                                                    priority
+========================================================================================================
+core                  /home/ubuntu/yocto-project/poky/meta                                      5
+yocto                 /home/ubuntu/yocto-project/poky/meta-poky                                 5
+yoctobsp              /home/ubuntu/yocto-project/poky/meta-yocto-bsp                            5
+mender                /home/ubuntu/yocto-project/meta-mender/meta-mender-core                   6
+mender-demo           /home/ubuntu/yocto-project/meta-mender/meta-mender-demo                   10
+openembedded-layer    /home/ubuntu/yocto-project/meta-openembedded/meta-oe                      5
+meta-python           /home/ubuntu/yocto-project/meta-openembedded/meta-python                  5
+mender-qemu           /home/ubuntu/yocto-project/meta-mender/meta-mender-qemu                   6
+```
+
+Build the image:
+```
 bitbake core-image-full-cmdline
-# Run the tests!
-cd ../meta-mender/tests/acceptance/
+```
+
+This may run for a while, especially if you are doing this for the first time.
+
+You will find the build artifacts under `build/tmp/deploy/images`
+
+Run the tests! (Note that you might need to adjust the file paths to match
+your local setup)
+
+```
+cd meta-mender/tests/acceptance/
 python3 -m pytest -p no:xdist --bitbake-image core-image-full-cmdline --board-type=qemux86-64
+```
+
+Or run the image in QEMU manually:
+```
+qemu-system-x86_64 \
+  -drive if=pflash,format=qcow2,readonly=on,file=ovmf.code.qcow2 \
+  -drive if=pflash,format=qcow2,file=ovmf.vars.qcow2 \
+  -drive file=core-image-full-cmdline-qemux86-64.uefiimg,format=raw \
+  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+  -device virtio-net-pci,netdev=net0 \
+  -m 2048 \
+  -enable-kvm \
+  -nographic
 ```
 
 ## Backend tests
