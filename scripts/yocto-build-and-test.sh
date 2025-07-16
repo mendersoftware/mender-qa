@@ -207,6 +207,7 @@ EXTERNALSRC${sep}pn-mender-client = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-client-native = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-connect = "$WORKSPACE/go"
 EXTERNALSRC${sep}pn-mender-configure = "$WORKSPACE/go/src/github.com/mendersoftware/mender-configure-module"
+EXTERNALSRC${sep}pn-mender-flash = "$WORKSPACE/go/src/github.com/mendersoftware/mender-flash"
 
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS${sep}remove = "do_patch"
