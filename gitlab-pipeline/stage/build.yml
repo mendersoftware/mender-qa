@@ -91,25 +91,25 @@ build:mender-monitor:package:
     paths:
       - stage-artifacts
 
-build:mender-gateway:package:
-  tags:
-    - mender-qa-worker-generic-light
-  stage: build
-  needs:
-    - init:workspace
-  allow_failure: false
-  before_script:
-    # Early exit when building an integration version without mender-gateway
-    - apt update && apt install -yyq xz-utils
-    - xz -d workspace.tar.xz
-    - tar -tf workspace.tar
-        ./go/src/github.com/mendersoftware/mender-gateway  >/dev/null 2>/dev/null || exit 0
-    # Restore workspace from init stage
-    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
-    - mv workspace.tar /tmp
-    - rm -rf ${WORKSPACE}
-    - mkdir -p ${WORKSPACE}
-    - cd ${WORKSPACE}
-    - tar -xf /tmp/workspace.tar
-    # Move into component path
-    - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-gateway
+#build:mender-gateway:package:
+#  tags:
+#    - mender-qa-worker-generic-light
+#  stage: build
+#  needs:
+#    - init:workspace
+#  allow_failure: false
+#  before_script:
+#    # Early exit when building an integration version without mender-gateway
+#    - apt update && apt install -yyq xz-utils
+#    - xz -d workspace.tar.xz
+#    - tar -tf workspace.tar
+#        ./go/src/github.com/mendersoftware/mender-gateway  >/dev/null 2>/dev/null || exit 0
+#    # Restore workspace from init stage
+#    - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+#    - mv workspace.tar /tmp
+#    - rm -rf ${WORKSPACE}
+#    - mkdir -p ${WORKSPACE}
+#    - cd ${WORKSPACE}
+#    - tar -xf /tmp/workspace.tar
+#    # Move into component path
+#    - cd ${WORKSPACE}/go/src/github.com/mendersoftware/mender-gateway
