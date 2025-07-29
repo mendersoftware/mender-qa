@@ -1,0 +1,178 @@
+# MEN-7729 Zephyr onboarding
+
+## Summary
+
+This test plan covers the implementation of the Zephyr onboarding functionality.
+
+This project introduces a new "Micro" and "Standard" device tiers. Micro for microcontrollers and a "Standard" tier for anything else.
+The Micro tier aims to optimize for devices with lower software complexity and smaller artifact sizes.
+The Standard tier will be the default tier and used for all devices without any other tier specified.
+
+This project also enables new users to get started with the Zephyr platform through a guided setup process.
+
+## Related
+
+- [MEN-7729 Zephyr onboarding (Epic)](https://northerntech.atlassian.net/browse/MEN-7729)
+- [User experience for Zephyr (Docs)](https://docs.google.com/document/d/1-3BtSTl5kr4lT9Rcah-G4cRQhgusr0VmRIYmWVE3Ygg)
+- [Pricing model for MCUs (Docs)](https://docs.google.com/document/d/1R8gUejuQecvYKuJlq0LEVzHFdMC3MSbOTHXZXaWD3Bo)
+- [UX/UI (Figma)](https://www.figma.com/design/ZTGKMcKtHrZ0V7pfdws7KM/Zephyr-onboarding-UX-concept?node-id=3761-2931&p=f&t=4EWRNIcCrseZ054D-0)
+- API documentation TBA
+- Onboarding (Docs) TBA
+
+## Features breakdown
+
+### Device tiers
+
+- Two device tiers: "Micro" and "Standard"
+    - Orthogonal to the current plan types (Trial, Basic, Professional, Enterprise)
+    - All tenants will be able to have device limits for both tiers
+- Commercial plans (Basic, Professional, Enterprise) with Micro tier devices will, by default, have a maximum 5 MB Artifact size for deployment
+- Device tier will be configured on the device side and included as part of the authentication set
+- During plan purchase, users can select the number of devices to purchase for each tier
+- Device tier limit will be synchronized with HubSpot
+
+### Onboarding process
+
+- Users can choose an MCU with Zephyr among the devices options
+- Guided process for initial device setup
+- For MCUs, the reference device will be Espressif ESP32-S3
+- New "Microcontroller Get started" tutorial
+
+### UX
+
+- A new device type (Zephyr/MCU) is available for onboarding
+- The UI will provide a configuration snippet for building MCU images
+    - the token includes the device tier and tenant token
+- A warning will be displayed in the UI if an artifact is too large for the "Micro" tier during deployment
+- There will be a visual indicator to distinguish between "Micro" and "Standard" device types
+
+### Server API
+
+__Identity Service:__
+- A new `x-mender-tier` parameter will be added to the device identity
+- The tier is incorporated into the JWT issued for a device
+
+__Management:__
+- Will get available tiers, their names, IDs, and current device limits
+- New endpoint to set device limits for a given tier (forwards requests to Stripe)
+- New endpoint to predict the payment amount for given device limits in tiers
+
+__Device Auth:__
+- Enforcing tier limits for new devices
+
+__Deployments:__
+- New `/next` endpoint will check the device tier and artifact size limits before providing an update
+
+__Internal:__
+- New endpoint to set artifact size limits per tier for a given tenant
+- New endpoint to set and get update and inventory rate limits for the "Micro" tier
+
+## Out of scope
+
+- Bulk device onboarding for enterprise users
+
+## Entry criteria
+
+- Device management functionality for Micro tier is available
+- API endpoints for onboarding the new tier are implemented
+- Micro tier device images are prepared
+
+## Exit criteria
+
+- All test cases pass
+- Manual user acceptance testing completed successfully
+    - newly found issues sufficiently addressed (blocker and high priority resolved)
+- Potential security issues addressed (TODO: coordinate with security officer)
+- New documentation updated/reviewed
+
+## Risk
+
+- Changes to the device identity and authentication must not break existing devices
+- E2E testing involves a 3rd party in Stripe and HubSpot
+- Flaky integration with Stripe could lead to billing errors for customers
+- The introduction of "Micro" and "Standard" tiers might confuse users, especially during the purchasing process
+- Tier imposed limits might prevent a legitimate update
+
+## Test environment
+
+### Infrastructure
+
+- Staging environment with the latest components deployed
+- Test instances for Stripe and HubSpot (TODO: unsure about HubSpot, or if strictly needed at all)
+
+### Test Data
+
+- Yocto image with "Micro" tier set
+- Zephyr image with "Micro" tier set
+- Sample runtime configuration to set "Micro" tier
+- Test tenants with different plans and device tier configurations
+- Artifacts of varying sizes, including some that exceed the default "Micro" tier limit of 5MB
+
+## Verification criteria
+
+### Server
+
+- Server correctly identifies the device tier
+- Device authentication enforces the device limits for each tier accordingly
+- The management API correctly reflects tier information, limits, and pricing from Stripe
+- Internal APIs for setting artifact size and rate limits work
+- The deployments service correctly enforces artifact size limits of 5MB for "Micro" tier devices
+- Rate limiting for updates  (1 / day) and inventory (1 / 14 days) is correctly enforced for "Micro" tier devices
+- Logging captures all onboarding events for audit purposes (?)
+
+### Client
+
+- The client correctly sends the `x-mender-tier` parameter in its identity request
+- The `mender-artifact` gets the new command-line arguments: `--fail-on-payload-size-greater:5MB` and `--warn-on-payload-size-greater:5MB`
+- Tier is correctly configured during the build process for both Yocto and Zephyr
+    - We provide guidance/layers to build Micro tier images
+    - If an Artifact exceeds 5MB, a warning will be displayed during the build process
+- Client handles update denials due to artifact size limits gracefully
+    - Device for which the update exceeds the limit, will be flagged in the UI
+    - Note: For Trial tier ther is no strict limit on the Artifact size
+
+### Installation / Migrations
+
+- Existing devices without a tier are correctly migrated to the Standard tier
+
+### UI
+
+- Visual design matches approved mockups
+- The UI shows the correct configuration snippet for the selected device type
+- Onboarding flow correctly presents Zephyr/MCU among available device options
+- Warnings for oversized artifacts are displayed
+- Indicators for rate limiting are displayed (TODO: unsure, but this is probably an error from the backend?)
+
+### SRE
+
+- Logging provides sufficient detail to debug issues related to device tiers and limits
+
+### Documentation
+
+- The "Get started" guides now consider the different device tiers
+- New concepts like tiers, limits, and build configurations are explained
+
+## Testing notes
+
+- User with accepted "Standard" devices in their trial cannot purchase a Micro-only plan
+    - Have active "Standard" devices -> Attempt to buy a Micro plan -> Verify the action is blocked
+    - Have active "Standard" devices -> Decommission them -> Attempt to buy a Micro plan -> Purchase now succeeds
+    - Must first decommission such devices or add "Standard" devices to a plan to prevent loss of access to existing devices if they purchase only a Micro device limit
+- Differences in limits between the free trial and paid plans
+    - Free trial has no artifact size limit or strict polling interval limits
+    - Commercial Micro plans, however, have default limits (e.g., 5 MB artifact size, daily update polls)
+- Ensure that all existing devices (and any new clients that don't specify a tier) are automatically and correctly categorized as Standard tier
+- Device tier is defined during the client build process
+- Built images/devices should be sending the `x-mender-tier` identity parameter
+- Verify `mender-artifact` new command line arguments for payload size
+- Ensure the API correctly interacts with Stripe for billing
+- Verify deploying a Micro device fails when the payload size exceeds the limit
+
+## Glossary
+
+- Tier: A category of device with specific limits and pricing
+    - Micro Tier: A new, lower-cost tier designed for microcontrollers with limitations on artifact size and update frequency
+    - Standard Tier: The existing tier for Linux-based devices, which is the default for all legacy devices
+- Device Limit: The maximum number of devices of a specific tier that a tenant can have
+- Artifact Size Limit: The maximum size of an artifact that can be deployed to a device of a specific tier. For the "Micro" tier, this is 5MB by default
+- Polling Interval: The frequency at which a device checks for updates or sends inventory data. The "Micro" tier will have stricter limits on this
