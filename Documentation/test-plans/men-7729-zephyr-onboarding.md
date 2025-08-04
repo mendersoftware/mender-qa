@@ -117,7 +117,9 @@ __Internal:__
 - Device authentication enforces the device limits for each tier accordingly
 - The management API correctly reflects tier information, limits, and pricing from Stripe
 - Internal APIs for setting artifact size and rate limits work
-- The deployments service correctly enforces artifact size limits of 5MB for "Micro" tier devices
+- The deployments service correctly enforces default artifact size limits of 5MB for "Micro" tier devices
+    - The deployments service enforces custom artifact size limits set on the tenant level
+    - Updates that failed due to the limits, should be clearly reported
 - Rate limiting for updates  (1 / day) and inventory (1 / 14 days) is correctly enforced for "Micro" tier devices
 - Logging captures all onboarding events for audit purposes (?)
 
