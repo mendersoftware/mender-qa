@@ -44,6 +44,7 @@ This project also enables new users to get started with the Zephyr platform thro
 - The UI will provide a configuration snippet for building MCU images
     - the token includes the device tier and tenant token
 - A warning will be displayed in the UI if an artifact is too large for the "Micro" tier during deployment
+    - Only applies to cases where we know the device type in advance, ie. not for dynamic deployments where device type might not be known before the deployment is actually attempted
 - There will be a visual indicator to distinguish between "Micro" and "Standard" device types
 
 ### Server API
