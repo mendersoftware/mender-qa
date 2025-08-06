@@ -450,6 +450,37 @@ copy_clean_image() {
         > "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}.gz"
 }
 
+# copies the bootable QEMU images and other related files to the workspace
+# directory so they can be collected by CI as build artifacts to allow local testing
+copy_build_artifacts_to_workspace() {
+    local machine_name="$1"
+    local board_name="$2"
+    local image_name="$3"
+    local device_type="$4"
+
+    local deploy_dir="${BUILDDIR}/tmp/deploy/images/${machine_name}"
+
+    local files_to_copy=(
+        "${image_name}-${machine_name}.uefiimg:UEFI image"
+        "${image_name}-${machine_name}.sdimg:SD image"
+        "${image_name}-${machine_name}.wic:WIC image"
+        "ovmf.qcow2:OVMF UEFI firmware"
+        "bzImage:bzImage"
+        "${image_name}-${machine_name}.cpio.gz:cpio.gz image"
+    )
+
+    for file_entry in "${files_to_copy[@]}"; do
+        local file_path="${file_entry%:*}"
+        local description="${file_entry#*:}"
+
+        if [ -f "${deploy_dir}/${file_path}" ]; then
+            echo "Copying ${description} for QEMU to be archived..."
+            cp -flv "${deploy_dir}/${file_path}" "$WORKSPACE/$board_name/"
+        fi
+    done
+}
+
+
 # returns the version of mender-binary-delta to be used in the build
 get_mender_binary_delta_version() {
     local recipe
@@ -715,6 +746,9 @@ build_and_test_client() {
         if [ -e $BUILDDIR/tmp/deploy/images/$machine_name/u-boot.elf ]; then
             cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/u-boot.elf $WORKSPACE/$board_name
         fi
+
+        copy_build_artifacts_to_workspace "$machine_name" "$board_name" "$image_name" "$device_type"
+
         for image in $WORKSPACE/$board_name/*; do
             cp $image $image.clean
         done
