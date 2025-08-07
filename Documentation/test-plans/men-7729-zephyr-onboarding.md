@@ -16,6 +16,7 @@ This project also enables new users to get started with the Zephyr platform thro
 - [User experience for Zephyr (Docs)](https://docs.google.com/document/d/1-3BtSTl5kr4lT9Rcah-G4cRQhgusr0VmRIYmWVE3Ygg)
 - [Pricing model for MCUs (Docs)](https://docs.google.com/document/d/1R8gUejuQecvYKuJlq0LEVzHFdMC3MSbOTHXZXaWD3Bo)
 - [UX/UI (Figma)](https://www.figma.com/design/ZTGKMcKtHrZ0V7pfdws7KM/Zephyr-onboarding-UX-concept?node-id=3761-2931&p=f&t=4EWRNIcCrseZ054D-0)
+- [Zephyr signup epic (Slides)](https://docs.google.com/presentation/d/1pIGPEDrZYKk4PSdsvhtcL8XAeuTybBHKcGhi19V8zXE)
 - API documentation TBA
 - Onboarding (Docs) TBA
 
@@ -75,6 +76,8 @@ __Internal:__
 ## Out of scope
 
 - Bulk device onboarding for enterprise users
+- "System" tier for Orchestrator device (?)
+- C++ client (?)
 
 ## Entry criteria
 
