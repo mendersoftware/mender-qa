@@ -68,6 +68,10 @@ __Internal:__
 - New endpoint to set artifact size limits per tier for a given tenant
 - New endpoint to set and get update and inventory rate limits for the "Micro" tier
 
+### Service Provider Tenant
+
+- Set global device limits for child tenants
+
 ## Out of scope
 
 - Bulk device onboarding for enterprise users
@@ -115,6 +119,7 @@ __Internal:__
 
 - Server correctly identifies the device tier
 - Device authentication enforces the device limits for each tier accordingly
+    - For SP Tenant, the device limit is reflected in it's child tenants
 - The management API correctly reflects tier information, limits, and pricing from Stripe
 - Internal APIs for setting artifact size and rate limits work
 - The deployments service correctly enforces default artifact size limits of 5MB for "Micro" tier devices
