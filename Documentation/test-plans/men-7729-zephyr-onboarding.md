@@ -15,7 +15,7 @@ This project also enables new users to get started with the Zephyr platform thro
 - [MEN-7729 Zephyr onboarding (Epic)](https://northerntech.atlassian.net/browse/MEN-7729)
 - [User experience for Zephyr (Docs)](https://docs.google.com/document/d/1-3BtSTl5kr4lT9Rcah-G4cRQhgusr0VmRIYmWVE3Ygg)
 - [Pricing model for MCUs (Docs)](https://docs.google.com/document/d/1R8gUejuQecvYKuJlq0LEVzHFdMC3MSbOTHXZXaWD3Bo)
-- [UX/UI (Figma)](https://www.figma.com/design/ZTGKMcKtHrZ0V7pfdws7KM/Zephyr-onboarding-UX-concept?node-id=3761-2931&p=f&t=4EWRNIcCrseZ054D-0)
+- [UX/UI (Figma)](https://www.figma.com/design/ZTGKMcKtHrZ0V7pfdws7KM/Zephyr-onboarding-UX-concept)
 - [Zephyr signup epic (Slides)](https://docs.google.com/presentation/d/1pIGPEDrZYKk4PSdsvhtcL8XAeuTybBHKcGhi19V8zXE)
 - API documentation TBA
 - Onboarding (Docs) TBA
@@ -30,14 +30,18 @@ This project also enables new users to get started with the Zephyr platform thro
 - Commercial plans (Basic, Professional, Enterprise) with Micro tier devices will, by default, have a maximum 5 MB Artifact size for deployment
 - Device tier will be configured on the device side and included as part of the authentication set
 - During plan purchase, users can select the number of devices to purchase for each tier
+    - Buying a paid plan with 0 "Standard" tier devices should be prevented, because the user might have "Standard" devices existing from their Free trial
 - Device tier limit will be synchronized with HubSpot
 
 ### Onboarding process
 
 - Users can choose an MCU with Zephyr among the devices options
+- Users can choose between US and EU hosting regions
 - Guided process for initial device setup
-- For MCUs, the reference device will be Espressif ESP32-S3
-- New "Microcontroller Get started" tutorial
+- Connecting a new device dialog now features MCU devices
+    - For MCUs, the reference device will be Espressif ESP32-S3
+- Device onboarding stops if the "Micro" tier device cannot run the demo artifact (?)
+- New "Microcontroller Get started" tutorial link
 
 ### UX
 
@@ -71,7 +75,7 @@ __Internal:__
 
 ### Service Provider Tenant
 
-- Set global device limits for child tenants
+- Set global device limits for child tenants per tier
 
 ## Out of scope
 
@@ -154,6 +158,7 @@ __Internal:__
 - Onboarding flow correctly presents Zephyr/MCU among available device options
 - Warnings for oversized artifacts are displayed
 - Indicators for rate limiting are displayed (TODO: unsure, but this is probably an error from the backend?)
+- Some addons (eg. Configure) are not availble under certain pricing plans (Basic)
 
 ### SRE
 
