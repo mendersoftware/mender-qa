@@ -126,6 +126,7 @@ __Internal:__
     - The deployments service enforces custom artifact size limits set on the tenant level
     - Updates that failed due to the limits, should be clearly reported
 - Rate limiting for updates  (1 / day) and inventory (1 / 14 days) is correctly enforced for "Micro" tier devices
+    - Device updates that automatically trigger inventory updates should not consume the allocated inventory update quota
 - Logging captures all onboarding events for audit purposes (?)
 
 ### Client
