@@ -134,6 +134,9 @@ init:workspace:
           $(repo_to_rev $repo)
     - done
 
+    # Add mender-gateway
+    - checkout_repo git@github.com:mendersoftware/mender-gateway go/src/github.com/mendersoftware/mender-gateway $MENDER_GATEWAY_REV
+
     # Add other repositories.
     - checkout_repo git@github.com:openembedded/meta-openembedded.git meta-openembedded $META_OPENEMBEDDED_REV
     - if [ "$BUILD_RASPBERRYPI3" = true ] || [ "$BUILD_RASPBERRYPI4" = true ]; then
