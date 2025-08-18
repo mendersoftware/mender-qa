@@ -28,6 +28,7 @@ should either be fixed or reported in JIRA tasks to follow-up in the next period
 ### Nightly Mender QA build (client only)
 
 Link: https://qastatus.mender.io/nightlies
+
 Link: https://gitlab.com/Northern.tech/Mender/mender-qa/-/pipelines?page=1&scope=all&source=schedule
 
 There is no golden rule on what to do when the "Last Pipeline" in the link above
@@ -40,6 +41,7 @@ for actual test failures we need to asses if it might be a regression or not.
 ### Nightly Mender Server
 
 Link: https://gitlab.com/Northern.tech/Mender/mender-server/-/pipelines?page=1&scope=all&source=schedule
+
 Link: https://gitlab.com/Northern.tech/Mender/mender-server-enterprise/-/pipelines?page=1&scope=all&source=schedule
 
 Nightly tests over the mender-server monorepo. These include the whole spectrum from unit tests to E2E tests.
@@ -49,7 +51,7 @@ The second pipeline is for the Enterprise version but essentially features the s
 ### Nightly Mender Server Integration tests
 
 Link: *qastatus link pending*
-Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipeline_schedules
+
 Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipelines?page=1&scope=all&source=schedule
 
 These tests are related to the Mender Server monorepo artifacts from `main`,
@@ -82,7 +84,9 @@ case of failures.
 ### Other notable weekly pipelines
 
 Link: https://gitlab.com/Northern.tech/Mender/integration-test-runner/-/pipeline_schedules
+
 Link: https://gitlab.com/Northern.tech/Mender/mender-mcu/-/pipeline_schedules
+
 Link: https://gitlab.com/Northern.tech/Mender/monitor-client/-/pipeline_schedules
 
 ### Individual pipelines
