@@ -135,7 +135,8 @@ init:workspace:
     - done
 
     # Add mender-gateway
-    - checkout_repo git@github.com:mendersoftware/mender-gateway go/src/github.com/mendersoftware/mender-gateway $MENDER_GATEWAY_REV
+    # This might already be checked out if we use a integration revision that still has mender-gateway as a releasable component
+    - checkout_repo git@github.com:mendersoftware/mender-gateway go/src/github.com/mendersoftware/mender-gateway $MENDER_GATEWAY_REV || true
 
     # Add other repositories.
     - checkout_repo git@github.com:openembedded/meta-openembedded.git meta-openembedded $META_OPENEMBEDDED_REV
