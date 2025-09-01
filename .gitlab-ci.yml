@@ -75,9 +75,7 @@ variables:
     description: |-
       Version of mender-snapshot
 
-  # Integration reposiroty. Its future is undefined, but currenly we use for two things:
-  # To relate the Mender Client subcomponents with one another
-  # To version the integration tests themselves.
+  # Repository revision to run the integration tests from
   INTEGRATION_REV:
     value: "master"
     description: |-

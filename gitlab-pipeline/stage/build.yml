@@ -1,5 +1,6 @@
 
 include:
+  # TODO QA-1178: Align mender-gateway and mender-monitor
   - project: 'Northern.tech/Mender/mender-gateway'
     file: '.gitlab-ci-build-package.yml'
     ref: 'master'
@@ -55,6 +56,10 @@ build:mender-monitor:package:
   needs: []
   allow_failure: false
   before_script:
+    # Early exit if version is latest
+    - if [ "$MONITOR_CLIENT_REV" = "latest" ]; then
+    -   exit 0
+    - fi
     - apk add --no-cache git openssh
     # Prepare SSH keys
     - eval $(ssh-agent -s)
@@ -88,7 +93,7 @@ build:mender-gateway:package:
     - init:workspace
   allow_failure: false
   before_script:
-    # Early exit when building an integration version without mender-gateway
+    # Early exit if repository is not checked out
     - apt update && apt install -yyq xz-utils
     - xz -d workspace.tar.xz
     - tar -tf workspace.tar
