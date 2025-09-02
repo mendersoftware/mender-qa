@@ -13,6 +13,11 @@ declare -a CONFIG_DEVICE_TYPES
 
 export PATH=$PATH:$WORKSPACE/go/bin
 
+# Get revision for a repository (i.e mender-something to $MENDER_SOMETHING_REV)
+repo_to_rev() {
+    echo "$(eval echo \$$(echo $1 | tr [a-z-] [A-Z_])_REV)"
+}
+
 is_building_board() {
     local ret=0
     local uc_board="$(tr [a-z-] [A-Z_] <<<$1)"
@@ -121,6 +126,33 @@ copy_build_conf() {
     done
 }
 
+# Get the yocto recipe name from the repo
+repo_to_recipe() {
+    case "$1" in
+    mender-configure-module)
+        echo "mender-configure"
+        ;;
+    monitor-client)
+        echo "mender-monitor"
+        ;;
+    *)
+        echo $1
+        ;;
+    esac
+}
+
+# Repo is closed source (installs prebuilt tarball)
+is_closed_source() {
+    case "$1" in
+    mender-binary-delta|monitor-client|mender-gateway)
+        return 0
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+}
+
 prepare_build_config() {
     local machine
     machine=$1
@@ -134,12 +166,45 @@ prepare_build_config() {
         return 1
     fi
 
-    # Mender Client LTS components
-    local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
-    local mender_connect_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-connect --in-integration-version HEAD)
-    local mender_configure_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-configure-module --in-integration-version HEAD)
-    local mender_flash_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-flash --in-integration-version HEAD)
+    for source_repository in $(ls $WORKSPACE/go/src/github.com/mendersoftware/); do
+        # TODO: handle here the closed source ones (add SRC_URI and PREFERRED_VERSION)
+        if is_closed_source $source_repository; then
+            continue
+        fi
 
+        # Version from env variables
+        local env_version=$(repo_to_rev $source_repository)
+
+        # TODO: if version == pull/XXX/head, what?
+
+        local on_exact_tag=$(test "$env_version" != "master" && \
+            cd $WORKSPACE/go/src/github.com/mendersoftware/$source_repository && \
+            git tag --points-at HEAD 2>/dev/null | egrep ^"$env_version"$ ) || \
+            on_exact_tag=
+        if [ -n "$on_exact_tag" ]; then
+            yocto_version="$on_exact_tag"
+        else
+            yocto_version="$env_version-git%"
+        fi
+
+        # Handling of external source path for go software
+        if [ -e "$WORKSPACE/go/src/github.com/mendersoftware/$source_repository/go.mod" ]; then
+            externalsrc="$WORKSPACE/go"
+        else
+            externalsrc="$WORKSPACE/go/src/github.com/mendersoftware/$source_repository"
+        fi
+
+        recipe=$(repo_to_recipe $source_repository)
+
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+EXTERNALSRC:pn-${recipe} = "$externalsrc"
+EXTERNALSRC:pn-${recipe}-native = "$externalsrc"
+PREFERRED_VERSION:pn-${recipe} = "$yocto_version"
+PREFERRED_VERSION:pn-${recipe}-native = "$yocto_version"
+EOF
+    done
+
+    # mender-binary-delta special handling
     local mender_binary_delta_version=$(get_mender_binary_delta_version)
     cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-binary-delta = "$mender_binary_delta_version"
@@ -149,6 +214,7 @@ EOF
 SRC_URI:pn-mender-binary-delta = "file://${tarball}"
 EOF
 
+    # monitor-client special handling
     if has_component monitor-client; then
         local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1 | xargs basename)
         local mender_monitor_version=$(tar -Oxf $WORKSPACE/stage-artifacts/$mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
@@ -161,6 +227,7 @@ PREFERRED_VERSION:pn-mender-monitor = "$mender_monitor_version"
 EOF
     fi
 
+    # mender-gateway special handling
     if has_component mender-gateway; then
         local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
         tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
@@ -178,36 +245,10 @@ EOF
     fi
 
     cat >> $BUILDDIR/conf/local.conf <<EOF
-EXTERNALSRC:pn-mender = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
-EXTERNALSRC:pn-mender-native = "$WORKSPACE/go/src/github.com/mendersoftware/mender"
-EXTERNALSRC:pn-mender-client = "$WORKSPACE/go"
-EXTERNALSRC:pn-mender-client-native = "$WORKSPACE/go"
-EXTERNALSRC:pn-mender-connect = "$WORKSPACE/go"
-EXTERNALSRC:pn-mender-configure = "$WORKSPACE/go/src/github.com/mendersoftware/mender-configure-module"
-EXTERNALSRC:pn-mender-flash = "$WORKSPACE/go/src/github.com/mendersoftware/mender-flash"
-
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS:remove = "do_patch"
 
 EOF
-
-    # Conditionally add EXTERNALSRC for independent components
-    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-EXTERNALSRC:pn-mender-artifact = "$WORKSPACE/go"
-EXTERNALSRC:pn-mender-artifact-native = "$WORKSPACE/go"
-EOF
-    fi
-    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-setup" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-EXTERNALSRC:pn-mender-setup = "$WORKSPACE/go"
-EOF
-    fi
-    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-EXTERNALSRC:pn-mender-snapshot = "$WORKSPACE/go"
-EOF
-    fi
 
     # Use network cache if present, if not, use local cache.
     if [ -d /mnt/sstate-cache ]; then
@@ -225,168 +266,7 @@ EOF
 MENDER_ARTIFACT_NAME = "mender-image-$(date +%Y%m%d-%H%M%S)"
 EOF
 
-    # Mender Client LTS components
-    local mender_on_exact_tag=$(test "$MENDER_REV" != "master" && \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender && \
-        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_REV"$ ) || \
-        mender_on_exact_tag=
-    local is_mender_golang_client=$( \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender && \
-        git merge-base --is-ancestor 3dfc9a02478d6e0fd8b8cb53b9f8255eb9225021 HEAD && \
-	    echo false || \
-	    echo true)
-    local mender_connect_on_exact_tag=$(test "$MENDER_CONNECT_REV" != "master" && \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-connect && \
-        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONNECT_REV"$ ) || \
-        mender_connect_on_exact_tag=
-    local mender_configure_on_exact_tag=$(test "$MENDER_CONFIGURE_MODULE_REV" != "master" && \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-configure-module && \
-        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_CONFIGURE_MODULE_REV"$ ) || \
-        mender_configure_on_exact_tag=
-    local mender_flash_on_exact_tag=$(test "$MENDER_FLASH_REV" != "master" && \
-        cd $WORKSPACE/go/src/github.com/mendersoftware/mender-flash && \
-        git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_FLASH_REV"$ ) || \
-        mender_flash_on_exact_tag=
-
-    # mender-artifact (can or cannot be checked out)
-    local mender_artifact_version=$MENDER_ARTIFACT_REV
-    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-artifact" ]; then
-        local mender_artifact_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-artifact --in-integration-version HEAD)
-        local mender_artifact_on_exact_tag=$(test "$MENDER_ARTIFACT_REV" != "master" && \
-            cd $WORKSPACE/go/src/github.com/mendersoftware/mender-artifact && \
-            git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_ARTIFACT_REV"$ ) || \
-            mender_artifact_on_exact_tag=
-    else
-        local mender_artifact_on_exact_tag=$(test "$MENDER_ARTIFACT_REV" != "master" && echo "$MENDER_ARTIFACT_REV") ||
-            mender_artifact_on_exact_tag=
-    fi
-
-    # mender-setup (can or cannot be checked out)
-    local mender_setup_version=$MENDER_SETUP_REV
-    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-setup" ]; then
-        local mender_setup_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-setup --in-integration-version HEAD)
-        local mender_setup_on_exact_tag=$(test "$MENDER_SETUP_REV" != "master" && \
-            cd $WORKSPACE/go/src/github.com/mendersoftware/mender-setup && \
-            git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SETUP_REV"$ ) || \
-            mender_setup_on_exact_tag=
-    else
-        local mender_setup_on_exact_tag=$(test "$MENDER_SETUP_REV" != "master" && echo "$MENDER_SETUP_REV") ||
-            mender_setup_on_exact_tag=
-    fi
-
-    # mender-snapshot (can or cannot be checked out)
-    local mender_snapshot_version=$MENDER_SNAPSHOT_REV
-    if [ -d "$WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot" ]; then
-        local mender_snapshot_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender-snapshot --in-integration-version HEAD)
-        local mender_snapshot_on_exact_tag=$(test "$MENDER_SNAPSHOT_REV" != "master" && \
-            cd $WORKSPACE/go/src/github.com/mendersoftware/mender-snapshot && \
-            git tag --points-at HEAD 2>/dev/null | egrep ^"$MENDER_SNAPSHOT_REV"$ ) || \
-            mender_snapshot_on_exact_tag=
-    else
-        local mender_snapshot_on_exact_tag=$(test "$MENDER_SNAPSHOT_REV" != "master" && echo "$MENDER_SNAPSHOT_REV") ||
-            mender_snapshot_on_exact_tag=
-    fi
-
-    # Setting these PREFERRED_VERSIONs doesn't influence which version we build,
-    # since we are building the one that Jenkins has cloned, but it does
-    # influence which version Yocto and the binaries will show.
-    if [ -n "$mender_on_exact_tag" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-# MEN-2948: Renamed mender recipe -> mender-client
-# But the "mender" reference has to be kept for backwards compatibility
-# with 2.1.x, 2.2.x, and 2.3.x
-PREFERRED_VERSION:pn-mender = "$mender_on_exact_tag"
-PREFERRED_VERSION:pn-mender-native = "$mender_on_exact_tag"
-PREFERRED_VERSION:pn-mender-client = "$mender_on_exact_tag"
-PREFERRED_VERSION:pn-mender-client-native = "$mender_on_exact_tag"
-EOF
-    else
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-# MEN-2948: Renamed mender recipe -> mender-client
-# But the "mender" reference has to be kept for backwards compatibility
-# with 2.1.x, 2.2.x, and 2.3.x
-PREFERRED_VERSION:pn-mender = "$client_version-git%"
-PREFERRED_VERSION:pn-mender-native = "$client_version-git%"
-PREFERRED_VERSION:pn-mender-client = "$client_version-git%"
-PREFERRED_VERSION:pn-mender-client-native = "$client_version-git%"
-EOF
-    fi
-
-    if $is_mender_golang_client; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_PROVIDER_mender-native  = "mender-client-native"
-PREFERRED_RPROVIDER_mender-auth   = "mender-client"
-PREFERRED_RPROVIDER_mender-update = "mender-client"
-EOF
-    else
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_PROVIDER_mender-native  = "mender-native"
-PREFERRED_RPROVIDER_mender-auth   = "mender"
-PREFERRED_RPROVIDER_mender-update = "mender"
-EOF
-    fi
-
-    if [ -n "$mender_artifact_on_exact_tag" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-artifact = "$mender_artifact_on_exact_tag"
-PREFERRED_VERSION:pn-mender-artifact-native = "$mender_artifact_on_exact_tag"
-EOF
-    else
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-artifact = "$mender_artifact_version-git%"
-PREFERRED_VERSION:pn-mender-artifact-native = "$mender_artifact_version-git%"
-EOF
-    fi
-
-    if [ -n "$mender_connect_on_exact_tag" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-connect = "$mender_connect_on_exact_tag"
-EOF
-    else
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-connect = "$mender_connect_version-git%"
-EOF
-    fi
-
-    if [ -n "$mender_setup_on_exact_tag" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-setup = "$mender_setup_on_exact_tag"
-EOF
-    else
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-setup = "$mender_setup_version-git%"
-EOF
-    fi
-
-    if [ -n "$mender_snapshot_on_exact_tag" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-snapshot = "$mender_snapshot_on_exact_tag"
-EOF
-    else
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-snapshot = "$mender_snapshot_version-git%"
-EOF
-    fi
-
-    if [ -n "$mender_configure_on_exact_tag" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-configure = "$mender_configure_on_exact_tag"
-EOF
-    else
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-configure = "$mender_configure_version-git%"
-EOF
-    fi
-
-    if [ -n "$mender_flash_on_exact_tag" ]; then
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-flash = "$mender_flash_on_exact_tag"
-EOF
-    else
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-flash = "$mender_flash_version-git%"
-EOF
-    fi
+    # TODO: tweak the versions for the components known to have major upgrades
 }
 
 # prepares the configuration for the so-called clean image. this is the image
