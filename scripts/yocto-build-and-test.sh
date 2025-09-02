@@ -647,23 +647,11 @@ build_and_test_client() {
         run_bitbake $images_to_build
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
-            # Legacy note on release_tool --set-version-of
-            #
-            # Up until Mender 3.7, this was used in by legacy release process to modify
-            # the docker-compose files with an specific Docker tag "pr" and then launch
-            # the integration tests with such images. Since the split of the release process
-            # we don't support this and the tests will be triggered by a downstream pipeline
-            # (from integration repository).
-            # To not make the logic too complicated, just accept errors in all the invocations
-            #
             filename="clean-${image_name}-${machine_name}.${extension}"
             $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                 $machine_name \
                 -t mendersoftware/mender-client-qemu:pr
-            $WORKSPACE/integration/extra/release_tool.py \
-                --set-version-of mender-client-qemu \
-                --version pr || true
 
             if grep mender-image-full-cmdline-rofs <<<"$images_to_build"; then
                 filename="clean-mender-image-full-cmdline-rofs-${machine_name}.${extension}"
@@ -672,9 +660,6 @@ build_and_test_client() {
                     -i mender-image-full-cmdline-rofs \
                     $machine_name \
                     -t mendersoftware/mender-client-qemu-rofs:pr
-                $WORKSPACE/integration/extra/release_tool.py \
-                    --set-version-of mender-client-qemu-rofs \
-                    --version pr || true
             fi
 
             if grep mender-monitor-image-full-cmdline <<<"$images_to_build"; then
@@ -684,9 +669,6 @@ build_and_test_client() {
                     -i mender-monitor-image-full-cmdline \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr
-                $WORKSPACE/integration/extra/release_tool.py \
-                    --set-version-of mender-monitor-qemu-commercial \
-                    --version pr || true
             fi
 
             if grep mender-gateway-image-full-cmdline <<<"$images_to_build"; then
@@ -696,9 +678,6 @@ build_and_test_client() {
                     -i mender-gateway-image-full-cmdline \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-gateway-qemu-commercial:pr
-                $WORKSPACE/integration/extra/release_tool.py \
-                    --set-version-of mender-gateway-qemu-commercial \
-                    --version pr || true
             fi
 
             if grep mender-image-full-cmdline-rofs-commercial <<<"$images_to_build"; then
@@ -709,9 +688,6 @@ build_and_test_client() {
                     -i mender-image-full-cmdline-rofs-commercial \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr
-                $WORKSPACE/integration/extra/release_tool.py \
-                    --set-version-of mender-qemu-rofs-commercial \
-                    --version pr || true
             fi
         fi
 
