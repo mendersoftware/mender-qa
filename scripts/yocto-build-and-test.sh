@@ -222,7 +222,7 @@ EOF
     fi
 
     cat >> $BUILDDIR/conf/local.conf <<EOF
-MENDER_ARTIFACT_NAME = "mender-image-$client_version"
+MENDER_ARTIFACT_NAME = "mender-image-$(date +%Y%m%d-%H%M%S)"
 EOF
 
     # Mender Client LTS components
