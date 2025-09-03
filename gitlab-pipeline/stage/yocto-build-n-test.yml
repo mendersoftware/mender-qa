@@ -83,7 +83,11 @@ test:acceptance:qemux86_64:uefi_grub:
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
+    # The tests should've saved logs from the VM, save them as CI artifacts
+    - echo "Gathering logs from tested image..."
+    - cp -r /tmp/journalctl* stage-artifacts/
     - ls -lh stage-artifacts/
+
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
 
@@ -136,6 +140,9 @@ test:acceptance:qemux86_64:uefi_grub:cross-platform:
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
+    # The tests should've saved logs from the VM, save them as CI artifacts
+    - echo "Gathering logs from tested image..."
+    - cp -r /tmp/journalctl* stage-artifacts/
     - ls -lh stage-artifacts/
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
@@ -189,6 +196,9 @@ test:acceptance:vexpress_qemu:
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
+    # The tests should've saved logs from the VM, save them as CI artifacts
+    - echo "Gathering logs from tested image..."
+    - cp -r /tmp/journalctl* stage-artifacts/
     - ls -lh stage-artifacts/
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
@@ -242,6 +252,9 @@ test:acceptance:qemux86_64:bios_grub:
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
+    # The tests should've saved logs from the VM, save them as CI artifacts
+    - echo "Gathering logs from tested image..."
+    - cp -r /tmp/journalctl* stage-artifacts/
     - ls -lh stage-artifacts/
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
@@ -295,6 +308,9 @@ test:acceptance:qemux86_64:bios_grub_gpt:
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
+    # The tests should've saved logs from the VM, save them as CI artifacts
+    - echo "Gathering logs from tested image..."
+    - cp -r /tmp/journalctl* stage-artifacts/
     - ls -lh stage-artifacts/
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
@@ -348,6 +364,9 @@ test:acceptance:vexpress_qemu:uboot_uefi_grub:
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
+    # The tests should've saved logs from the VM, save them as CI artifacts
+    - echo "Gathering logs from tested image..."
+    - cp -r /tmp/journalctl* stage-artifacts/
     - ls -lh stage-artifacts/
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
@@ -404,6 +423,9 @@ test:acceptance:vexpress_qemu:flash:
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
 
+    # The tests should've saved logs from the VM, save them as CI artifacts
+    - echo "Gathering logs from tested image..."
+    - cp -r /tmp/journalctl* stage-artifacts/
     - ls -lh stage-artifacts/
     # Post job status
     - ${CI_PROJECT_DIR}/scripts/github_pull_request_status $(cat /JOB_RESULT.txt) "Gitlab ${CI_JOB_NAME} finished" "${CI_JOB_URL}" "${CI_JOB_NAME}/${INTEGRATION_REV}"
