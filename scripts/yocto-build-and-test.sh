@@ -219,7 +219,7 @@ EOF
     else
         local version="$MENDER_BINARY_DELTA_VERSION"
         if [ -z "$version" -o "$version" = "latest" ]; then
-            version=$(get_latest_version meta-mender-commercial/recipes-mender/mender-binary-delta)
+            version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-binary-delta)
         fi
         s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/mender-binary-delta-${version}.tar.xz $WORKSPACE/downloads
         cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -241,7 +241,7 @@ EOF
     else
         local version="$MONITOR_CLIENT_REV"
         if [ -z "$version" -o "$version" = "latest" ]; then
-            version=$(get_latest_version meta-mender-commercial/conditional/mender-monitor)
+            version=$(get_latest_recipe_version meta-mender-commercial/conditional/mender-monitor)
         fi
         s3cmd get s3://${S3_BUCKET_NAME}/mender-monitor/yocto/${version}/mender-monitor-${version}.tar.gz $WORKSPACE/downloads
         cat >> $BUILDDIR/conf/local.conf <<EOF
@@ -267,7 +267,7 @@ EOF
     else
         local version="$MENDER_GATEWAY_REV"
         if [ -z "$version" -o "$version" = "latest" ]; then
-            version=$(get_latest_version meta-mender-commercial/recipes-mender/mender-gateway)
+            version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-gateway)
         fi
         s3cmd get s3://${S3_BUCKET_NAME}/mender-gateway/yocto/${version}/mender-gateway-${version}.tar.xz $WORKSPACE/downloads
         s3cmd get s3://${S3_BUCKET_NAME}/mender-gateway/examples/${version}/mender-gateway-examples-${version}.tar $WORKSPACE/downloads
@@ -300,7 +300,23 @@ EOF
 MENDER_ARTIFACT_NAME = "mender-image-$(date +%Y%m%d-%H%M%S)"
 EOF
 
-    # TODO: tweak the versions for the components known to have major upgrades
+    # Set preferred versions for components known to have major upgrades
+    for recipe_dir in "meta-mender-core/recipes-mender/mender-artifact" \
+            "meta-mender-core/recipes-mender/mender-client" \
+            "meta-mender-commercial/recipes-mender/mender-gateway"; do
+        local recipe=$(basename "$recipe_dir")
+        if [ "$recipe" = "mender-client" ]; then
+            recipe=mender
+        fi
+
+        if ! grep -q "^PREFERRED_VERSION:pn-${recipe} =" "$BUILDDIR/conf/local.conf"; then
+            local latest_major=$(get_latest_recipe_major_version "$recipe_dir")
+            cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-${recipe} = "${latest_major}.%"
+PREFERRED_VERSION:pn-${recipe}-native = "${latest_major}.%"
+EOF
+        fi
+    done
 }
 
 # prepares the configuration for the so-called clean image. this is the image
@@ -372,13 +388,20 @@ copy_build_artifacts_to_workspace() {
 
 
 # returns the latest available version of a recipe
-get_latest_version() {
+get_latest_recipe_version() {
     local recipe_dir="$1"
-    recipe=$(ls ${WORKSPACE}/meta-mender/${recipe_dir}/*.bb \
+    ls ${WORKSPACE}/meta-mender/${recipe_dir}/*.bb \
         | grep -E '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?' \
         | sort -V \
-        | tail -n1)
-    echo $recipe | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?'
+        | tail -n1 \
+        | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?'
+}
+
+# returns the latest major version of a recipe
+get_latest_recipe_major_version() {
+    local recipe_dir="$1"
+    get_latest_recipe_version ${recipe_dir} \
+        | cut -d. -f1
 }
 
 
@@ -404,7 +427,7 @@ init_environment() {
     # Get mender-binary-delta generator
     # MEN-5268 TODO: move somewhere else (acceptance tests?)
     if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
-        local version=$(get_latest_version meta-mender-commercial/recipes-mender/mender-binary-delta)
+        local version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-binary-delta)
         mkdir -p $WORKSPACE/bin
         s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/x86_64/mender-binary-delta-generator $WORKSPACE/bin
         chmod +x $WORKSPACE/bin/mender-binary-delta-generator
