@@ -179,16 +179,20 @@ prepare_build_config() {
         # Version from env variables
         local env_version=$(repo_to_rev $source_repository)
 
-        # TODO: if version == pull/XXX/head, what?
-
+        # Yocto version in order of preference:
+        # -> if exact Git tag, use that
+        # -> if PR, use master-git%
+        # -> otherwise env ver + git% (maser-git, 5.0.x-git, etc)
+        local yocto_version="$env_version-git%"
+        if [[ "$env_version" =~ ^pull/[0-9]+/head$ ]]; then
+            yocto_version="master-git%"
+        fi
         local on_exact_tag=$(test "$env_version" != "master" && \
             cd $WORKSPACE/go/src/github.com/mendersoftware/$source_repository && \
             git tag --points-at HEAD 2>/dev/null | egrep ^"$env_version"$ ) || \
             on_exact_tag=
         if [ -n "$on_exact_tag" ]; then
             yocto_version="$on_exact_tag"
-        else
-            yocto_version="$env_version-git%"
         fi
 
         # Handling of external source path for go software
