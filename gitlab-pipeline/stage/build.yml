@@ -42,10 +42,6 @@ build:client:docker:
     - tar -xf /tmp/workspace.tar
   script:
     - echo ${CI_REGISTRY_PASSWORD} | docker login --username ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
-    # First build mender's repo Docker image
-    - cd go/src/github.com/mendersoftware/mender
-    - ./tests/build-docker -t ${GITLAB_REGISTRY_PREFIX}-mender-client-docker
-    - docker push ${GITLAB_REGISTRY_PREFIX}-mender-client-docker
     - cd $WORKSPACE/integration/extra/mender-client-docker-addons
     - docker build
       --build-arg MENDER_CLIENT_REV=$MENDER_REV
