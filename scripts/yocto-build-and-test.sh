@@ -166,9 +166,13 @@ prepare_build_config() {
         return 1
     fi
 
+    # Checked out open source components:
+    # -> preferred version can be a tag or <branch>-git%, with special handling for PRs
+    # -> external source is the GO src dir or the actual subdir
+
     for source_repository in $(ls $WORKSPACE/go/src/github.com/mendersoftware/); do
-        # TODO: handle here the closed source ones (add SRC_URI and PREFERRED_VERSION)
         if is_closed_source $source_repository; then
+            # Explicit handling below
             continue
         fi
 
@@ -204,17 +208,26 @@ PREFERRED_VERSION:pn-${recipe}-native = "$yocto_version"
 EOF
     done
 
-    # mender-binary-delta special handling
-    local mender_binary_delta_version=$(get_mender_binary_delta_version)
-    cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-binary-delta = "$mender_binary_delta_version"
-EOF
-    local tarball=$(echo "$WORKSPACE"/mender-binary-delta/*.tar.xz)
-    cat >> "$BUILDDIR"/conf/local.conf <<EOF
-SRC_URI:pn-mender-binary-delta = "file://${tarball}"
-EOF
+    # Closed source components:
+    # -> if checked out, locate the package
+    # -> otherwise fetch from S3 bucket
 
-    # monitor-client special handling
+    if has_component mender-binary-delta; then
+        # MEN-5268 TODO: locate the local package instead
+        echo "mender-binary-delta cannot (yet) be integrated from master."
+        exit 1
+    else
+        local version="$MENDER_BINARY_DELTA_VERSION"
+        if [ -z "$version" -o "$version" = "latest" ]; then
+            version=$(get_latest_version meta-mender-commercial/recipes-mender/mender-binary-delta)
+        fi
+        s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/mender-binary-delta-${version}.tar.xz $WORKSPACE/downloads
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-binary-delta = "$version"
+SRC_URI:pn-mender-binary-delta = "file:///$WORKSPACE/downloads/mender-binary-delta-${version}.tar.xz"
+EOF
+    fi
+
     if has_component monitor-client; then
         local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1 | xargs basename)
         local mender_monitor_version=$(tar -Oxf $WORKSPACE/stage-artifacts/$mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
@@ -225,9 +238,18 @@ EOF
 SRC_URI:pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/$mender_monitor_filename"
 PREFERRED_VERSION:pn-mender-monitor = "$mender_monitor_version"
 EOF
+    else
+        local version="$MONITOR_CLIENT_REV"
+        if [ -z "$version" -o "$version" = "latest" ]; then
+            version=$(get_latest_version meta-mender-commercial/conditional/mender-monitor)
+        fi
+        s3cmd get s3://${S3_BUCKET_NAME}/mender-monitor/yocto/${version}/mender-monitor-${version}.tar.gz $WORKSPACE/downloads
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-monitor = "$version"
+SRC_URI:pn-mender-monitor = "file:///$WORKSPACE/downloads/mender-monitor-${version}.tar.gz"
+EOF
     fi
 
-    # mender-gateway special handling
     if has_component mender-gateway; then
         local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
         tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
@@ -238,9 +260,21 @@ EOF
         fi
         local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-examples-*.tar" | head -n1 | xargs basename)
         cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-gateway = "$mender_gateway_version"
 SRC_URI:pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/$mender_gateway_filename"
 SRC_URI:pn-mender-gateway:append = " file:///$WORKSPACE/stage-artifacts/$mender_gateway_examples_filename"
-PREFERRED_VERSION:pn-mender-gateway = "$mender_gateway_version"
+EOF
+    else
+        local version="$MENDER_GATEWAY_REV"
+        if [ -z "$version" -o "$version" = "latest" ]; then
+            version=$(get_latest_version meta-mender-commercial/recipes-mender/mender-gateway)
+        fi
+        s3cmd get s3://${S3_BUCKET_NAME}/mender-gateway/yocto/${version}/mender-gateway-${version}.tar.xz $WORKSPACE/downloads
+        s3cmd get s3://${S3_BUCKET_NAME}/mender-gateway/examples/${version}/mender-gateway-examples-${version}.tar $WORKSPACE/downloads
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-gateway = "$version"
+SRC_URI:pn-mender-gateway = "file:///$WORKSPACE/downloads/mender-gateway-${version}.tar.xz"
+SRC_URI:pn-mender-gateway:append = " file:///$WORKSPACE/downloads/mender-gateway-examples-${version}.tar"
 EOF
     fi
 
@@ -337,14 +371,13 @@ copy_build_artifacts_to_workspace() {
 }
 
 
-# returns the version of mender-binary-delta to be used in the build
-get_mender_binary_delta_version() {
-    local recipe
-    if [ -z "$MENDER_BINARY_DELTA_VERSION" -o "$MENDER_BINARY_DELTA_VERSION" = "latest" ]; then
-        recipe=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*.bb | sort -V | tail -n1)
-    else
-        recipe=$(ls $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender/mender-binary-delta/*$MENDER_BINARY_DELTA_VERSION*.bb)
-    fi
+# returns the latest available version of a recipe
+get_latest_version() {
+    local recipe_dir="$1"
+    recipe=$(ls ${WORKSPACE}/meta-mender/${recipe_dir}/*.bb \
+        | grep -E '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?' \
+        | sort -V \
+        | tail -n1)
     echo $recipe | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?'
 }
 
@@ -365,13 +398,16 @@ init_environment() {
         exit 1
     fi
 
-    # Get mender-binary-delta tarball and add the generator to the PATH
+    # Directory for pre-built S3 packages
+    mkdir -p $WORKSPACE/downloads
+
+    # Get mender-binary-delta generator
+    # MEN-5268 TODO: move somewhere else (acceptance tests?)
     if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
-        local version=$(get_mender_binary_delta_version)
-        mkdir -p $WORKSPACE/mender-binary-delta
-        s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/mender-binary-delta-${version}.tar.xz $WORKSPACE/mender-binary-delta
+        local version=$(get_latest_version meta-mender-commercial/recipes-mender/mender-binary-delta)
         mkdir -p $WORKSPACE/bin
-        tar -C $WORKSPACE/bin --strip-components=2 -xf $WORKSPACE/mender-binary-delta/mender-binary-delta-${version}.tar.xz mender-binary-delta-${version}/x86_64/mender-binary-delta-generator
+        s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/x86_64/mender-binary-delta-generator $WORKSPACE/bin
+        chmod +x $WORKSPACE/bin/mender-binary-delta-generator
         export PATH=$PATH:$WORKSPACE/bin
     fi
 }
