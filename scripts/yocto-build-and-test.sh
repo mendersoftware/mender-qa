@@ -559,10 +559,6 @@ build_and_test_client() {
                     && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
                 images_to_build+=" mender-monitor-image-full-cmdline"
             fi
-            if has_component mender-gateway \
-                    && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-gateway-image-full-cmdline.bb ]]; then
-                images_to_build+=" mender-gateway-image-full-cmdline"
-            fi
             if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
                 images_to_build+=" mender-image-full-cmdline-rofs-commercial"
             fi
@@ -612,15 +608,6 @@ build_and_test_client() {
                     -i mender-monitor-image-full-cmdline \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr
-            fi
-
-            if grep mender-gateway-image-full-cmdline <<<"$images_to_build"; then
-                filename="clean-mender-gateway-image-full-cmdline-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
-                -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
-                    -i mender-gateway-image-full-cmdline \
-                    $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-gateway-qemu-commercial:pr
             fi
 
             if grep mender-image-full-cmdline-rofs-commercial <<<"$images_to_build"; then
