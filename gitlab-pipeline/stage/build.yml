@@ -26,6 +26,8 @@ build:client:docker:
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
+    # Dependencies
+    - apk --update add curl jq
     # Check out integration repository
     - git init ${CI_PROJECT_DIR}/integration
     - cd ${CI_PROJECT_DIR}/integration
