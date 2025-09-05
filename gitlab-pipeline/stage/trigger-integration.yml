@@ -50,6 +50,14 @@ trigger:generate-gitlab-integration-rev:
 trigger:integration-tests:
   extends: .template:trigger:integration-tests
   rules:
+    - if: |
+          $MENDER_REV == "latest" &&
+          $MENDER_CONNECT_REV == "latest" &&
+          $MENDER_CONFIGURE_MODULE_REV == "latest" &&
+          $MONITOR_CLIENT_REV == "latest" &&
+          $MENDER_BINARY_DELTA_VERSION == "latest" &&
+          $MENDER_FLASH_REV == "latest"
+      when: never
     - if: $RUN_INTEGRATION_TESTS == "true"
   needs:
     - trigger:generate-gitlab-integration-rev
