@@ -314,10 +314,12 @@ EOF
         fi
 
         if ! grep -q "^PREFERRED_VERSION:pn-${recipe} =" "$BUILDDIR/conf/local.conf"; then
-            local latest_major=$(get_latest_recipe_major_version "$recipe_dir")
+            # Using latest version instead of "M.%"" due to a bug in yocto. See:
+            #  https://bugzilla.yoctoproject.org/show_bug.cgi?id=15967
+            local latest_version=$(get_latest_recipe_version "$recipe_dir")
             cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-${recipe} = "${latest_major}.%"
-PREFERRED_VERSION:pn-${recipe}-native = "${latest_major}.%"
+PREFERRED_VERSION:pn-${recipe} = "${latest_version}"
+PREFERRED_VERSION:pn-${recipe}-native = "${latest_version}"
 EOF
         fi
     done
@@ -399,13 +401,6 @@ get_latest_recipe_version() {
         | sort -V \
         | tail -n1 \
         | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?'
-}
-
-# returns the latest major version of a recipe
-get_latest_recipe_major_version() {
-    local recipe_dir="$1"
-    get_latest_recipe_version ${recipe_dir} \
-        | cut -d. -f1
 }
 
 
