@@ -1,5 +1,6 @@
 
 include:
+  # TODO QA-1178: Align mender-gateway and mender-monitor
   - project: 'Northern.tech/Mender/mender-gateway'
     file: '.gitlab-ci-build-package.yml'
     ref: 'master'
@@ -25,6 +26,8 @@ build:client:docker:
   before_script:
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
+    # Dependencies
+    - apk --update add curl jq
     # Check out integration repository
     - git init ${CI_PROJECT_DIR}/integration
     - cd ${CI_PROJECT_DIR}/integration
@@ -36,6 +39,23 @@ build:client:docker:
   script:
     - echo ${CI_REGISTRY_PASSWORD} | docker login --username ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
     - cd ${CI_PROJECT_DIR}/integration/extra/mender-client-docker-addons
+    # QA-1176 TODO: move the "latest to tag" translation to the Dockerfile
+    - |
+      get_latest_tag() {
+        git -c 'versionsort.suffix=-' ls-remote --tags --sort='v:refname' --refs $1 |
+          grep -E 'v?[0-9]+\.[0-9]+\.[0-9]+.*$' |
+          tail -n1 |
+          cut -d'/' -f3
+      }
+    - if [ "$MENDER_REV" = "latest" ]; then
+    -   MENDER_REV=$(get_latest_tag https://github.com/mendersoftware/mender.git)
+    - fi
+    - if [ "$MENDER_CONNECT_REV" = "latest" ]; then
+    -   MENDER_CONNECT_REV=$(get_latest_tag https://github.com/mendersoftware/mender-connect.git)
+    - fi
+    - if [ "$MENDER_SETUP_REV" = "latest" ]; then
+    -   MENDER_SETUP_REV=$(get_latest_tag https://github.com/mendersoftware/mender-setup.git)
+    - fi
     - docker build
       --build-arg MENDER_CLIENT_REV=$MENDER_REV
       --build-arg MENDER_CONNECT_REV=$MENDER_CONNECT_REV
@@ -55,6 +75,10 @@ build:mender-monitor:package:
   needs: []
   allow_failure: false
   before_script:
+    # Early exit if version is latest
+    - if [ "$MONITOR_CLIENT_REV" = "latest" ]; then
+    -   exit 0
+    - fi
     - apk add --no-cache git openssh
     # Prepare SSH keys
     - eval $(ssh-agent -s)
@@ -88,7 +112,7 @@ build:mender-gateway:package:
     - init:workspace
   allow_failure: false
   before_script:
-    # Early exit when building an integration version without mender-gateway
+    # Early exit if repository is not checked out
     - apt update && apt install -yyq xz-utils
     - xz -d workspace.tar.xz
     - tar -tf workspace.tar

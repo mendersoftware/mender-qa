@@ -18,6 +18,7 @@ variables:
     value: "master"
     description: |-
       Version of monitor-client
+  # MEN-5268 TODO: Support fetching and testing mender-binary-delta master
   MENDER_BINARY_DELTA_VERSION:
     value: "latest"
     description: |-
@@ -28,10 +29,8 @@ variables:
       Version of mender-flash
 
   # Mender Gateway LTS
-  # Currently build, tested and released together with the Client.
-  # To be moved out with MEN-XXXX
   MENDER_GATEWAY_REV:
-    value: "master"
+    value: "latest"
     description: |-
       Version of mender-gateway
 
@@ -61,29 +60,26 @@ variables:
       Version of mender-qa
 
   # Versions of independent components
-  # The build publish and release of all of these soon or later will be moved out of mender-qa
   MENDER_ARTIFACT_REV:
-    value: "master"
+    value: "latest"
     description: |-
       Version of mender-artifact
   MENDER_SETUP_REV:
-    value: "master"
+    value: "latest"
     description: |-
       Version of mender-setup
   MENDER_SNAPSHOT_REV:
-    value: "master"
+    value: "latest"
     description: |-
       Version of mender-snapshot
 
-  # Integration reposiroty. Its future is undefined, but currenly we use for two things:
-  # To relate the Mender Client subcomponents with one another
-  # To version the integration tests themselves.
+  # Repository revision to run the integration tests from
   INTEGRATION_REV:
     value: "master"
     description: |-
       Version of integration
 
-  # Build Virtual Client(s)
+  # Build Virtual Device(s)
   BUILD_CLIENT:
     value: "true"
     description: |-
