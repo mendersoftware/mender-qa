@@ -158,10 +158,6 @@ variables:
       Set the parallel factor for client acceptance tests
 
   # Child pipelines build and test
-  MENDER_CONVERT_REV:
-    value: "master"
-    description: |-
-      Version of mender-convert
   MENDER_DIST_PACKAGES_REV:
     value: "master"
     description: |-
@@ -170,18 +166,10 @@ variables:
     value: "false"
     description: |-
       Flag to trigger child pipeline mender-dist-packages
-  BUILD_MENDER_CONVERT:
-    value: "false"
-    description: |-
-      Flag to trigger child pipeline mender-convert
   TEST_MENDER_DIST_PACKAGES:
     value: "false"
     description: |-
       Flag to run tests in child pipeline mender-dist-packages
-  TEST_MENDER_CONVERT:
-    value: "false"
-    description: |-
-      Flag to run tests in child pipeline mender-convert
   RUN_INTEGRATION_TESTS:
     value: "true"
     description: |-
@@ -227,7 +215,6 @@ include:
   - local: "/gitlab-pipeline/stage/build.yml"
   - local: "/gitlab-pipeline/stage/yocto-build-n-test.yml"
   - local: "/gitlab-pipeline/stage/trigger-packages.yml"
-  - local: "/gitlab-pipeline/stage/trigger-images.yml"
   - local: "/gitlab-pipeline/stage/trigger-integration.yml"
   - local: "/gitlab-pipeline/stage/release.yml"
   - local: "/gitlab-pipeline/stage/post.yml"
