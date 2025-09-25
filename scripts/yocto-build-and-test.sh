@@ -297,6 +297,13 @@ EOF
 SRCTREECOVEREDTASKS:remove = "do_patch"
 
 EOF
+    # For now the mender-orchestrator-support version is hardcoded to main as we don't yet
+    # have the logic to checkout revisions.
+    # This will be aligned with the other closed-source components in QA-1180
+    local version="main-git%"
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-orchestrator-support = "$version"
+EOF
 
     # Use network cache if present, if not, use local cache.
     if [ -d /mnt/sstate-cache ]; then
