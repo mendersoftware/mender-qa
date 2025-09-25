@@ -58,7 +58,7 @@ else
 fi
 
 # Open SSH port on 222.
-if type iptables; then
+if type iptables >/dev/null 2>&1; then
     iptables -t nat -I PREROUTING 1 -p tcp --dport 222 -j DNAT --to-dest :22
     iptables -t nat -I OUTPUT 1 -p tcp --dst 127.0.0.1 --dport 222 -j DNAT --to-dest :22
 else
