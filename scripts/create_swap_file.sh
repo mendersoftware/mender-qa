@@ -11,8 +11,10 @@ then
 fi
 SIZE="$1"
 
-# Don't overwrite if file exists
-[ -f /swapfile ] && exit 1
+if swapon | grep /swapfile >/dev/null; then
+  echo "/swapfile already configured and setup. Exiting."
+  exit 0
+fi
 
 time dd if=/dev/zero of=/swapfile bs=1M count=$SIZE
 chmod 0600 /swapfile
