@@ -717,7 +717,10 @@ build_and_test_client() {
         if [ -e "$WORKSPACE/$board_name/$image_name-$device_type.ext4" ]; then
 
             # Prepare deliveries: modified fs, release_1 artifact, and compressed sdimg for hw boards
-            local client_version=$($WORKSPACE/integration/extra/release_tool.py --version-of mender --in-integration-version HEAD)
+            local client_version="$MENDER_REV"
+            if [[ "$client_version" =~ ^pull/[0-9]+/head$ ]]; then
+                client_version="pr"
+            fi
             cp $WORKSPACE/$board_name/$image_name-$device_type.ext4 $WORKSPACE/$board_name/$image_name-$device_type-release_1.ext4
             modify_ext4 $WORKSPACE/$board_name/$image_name-$device_type-release_1.ext4 release-1_${client_version}
             modify_artifact $WORKSPACE/$board_name/$image_name-$device_type.mender $WORKSPACE/$board_name/$image_name-$device_type.ext4 release-1_${client_version} $WORKSPACE/$board_name/${board_name}_release_1_${client_version}.mender
