@@ -47,24 +47,6 @@ release:testing-boards:beagleboneblack:automatic:
       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_BEAGLEBONEBLACK == "true"
   extends: .template_release_board_artifacts
 
-.publish_helper_functions: &publish_helper_functions |
-  # Bash function to check if the string is a final tag
-  function is_final_tag () {
-    local -r version="$1"
-    [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-  }
-  # Bash function to check if the string is a build tag
-  function is_build_tag () {
-    local -r version="$1"
-    [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-build[0-9]+$ ]]
-  }
-  # Bash function to check if the target binary already exists
-  function is_published () {
-    local -r bucket="$1"
-    local -r path="$2"
-    aws s3api head-object --bucket "${bucket}" --key "${path}" >/dev/null 2>&1
-  }
-
 .template_release_mender-monitor:
   tags:
     - mender-qa-worker-generic-light
