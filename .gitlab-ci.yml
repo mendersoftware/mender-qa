@@ -47,6 +47,10 @@ variables:
     value: ${POKY_REV}
     description: |-
       Version of meta-openembedded
+  META_VIRTUALIZATION_REV:
+    value: ${POKY_REV}
+    description: |-
+      Version of meta-virtualization
   META_RASPBERRYPI_REV:
     value: ${POKY_REV}
     description: |-

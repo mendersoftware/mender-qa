@@ -146,6 +146,7 @@ init:workspace:
 
     # Add other repositories.
     - checkout_repo git@github.com:openembedded/meta-openembedded.git meta-openembedded $META_OPENEMBEDDED_REV
+    - checkout_repo git://git.yoctoproject.org/meta-virtualization meta-virtualization $META_VIRTUALIZATION_REV
     - if [ "$BUILD_RASPBERRYPI3" = true ] || [ "$BUILD_RASPBERRYPI4" = true ]; then
     -   checkout_repo https://github.com/agherzan/meta-raspberrypi.git meta-raspberrypi $META_RASPBERRYPI_REV
     - fi
