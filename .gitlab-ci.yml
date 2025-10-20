@@ -44,11 +44,15 @@ variables:
     description: |-
       Version of poky
   META_OPENEMBEDDED_REV:
-    value: "scarthgap"
+    value: ${POKY_REV}
     description: |-
       Version of meta-openembedded
+  META_VIRTUALIZATION_REV:
+    value: ${POKY_REV}
+    description: |-
+      Version of meta-virtualization
   META_RASPBERRYPI_REV:
-    value: "kirkstone"
+    value: ${POKY_REV}
     description: |-
       Version of meta-raspberrypi. Only applicable for kirkstone or older
 
