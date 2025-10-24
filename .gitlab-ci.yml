@@ -223,6 +223,13 @@ include:
   - local: "/gitlab-pipeline/stage/release.yml"
   - local: "/gitlab-pipeline/stage/post.yml"
 
+default:
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
 stages:
   # .pre and .post have no effect and are only for documentation purposes. .pre
   # and .post stages run at the very start and very end of a pipeline,
