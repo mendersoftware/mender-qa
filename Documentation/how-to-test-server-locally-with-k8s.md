@@ -319,6 +319,18 @@ redis:
 EOF
 ```
 
+#### Enable Server-side generation of Delta Artifacts
+
+For Enterprise, you can enable the Server-side generation of Delta Artifacts with:
+
+```bash
+cat >> mender-values.yml <<EOF
+
+generate_delta_worker:
+  enabled: true
+EOF
+```
+
 ### Verify Configuration File
 
 **IMPORTANT:** After creating the file, verify that all variables are correctly expanded. There should be NO occurrences of `${VARIABLE_NAME}` in the file.
