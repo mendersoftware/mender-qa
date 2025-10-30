@@ -369,7 +369,7 @@ ingress:
 
 For Enterprise, you need access to the Mender Enterprise Docker registry (`registry.mender.io`). If you don't have credentials, contact your Mender representative.
 
-First, verify you have access:
+First, **on the host machine** , verify you have access:
 ```bash
 docker login registry.mender.io
 Username: your-username
@@ -393,7 +393,7 @@ https://docs.docker.com/go/credential-store/
 Login Succeeded
 ```
 
-If successful, export your secrets and create Kubernetes Docker registry secret:
+If successful, **back to the virtual machine**, export your secrets and create Kubernetes Docker registry secret:
 ```bash
 export MENDER_REGISTRY_USERNAME="your-username"
 export MENDER_REGISTRY_PASSWORD="your-password"
