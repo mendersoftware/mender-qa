@@ -619,3 +619,40 @@ On your host machine:
 cd mender-virtual-server
 vagrant destroy -f
 ```
+
+## Client configuration
+
+First copy `server.crt` from the VM to a known path on your host machine
+
+```
+vagrant ssh-config
+```
+
+Check `HostName` and `IdentityFile` from the command above
+
+```
+HOST=...
+IDFILE=...
+DEST=$HOME/...
+scp -i $IDFILE vagrant@$HOST:/home/vagrant/mender-certs/mender.crt $DEST
+```
+
+### Yocto project
+
+Follow https://docs.mender.io/operating-system-updates-yocto-project/build-for-production#preparing-the-server-certificates-on-the-client
+
+For example by adding something like the following to your `local.conf`:
+
+```
+FILESEXTRAPATHS:prepend:pn-mender-server-certificate := "/home/lluis/mender-virtual-server/:"
+SRC_URI:append:pn-mender-server-certificate = " file://server.crt"
+IMAGE_INSTALL:append = " mender-server-certificate"
+```
+
+### Debian family
+
+TODO
+
+### Zephyr (preview)
+
+TODO
