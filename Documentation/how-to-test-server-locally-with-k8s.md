@@ -555,6 +555,15 @@ View logs if needed:
 kubectl logs mender-device-auth-6745b98c5b-k6dkp --tail=50
 ```
 
+## Upgrade Mender Server
+
+Specify the version to run (or upgrade to) the Mender Server by running the following command (same command for both Open Source and Enterprise):
+
+```bash
+VERSION=v4.1.0-saas.16
+helm upgrade --install mender mender/mender --set default.image.tag=$VERSION --wait -f mender-values.yml --devel
+```
+
 ## Tearing Down the Installation
 
 ### Uninstall Mender
