@@ -38,8 +38,9 @@ Vagrant.configure("2") do |config|
   config.vm.box = "generic/debian12"
 
   config.vm.provider "libvirt" do |libvirt|
-    # 4GB RAM (6GB recommended for Enterprise); if you see issues increase to 8GB (12 GB for Enterprise)
+    # 4GB RAM (8GB recommended for Enterprise); if you see issues increase to 8GB (12 GB for Enterprise)
     libvirt.memory = "4096"
+    # 4 CPUs (6 recommended for Enterprise)
     libvirt.cpus = "4"       # 4 CPUs
   end
 
