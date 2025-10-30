@@ -132,12 +132,12 @@ openssl req -new -key mender.key -out mender.csr \
   -subj "/C=US/ST=State/L=City/O=Mender/CN=mender.local"
 
 # Generate self-signed certificate (valid for 365 days)
-openssl x509 -req -days 365 -in mender.csr -signkey mender.key -out mender.crt \
+openssl x509 -req -days 365 -in mender.csr -signkey mender.key -out server.crt \
   -extfile <(printf "subjectAltName=DNS:mender.local")
 
 # Create Kubernetes TLS secret
 kubectl create secret tls mender-ingress-tls \
-  --cert=mender.crt \
+  --cert=server.crt \
   --key=mender.key
 
 # Verify secret was created
