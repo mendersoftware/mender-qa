@@ -24,15 +24,3 @@ mender-qa:failure:
     - apk --update add jq
   script:
     - $CI_PROJECT_DIR/scripts/github_pull_request_status failure "mender-qa pipeline failed" $CI_PIPELINE_URL ci/mender-qa
-
-trigger:mantra:
-  stage: .post
-  inherit:
-    variables: false
-  trigger:
-    branch: master
-    project: Northern.tech/Mender/mantra
-    strategy: depend
-  rules:
-    - if: $NIGHTLY_BUILD == "true"
-      when: always
