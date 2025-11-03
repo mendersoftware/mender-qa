@@ -38,8 +38,9 @@ Vagrant.configure("2") do |config|
   config.vm.box = "generic/debian12"
 
   config.vm.provider "libvirt" do |libvirt|
-    # 4GB RAM (6GB recommended for Enterprise); if you see issues increase to 8GB (12 GB for Enterprise)
+    # 4GB RAM (8GB recommended for Enterprise); if you see issues increase to 8GB (12 GB for Enterprise)
     libvirt.memory = "4096"
+    # 4 CPUs (6 recommended for Enterprise)
     libvirt.cpus = "4"       # 4 CPUs
   end
 
@@ -131,12 +132,12 @@ openssl req -new -key mender.key -out mender.csr \
   -subj "/C=US/ST=State/L=City/O=Mender/CN=mender.local"
 
 # Generate self-signed certificate (valid for 365 days)
-openssl x509 -req -days 365 -in mender.csr -signkey mender.key -out mender.crt \
+openssl x509 -req -days 365 -in mender.csr -signkey mender.key -out server.crt \
   -extfile <(printf "subjectAltName=DNS:mender.local")
 
 # Create Kubernetes TLS secret
 kubectl create secret tls mender-ingress-tls \
-  --cert=mender.crt \
+  --cert=server.crt \
   --key=mender.key
 
 # Verify secret was created
@@ -318,6 +319,18 @@ redis:
 EOF
 ```
 
+#### Enable Server-side generation of Delta Artifacts
+
+For Enterprise, you can enable the Server-side generation of Delta Artifacts with:
+
+```bash
+cat >> mender-values.yml <<EOF
+
+generate_delta_worker:
+  enabled: true
+EOF
+```
+
 ### Verify Configuration File
 
 **IMPORTANT:** After creating the file, verify that all variables are correctly expanded. There should be NO occurrences of `${VARIABLE_NAME}` in the file.
@@ -356,7 +369,7 @@ ingress:
 
 For Enterprise, you need access to the Mender Enterprise Docker registry (`registry.mender.io`). If you don't have credentials, contact your Mender representative.
 
-First, verify you have access:
+First, **on the host machine** , verify you have access:
 ```bash
 docker login registry.mender.io
 Username: your-username
@@ -380,7 +393,7 @@ https://docs.docker.com/go/credential-store/
 Login Succeeded
 ```
 
-If successful, export your secrets and create Kubernetes Docker registry secret:
+If successful, **back to the virtual machine**, export your secrets and create Kubernetes Docker registry secret:
 ```bash
 export MENDER_REGISTRY_USERNAME="your-username"
 export MENDER_REGISTRY_PASSWORD="your-password"
@@ -542,6 +555,15 @@ View logs if needed:
 kubectl logs mender-device-auth-6745b98c5b-k6dkp --tail=50
 ```
 
+## Upgrade Mender Server
+
+Specify the version to run (or upgrade to) the Mender Server by running the following command (same command for both Open Source and Enterprise):
+
+```bash
+VERSION=v4.1.0-saas.16
+helm upgrade --install mender mender/mender --set default.image.tag=$VERSION --wait -f mender-values.yml --devel
+```
+
 ## Tearing Down the Installation
 
 ### Uninstall Mender
@@ -597,3 +619,40 @@ On your host machine:
 cd mender-virtual-server
 vagrant destroy -f
 ```
+
+## Client configuration
+
+First copy `server.crt` from the VM to a known path on your host machine
+
+```
+vagrant ssh-config
+```
+
+Check `HostName` and `IdentityFile` from the command above
+
+```
+HOST=...
+IDFILE=...
+DEST=$HOME/...
+scp -i $IDFILE vagrant@$HOST:/home/vagrant/mender-certs/mender.crt $DEST
+```
+
+### Yocto project
+
+Follow https://docs.mender.io/operating-system-updates-yocto-project/build-for-production#preparing-the-server-certificates-on-the-client
+
+For example by adding something like the following to your `local.conf`:
+
+```
+FILESEXTRAPATHS:prepend:pn-mender-server-certificate := "/home/lluis/mender-virtual-server/:"
+SRC_URI:append:pn-mender-server-certificate = " file://server.crt"
+IMAGE_INSTALL:append = " mender-server-certificate"
+```
+
+### Debian family
+
+TODO
+
+### Zephyr (preview)
+
+TODO
