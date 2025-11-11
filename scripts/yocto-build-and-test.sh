@@ -599,10 +599,14 @@ build_and_test_client() {
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
             filename="clean-${image_name}-${machine_name}.${extension}"
+            local docker_tag="mendersoftware/mender-client-qemu:pr"
+            if [[ "$board_name" == *"-extended" ]]; then
+                docker_tag="mendersoftware/mender-client-qemu-extended:pr"
+            fi
             $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                 $machine_name \
-                -t mendersoftware/mender-client-qemu:pr
+                -t "$docker_tag"
 
             if grep mender-image-full-cmdline-rofs <<<"$images_to_build"; then
                 filename="clean-mender-image-full-cmdline-rofs-${machine_name}.${extension}"
@@ -733,6 +737,7 @@ build_and_test_client() {
 
 # add_to_build_list        MACHINE_NAME              BOARD_NAME                     IMAGE_NAME               [DEVICE_TYPE]
 add_to_build_list          qemux86-64                qemux86-64-uefi-grub           core-image-full-cmdline
+add_to_build_list          qemux86-64                qemux86-64-uefi-grub-extended  core-image-full-cmdline
 add_to_build_list          vexpress-qemu             vexpress-qemu                  core-image-full-cmdline
 add_to_build_list          vexpress-qemu-flash       vexpress-qemu-flash            core-image-minimal
 add_to_build_list          raspberrypi3              raspberrypi3                   core-image-full-cmdline
