@@ -398,7 +398,7 @@ then
     # Copy the workspace back after job has ended.
     if [ -n "$WORKSPACE" ]
     then
-        $RSYNC -e "$RSH"    $login:"$WORKSPACE_REMOTE"/  "$WORKSPACE"/
+        $RSYNC -e "$RSH"    $login:"$WORKSPACE_REMOTE"/output/  "$WORKSPACE"/
     fi
 
     # --------------------------------------------------------------------------
