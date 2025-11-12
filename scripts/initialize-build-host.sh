@@ -32,6 +32,18 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCtoU/75IdcahCzBY9RbSrouIHq0sWZU4xQr9wopGtZ
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCt2G+E9pt6ufosHyOUeUb6z2eaeerUaf/Z3gb/woPGA3R0j0depJnSMXcYeGAIfsdhz+TQ6pKcl42CrGfu9b0Ypuxq9CG020/D1XjuoWCR2cNx0UWd7HO9uaGZpwejXaCY1LF/0054nb5cIgJvAfMfXFSmoxy80OU9Vvc75fD1JQfjOHYaLk4UdUqeIFJ7m1l6vN8xC5AFNK1oFq4vHAfbcLEU0e4X3jeFlxeMKSGaBu/5OwAdTvJfMU+IH+D2K1ix7AGFUNmYW790IfYlm7b4hcfJdsLV5emKg416k//+w7/o4zaQBIv7y1ETV3+JDg8hJZNdrzlAxIRZOpBlKitD lars.erik.wik@northern.tech
 '
 
+start_spinner() {
+    # $1 sleep time between spinner dots
+    >&2 echo "spinner: will echo . every $1 seconds"
+    (set +x; while true; do >&2 echo "."; sleep "$1"; done) &
+    spinner_pid=$!
+    echo "$spinner_pid" > /tmp/spinner_pid
+}
+
+stop_spinner() {
+    [ -f /tmp/spinner_pid ] && kill -9 "$(cat /tmp/spinner_pid)"
+}
+
 #
 # Detect and replace non-POSIX shell
 #
@@ -398,7 +410,17 @@ then
     # Copy the workspace back after job has ended.
     if [ -n "$WORKSPACE" ]
     then
-        $RSYNC -e "$RSH"    $login:"$WORKSPACE_REMOTE"/  "$WORKSPACE"/
+        # This can take a very long time. So we need to prevent timeouts
+        start_spinner 600
+        if $RSYNC -e "$RSH"    $login:"$WORKSPACE_REMOTE"/  "$WORKSPACE"/; then
+            stop_spinner
+            echo "Finished copying the workspace back after job has ended"
+        else
+            EXIT_CODE=$?
+            echo "error: Failed to copy the workspace back after job has ended"
+            stop_spinner
+            exit $EXIT_CODE
+        fi
     fi
 
     # --------------------------------------------------------------------------
