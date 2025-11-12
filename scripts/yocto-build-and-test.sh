@@ -340,6 +340,14 @@ PREFERRED_VERSION:pn-${recipe}-native = "${latest_version}"
 EOF
         fi
     done
+
+    # Select provider in LTS branches that have both golang and C++ client
+    # TODO: Remove after kirkstone goes end of life
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_PROVIDER_mender-native  = "mender-native"
+PREFERRED_RPROVIDER_mender-auth   = "mender"
+PREFERRED_RPROVIDER_mender-update = "mender"
+EOF
 }
 
 # prepares the configuration for the so-called clean image. this is the image
