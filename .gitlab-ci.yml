@@ -89,6 +89,11 @@ variables:
     description: |-
       Flag to build client for integration tests. False means use prebuilt client from upstream
 
+  BUILD_EXTENDED:
+    value: "true"
+    description: |-
+      Flag to build client for integration tests. False means use prebuilt client from upstream
+
   # Client Acceptance tests
   BUILD_QEMUX86_64_UEFI_GRUB:
     value: "true"
