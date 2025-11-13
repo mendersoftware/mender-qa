@@ -28,7 +28,9 @@ cd mender-virtual-server
 vagrant init generic/debian12
 ```
 
-Above will create a `Vagrantfile` in your working directory. Edit it to add the required configuration:
+Above will create a `Vagrantfile` in your working directory. Edit it to add the required configuration.
+Please configure the `config.vm.provider` section like below to install required
+tools:
 
 ```ruby
 # -*- mode: ruby -*-
@@ -49,6 +51,15 @@ Vagrant.configure("2") do |config|
   #config.vm.network "forwarded_port", guest: 443, host: 8443, host_ip: "127.0.0.1"
   config.vm.network "private_network", ip: "192.168.56.10"
 
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y tmux
+    sh -c 'echo "127.0.0.1 mender.local" >> /etc/hosts'
+    curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
+    echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> /home/vagrant/.bashrc
+    curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+    curl -s https://fluxcd.io/install.sh | sudo bash
+  SHELL
 end
 ```
 
@@ -78,23 +89,8 @@ For a local test environment, we use:
 
 ### System Preparation
 
-First, add a local domain to your /etc/hosts:
-```bash
-sudo sh -c 'echo "127.0.0.1 mender.local" >> /etc/hosts'
-```
-
-Install k3s (lightweight Kubernetes) and Helm; follow the [official Mender instructions](https://docs.mender.io/server-installation/production-installation-with-kubernetes/kubernetes#installation-of-kubernetes) or steps below:
-
-```bash
-# Install k3s
-curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
-
-# Export kubeconfig
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-
-# Add to shell profile for persistence
-echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> ~/.bashrc
-```
+The required tools like k3s (lightweight Kubernetes), Helm and Flux, are already
+installed from the Vagrantfile. You can verify them:
 
 Verify installation:
 ```bash
@@ -107,14 +103,14 @@ NAME                   STATUS   ROLES                  AGE   VERSION
 debian12.localdomain   Ready    control-plane,master   1m    v1.33.x+k3s1
 ```
 
-Install Helm:
-```bash
-curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-```
-
-Verify installation:
+Verify Helm installation:
 ```bash
 helm version
+```
+
+Verify Flux installation:
+```bash
+flux --version
 ```
 
 ### Generate Self-Signed Certificate
@@ -144,256 +140,90 @@ kubectl create secret tls mender-ingress-tls \
 kubectl get secret mender-ingress-tls
 ```
 
-### Install SeaweedFS (Local S3-Compatible Storage)
+### Install SeaweedFS (Local S3-Compatible Storage) and Mender from nt-iac
 
 You can follow instructions below or [official Mender guide](https://docs.mender.io/server-installation/production-installation-with-kubernetes/storage).
 
 Set up storage configuration:
 ```bash
-export STORAGE_CLASS="local-path"
-export STORAGE_BUCKET="mender-artifact-storage"
+# Generate random values
+export ADMIN_KEY=$(openssl rand -hex 16)
+export ADMIN_SECRET=$(openssl rand -hex 32)
+export READ_KEY=$(openssl rand -hex 16)
+export READ_SECRET=$(openssl rand -hex 32)
+
+# Create the SeaweedFS secret
+kubectl create secret generic seaweedfs-mender-s3-secret \
+  --from-literal=admin_access_key_id="$ADMIN_KEY" \
+  --from-literal=admin_secret_access_key="$ADMIN_SECRET" \
+  --from-literal=read_access_key_id="$READ_KEY" \
+  --from-literal=read_secret_access_key="$READ_SECRET" \
+  --from-literal=seaweedfs_s3_config="{\"identities\":[{\"name\":\"anvAdmin\",\"credentials\":[{\"accessKey\":\"$ADMIN_KEY\",\"secretKey\":\"$ADMIN_SECRET\"}],\"actions\":[\"Admin\",\"Read\",\"Write\"]},{\"name\":\"anvReadOnly\",\"credentials\":[{\"accessKey\":\"$READ_KEY\",\"secretKey\":\"$READ_SECRET\"}],\"actions\":[\"Read\"]}]}"
+
+# Create the Mender secret
+kubectl create secret generic mender-s3-artifacts \
+  --from-literal=AWS_AUTH_KEY="$ADMIN_KEY" \
+  --from-literal=AWS_AUTH_SECRET="$ADMIN_SECRET" \
+  --from-literal=AWS_BUCKET="mender-artifacts-storage-seaweedfs" \
+  --from-literal=AWS_FORCE_PATH_STYLE="true" \
+  --from-literal=AWS_URI="http://seaweedfs-s3:8333" \
+  --from-literal=AWS_REGION="us-east-1"
 ```
 
-Create SeaweedFS configuration:
+Install Flux components:
 ```bash
-cd ~
-
-cat > seaweedfs.yml <<EOF
-filer:
-  s3:
-    enabled: true
-    enableAuth: true
-    createBuckets:
-      - name: "${STORAGE_BUCKET}"
-  storageClass: ${STORAGE_CLASS}
-
-s3:
-  enabled: true
-  enableAuth: true
-EOF
-```
-
-Install SeaweedFS:
-```bash
-helm repo add seaweedfs https://seaweedfs.github.io/seaweedfs/helm
-helm repo update
-helm install seaweedfs --wait -f seaweedfs.yml seaweedfs/seaweedfs
+flux install 
 ```
 
 Expected output:
 ```
-NAME: seaweedfs
-LAST DEPLOYED: Thu Oct 16 14:59:30 2025
-NAMESPACE: default
-STATUS: deployed
-REVISION: 1
+✔ helm-controller: deployment ready
+✔ kustomize-controller: deployment ready
+✔ notification-controller: deployment ready
+✔ source-controller: deployment ready
+✔ install finished
 ```
 
-Verify SeaweedFS is running:
+Create the Github Secret needed to fetch from nt-iac repository
 ```bash
-kubectl get pods
+export GITHUB_TOKEN=<gh-token>
+
+flux create secret git github-auth \
+  --url=https://github.com/NorthernTechHQ/nt-iac \
+  --username=git \
+  --password=${GITHUB_TOKEN}
+```
+
+#### Open Source Configuration
+
+Bootstrap the cluster with Flux:
+```bash
+flux create source git nt-iac \
+  --url=https://github.com/NorthernTechHQ/nt-iac \
+  --branch=main \
+  --interval=1m \
+  --secret-ref=github-auth
+
+flux create kustomization manifests \
+  --source=GitRepository/nt-iac \
+  --path="./manifests/test-k3s-opensource" \
+  --prune=true \
+  --interval=10m
 ```
 
 Expected output:
 ```
-NAME                            READY   STATUS    RESTARTS   AGE
-seaweedfs-filer-0               1/1     Running   0          81s
-seaweedfs-master-0              1/1     Running   0          81s
-seaweedfs-s3-5c88cbd4c8-xxxxx   1/1     Running   0          81s
-seaweedfs-volume-0              1/1     Running   0          81s
+✚ generating Kustomization
+► applying Kustomization
+✔ Kustomization created
+◎ waiting for Kustomization reconciliation
+✔ Kustomization manifests is ready
+✔ applied revision main@sha1
 ```
 
-Export storage credentials (don't worry about AWS prefixes; this is needed for local installation as well):
-```bash
-export AWS_ACCESS_KEY_ID=$(kubectl get secret seaweedfs-s3-secret -o jsonpath='{.data.admin_access_key_id}' | base64 -d)
-export AWS_SECRET_ACCESS_KEY=$(kubectl get secret seaweedfs-s3-secret -o jsonpath='{.data.admin_secret_access_key}' | base64 -d)
-export AWS_REGION="us-east-1"
-export STORAGE_ENDPOINT="http://seaweedfs-s3:8333"
-```
+#### Enterprise Configuration
 
-## Install Mender Server
-
-### Add Mender Helm Repository
-
-```bash
-helm repo add mender https://charts.mender.io
-helm repo update
-```
-
-### Prepare Environment Variables
-
-```bash
-export MENDER_SERVER_DOMAIN="mender.local"
-export MENDER_SERVER_URL="https://${MENDER_SERVER_DOMAIN}"
-
-# Verify all variables are set
-echo "STORAGE_ENDPOINT: $STORAGE_ENDPOINT"
-echo "STORAGE_BUCKET: $STORAGE_BUCKET"
-echo "MENDER_SERVER_DOMAIN: $MENDER_SERVER_DOMAIN"
-echo "MENDER_SERVER_URL: $MENDER_SERVER_URL"
-```
-
-### Open Source Configuration
-
-For Open Source, create the configuration file:
-
-```bash
-cat > mender-values.yml <<EOF
-global:
-  s3:
-    AWS_URI: "${STORAGE_ENDPOINT}"
-    AWS_BUCKET: "${STORAGE_BUCKET}"
-    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
-    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
-  url: "${MENDER_SERVER_URL}"
-
-api_gateway:
-  storage_proxy:
-    enabled: true
-    url: "${STORAGE_ENDPOINT}"
-    customRule: "PathRegexp(\`^/${STORAGE_BUCKET}\`)"
-
-# We will use Traefik that is built-in k3s
-ingress:
-  enabled: true
-  ingressClassName: traefik
-  path: /
-  hosts:
-    - ${MENDER_SERVER_DOMAIN}
-  tls:
-    - secretName: mender-ingress-tls
-      hosts:
-        - ${MENDER_SERVER_DOMAIN}
-
-# Use included services (MongoDB, NATS; not recommended for production but fine for testing)
-mongodb:
-  enabled: true
-
-nats:
-  enabled: true
-EOF
-```
-
-### Enterprise Configuration
-
-For Enterprise, create the configuration file (note `enterprise: true` and `redis`):
-
-```bash
-cat > mender-values.yml <<EOF
-global:
-  enterprise: true
-  s3:
-    AWS_URI: "${STORAGE_ENDPOINT}"
-    AWS_BUCKET: "${STORAGE_BUCKET}"
-    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
-    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
-  url: "${MENDER_SERVER_URL}"
-
-api_gateway:
-  storage_proxy:
-    enabled: true
-    url: "${STORAGE_ENDPOINT}"
-    customRule: "PathRegexp(\`^/${STORAGE_BUCKET}\`)"
-
-# We will use Traefik that is built-in k3s
-ingress:
-  enabled: true
-  ingressClassName: traefik
-  path: /
-  hosts:
-    - ${MENDER_SERVER_DOMAIN}
-  tls:
-    - secretName: mender-ingress-tls
-      hosts:
-        - ${MENDER_SERVER_DOMAIN}
-
-# Use included services (MongoDB, NATS, Redis; not recommended for production but fine for testing)
-mongodb:
-  enabled: true
-
-nats:
-  enabled: true
-
-redis:
-  enabled: true
-EOF
-```
-
-#### Enable Server-side generation of Delta Artifacts
-
-For Enterprise, you can enable the Server-side generation of Delta Artifacts with:
-
-```bash
-cat >> mender-values.yml <<EOF
-
-generate_delta_worker:
-  enabled: true
-EOF
-```
-
-### Verify Configuration File
-
-**IMPORTANT:** After creating the file, verify that all variables are correctly expanded. There should be NO occurrences of `${VARIABLE_NAME}` in the file.
-
-The correct file should look similar to this:
-```yaml
-global:
-  s3:
-    AWS_URI: "http://seaweedfs-s3:8333"
-    AWS_BUCKET: "mender-artifact-storage"
-    AWS_ACCESS_KEY_ID: "xxxxxx"
-    AWS_SECRET_ACCESS_KEY: "xxxxxxxxxxxxxxx"
-  url: "https://mender.local"
-
-api_gateway:
-  storage_proxy:
-    enabled: true
-    url: "http://seaweedfs-s3:8333"
-    customRule: "PathRegexp(`^/mender-artifact-storage`)"
-
-ingress:
-  enabled: true
-  ingressClassName: traefik
-  path: /
-  hosts:
-    - mender.local
-  tls:
-    - secretName: mender-ingress-tls
-      hosts:
-        - mender.local
-```
-
-### Enterprise-Only: Docker Registry Setup
-
-**Skip this section if using Open Source.**
-
-For Enterprise, you need access to the Mender Enterprise Docker registry (`registry.mender.io`). If you don't have credentials, contact your Mender representative.
-
-First, **on the host machine** , verify you have access:
-```bash
-docker login registry.mender.io
-Username: your-username
-Password: your-password
-```
-
-In case you don't have Docker installed, install it using following commands:
-```bash
-sudo apt-get update
-sudo apt-get install docker.io
-sudo usermod -aG docker $USER
-newgrp docker
-```
-
-Expected output:
-```
-WARNING! Your credentials are stored unencrypted in '/home/vagrant/.docker/config.json'.
-Configure a credential helper to remove this warning. See
-https://docs.docker.com/go/credential-store/
-
-Login Succeeded
-```
-
-If successful, **back to the virtual machine**, export your secrets and create Kubernetes Docker registry secret:
+Create the Mender Enterprise Registry secret:
 ```bash
 export MENDER_REGISTRY_USERNAME="your-username"
 export MENDER_REGISTRY_PASSWORD="your-password"
@@ -404,49 +234,33 @@ kubectl create secret docker-registry my-mender-pull-secret \
   --docker-password=${MENDER_REGISTRY_PASSWORD} \
   --docker-email=${MENDER_REGISTRY_EMAIL} \
   --docker-server=registry.mender.io
+
+```
+
+Bootstrap the cluster with Flux:
+```bash
+flux create source git nt-iac \
+  --url=https://github.com/NorthernTechHQ/nt-iac \
+  --branch=main \
+  --interval=1m \
+  --secret-ref=github-auth
+
+flux create kustomization manifests \
+  --source=GitRepository/nt-iac \
+  --path="./manifests/test-k3s-enterprise" \
+  --prune=true \
+  --interval=10m
 ```
 
 Expected output:
 ```
-secret/my-mender-pull-secret created
+✚ generating Kustomization
+► applying Kustomization
+✔ Kustomization created
+◎ waiting for Kustomization reconciliation
+✔ Kustomization manifests is ready
+✔ applied revision main@sha1
 ```
-
-Add the image pull secret to your configuration file:
-```bash
-cat >> mender-values.yml <<EOF
-
-default:
-  imagePullSecrets:
-    - name: my-mender-pull-secret
-EOF
-```
-
-## Run Mender Server
-
-Make sure Helm repos are up to date:
-```bash
-helm repo update
-```
-
-Install Mender Server (same command for both Open Source and Enterprise):
-```bash
-helm upgrade --install mender mender/mender --wait --timeout=20m -f mender-values.yml
-```
-
-**Note:** This might take few minutes. You may see some pods returning errors while running. This is expected for migration pods. For example:
-
-```
-NAME                               READY   STATUS              RESTARTS   AGE
-mender-auditlogs-migration-9w27x   0/1     Error               0          28s
-mender-auditlogs-migration-lnc2s   0/1     ContainerCreating   0          0s
-mender-mongodb-69f86b6997-h5ln6    0/1     Running             0          28s
-seaweedfs-filer-0                  1/1     Running             0          18h
-seaweedfs-master-0                 1/1     Running             0          18h
-seaweedfs-s3-5c88cbd4c8-prbjd      1/1     Running             0          18h
-seaweedfs-volume-0                 1/1     Running             0          18h
-```
-
-The pod `mender-auditlogs-migration-9w27x` returned an error because MongoDB wasn't ready yet. It will be replaced with a new pod `mender-auditlogs-migration-lnc2s` that should eventually succeed.
 
 ### Monitor Installation Progress
 
@@ -455,11 +269,41 @@ In another terminal, you can monitor pod status:
 kubectl get pods -w
 ```
 
-Once the installation is successful, you should see output similar to:
+After about 10 minutes, verify SeaweedFS and Mender are running:
 
-![installation success](./images/mender-k8s-success-installation.png)
+```bash
+kubectl get pods
+```
 
-Note: You will see warnings that the installation is not meant for production use (MongoDB, Redis, NATS are using built-in non-HA configurations). This is expected for a local test setup.
+Expected output:
+```bash
+NAME                                             READY   STATUS    RESTARTS      AGE
+mender-api-gateway-99664d6c5-vgs2r               1/1     Running   0             81s
+mender-auditlogs-9b8cc954d-8g2cf                 1/1     Running   0             82s
+mender-create-artifact-worker-6df9f9b9f4-2ln95   1/1     Running   2 (60s ago)   81s
+mender-deployments-847f6fdf65-zxmzj              1/1     Running   0             82s
+mender-device-auth-56bdb6b6bf-shx5t              1/1     Running   0             81s
+mender-deviceconfig-cd77d69dd-tzg2t              1/1     Running   0             81s
+mender-deviceconnect-9d7579556-jz98g             1/1     Running   0             81s
+mender-devicemonitor-6f67c7b98c-6442q            1/1     Running   0             81s
+mender-generate-delta-worker-0                   1/1     Running   2 (54s ago)   82s
+mender-gui-cdfb6946f-885p6                       1/1     Running   0             82s
+mender-inventory-9665fb57c-v4k8d                 1/1     Running   0             82s
+mender-iot-manager-7774c4b467-9r4nn              1/1     Running   0             82s
+mender-mongodb-69f86b6997-tvcdv                  1/1     Running   0             5m51s
+mender-nats-0                                    3/3     Running   0             82s
+mender-nats-1                                    3/3     Running   0             82s
+mender-nats-2                                    3/3     Running   0             82s
+mender-nats-box-65d659fd84-f94sp                 1/1     Running   0             82s
+mender-tenantadm-79889477c8-fh94t                1/1     Running   0             82s
+mender-useradm-6c5f597f5f-fsvm4                  1/1     Running   0             82s
+mender-workflows-server-754c9cb6b4-bxsg4         1/1     Running   2 (68s ago)   82s
+mender-workflows-worker-84cc9d4cbf-7m5lt         1/1     Running   3 (54s ago)   82s
+seaweedfs-filer-0                                1/1     Running   0             5m50s
+seaweedfs-master-0                               1/1     Running   0             5m50s
+seaweedfs-s3-789f788758-n944c                    1/1     Running   0             5m50s
+seaweedfs-volume-0                               1/1     Running   0             5m50s
+```
 
 ## Create Users
 
@@ -561,8 +405,45 @@ Specify the version to run (or upgrade to) the Mender Server by running the foll
 
 ```bash
 VERSION=v4.1.0-saas.16
-helm upgrade --install mender mender/mender --set default.image.tag=$VERSION --wait -f mender-values.yml --devel
+
+kubectl create configmap mender-override-values \
+  --from-literal=mender-override-values.yaml='default:
+  image:
+    tag: "'$VERSION'"'
 ```
+
+## Run a Pull Request build (Feature Branch Deployment)
+
+Specify a build from a Pull Request, from Gitlab:
+
+```bash
+# Create a Gitlab Registry Secret
+export GITLAB_REGISTRY_USERNAME="your-username"
+export GITLAB_REGISTRY_TOKEN="your-password"
+export GITLAB_REGISTRY_EMAIL="your-email@example.com"
+
+kubectl create secret docker-registry my-gitlab-registry-secret \
+  --docker-username=${GITLAB_REGISTRY_USERNAME} \
+  --docker-password=${GITLAB_REGISTRY_TOKEN} \
+  --docker-email=${GITLAB_REGISTRY_EMAIL} \
+  --docker-server=registry.gitlab.com
+
+# Your build version that you can find in Gitlab CICD pipeline for the pr, like:
+# VERSION=build-2caec8af4113366eeb7b16905200d45a80d4eebd
+
+VERSION="your-build-version"
+
+kubectl create configmap mender-override-values \
+  --from-literal=mender-override-values.yaml='default:
+  image:
+    registry: registry.gitlab.com
+    repository: northern.tech/mender/mender-server-enterprise
+    tag: "'$VERSION'"
+  imagePullSecrets:
+    - name: my-gitlab-registry-secret'
+    
+```
+
 
 ## Tearing Down the Installation
 
