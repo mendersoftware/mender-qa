@@ -37,11 +37,13 @@ start_spinner() {
     >&2 echo "spinner: will echo . every $1 seconds"
     (set +x; while true; do >&2 echo "."; sleep "$1"; done) &
     spinner_pid=$!
-    echo "$spinner_pid" > /tmp/spinner_pid
+    echo "$spinner_pid" > "/tmp/spinner_pid_$(whoami)"
 }
 
 stop_spinner() {
-    [ -f /tmp/spinner_pid ] && kill -9 "$(cat /tmp/spinner_pid)"
+    SPINNER_FILE="/tmp/spinner_pid_$(whoami)"
+    [ -f "$SPINNER_FILE" ] && kill -9 "$(cat "$SPINNER_FILE")"
+    rm -f "$SPINNER_FILE"
 }
 
 #
