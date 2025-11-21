@@ -1,3 +1,7 @@
+include:
+  - project: "Northern.tech/Mender/mendertesting"
+    file: "qa-common/send-results-to-mantra.yml"
+    ref: "master"
 
 build:client:qemu:
   only:
@@ -55,6 +59,7 @@ test:acceptance:qemux86_64:uefi_grub:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
     CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
+    MANTRA_PROJECT_NAME: "client_accep_qemux86_64_uefi_grub"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -70,15 +75,7 @@ test:acceptance:qemux86_64:uefi_grub:
     -   cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub.html
     - fi
 
-    - if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -   build_name=nightly-$(date +%Y-%m-%d)
-    - else
-    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
-    - fi
-    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        client_accep_qemux86_64_uefi_grub
-        $build_name
-        results_accep_qemux86_64_uefi_grub.xml || true
+    - !reference [.mantra-push-results]
 
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
@@ -113,6 +110,7 @@ test:acceptance:qemux86_64:uefi_grub:cross-platform:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
     CROSS_PLATFORM_TESTS_ARG: "--only-cross-platform-tests"
+    MANTRA_PROJECT_NAME: "client_accep_cross_platform"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -126,15 +124,7 @@ test:acceptance:qemux86_64:uefi_grub:cross-platform:
     -   cp $WORKSPACE/meta-mender/tests/acceptance/report.html report_accep_qemux86_64_uefi_grub_cross_platform.html
     - fi
 
-    - if [ "$NIGHTLY_BUILD" = "true" ]; then
-    -   build_name=nightly-$(date +%Y-%m-%d)
-    - else
-    -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
-    - fi
-    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        client_accep_cross_platform
-        $build_name
-        results_accep_qemux86_64_uefi_grub_cross_platform.xml || true
+    - !reference [.mantra-push-results]
 
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
@@ -168,6 +158,7 @@ test:acceptance:vexpress_qemu:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu
     CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
+    MANTRA_PROJECT_NAME: "client_accep_vexpress_qemu"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -186,10 +177,8 @@ test:acceptance:vexpress_qemu:
     - else
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
-    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        client_accep_vexpress_qemu
-        $build_name
-        results_accep_vexpress_qemu.xml || true
+
+    - !reference [.mantra-push-results]
 
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
@@ -223,6 +212,7 @@ test:acceptance:qemux86_64:bios_grub:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub
     CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
+    MANTRA_PROJECT_NAME: "client_accep_qemux86_64_bios_grub"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -241,10 +231,8 @@ test:acceptance:qemux86_64:bios_grub:
     - else
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
-    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        client_accep_qemux86_64_bios_grub
-        $build_name
-        results_accep_qemux86_64_bios_grub.xml || true
+
+    - !reference [.mantra-push-results]
 
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
@@ -278,6 +266,7 @@ test:acceptance:qemux86_64:bios_grub_gpt:
   variables:
     JOB_BASE_NAME: mender_qemux86_64_bios_grub_gpt
     CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
+    MANTRA_PROJECT_NAME: "client_accep_qemux86_64_bios_grub_gpt"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -296,10 +285,8 @@ test:acceptance:qemux86_64:bios_grub_gpt:
     - else
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
-    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        client_accep_qemux86_64_bios_grub_gpt
-        $build_name
-        results_accep_qemux86_64_bios_grub_gpt.xml || true
+
+    - !reference [.mantra-push-results]
 
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
@@ -333,6 +320,7 @@ test:acceptance:vexpress_qemu:uboot_uefi_grub:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_uboot_uefi_grub
     CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
+    MANTRA_PROJECT_NAME: "client_accep_vexpress_qemu_uboot_uefi_grub"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -351,10 +339,8 @@ test:acceptance:vexpress_qemu:uboot_uefi_grub:
     - else
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
-    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        client_accep_vexpress_qemu_uboot_uefi_grub
-        $build_name
-        results_accep_vexpress_qemu_uboot_uefi_grub.xml || true
+
+    - !reference [.mantra-push-results]
 
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
@@ -391,6 +377,7 @@ test:acceptance:vexpress_qemu:flash:
   variables:
     JOB_BASE_NAME: mender_vexpress_qemu_flash
     CROSS_PLATFORM_TESTS_ARG: "--no-cross-platform-tests"
+    MANTRA_PROJECT_NAME: "client_accep_vexpress_qemu_flash"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts
@@ -409,10 +396,8 @@ test:acceptance:vexpress_qemu:flash:
     - else
     -   build_name=pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}
     - fi
-    - ${CI_PROJECT_DIR}/scripts/mantra_post_test_results
-        client_accep_vexpress_qemu_flash
-        $build_name
-        results_accep_vexpress_qemu_flash.xml || true
+
+    - !reference [.mantra-push-results]
 
     - cp /var/log/sysstat/sysstat.log .
     - sadf sysstat.log -g -- -qurbS > sysstat.svg
