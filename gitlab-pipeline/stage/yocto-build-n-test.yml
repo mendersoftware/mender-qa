@@ -16,16 +16,16 @@ build:client:qemu:
     - cd ${CI_PROJECT_DIR}
     - echo ${CI_REGISTRY_PASSWORD} | docker login --username ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
     - docker tag mendersoftware/mender-client-qemu:pr ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu
-    - docker push ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu
+    - docker push ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu"
     - docker tag mendersoftware/mender-client-qemu-rofs:pr ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-rofs
-    - docker push ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-rofs
+    - docker push ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-rofs && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-rofs"
     - if [[ -d $WORKSPACE/go/src/github.com/mendersoftware/monitor-client ]] && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
     -   docker tag registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr ${GITLAB_REGISTRY_PREFIX}-mender-monitor-qemu-commercial
-    -   docker push ${GITLAB_REGISTRY_PREFIX}-mender-monitor-qemu-commercial
+    -   docker push ${GITLAB_REGISTRY_PREFIX}-mender-monitor-qemu-commercial && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-monitor-qemu-commercial"
     - fi
     - if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
     -   docker tag registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial
-    -   docker push ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial
+    -   docker push ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial"
     - fi
   after_script:
     - export WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
