@@ -153,6 +153,16 @@ is_closed_source() {
     esac
 }
 
+add_virtualization() {
+    echo "Adding virtualization layers"
+
+    # Add required layers for docker/container support
+    bitbake-layers add-layer $WORKSPACE/meta-openembedded/meta-networking
+    bitbake-layers add-layer $WORKSPACE/meta-openembedded/meta-filesystems
+    bitbake-layers add-layer $WORKSPACE/meta-virtualization
+    bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-extended
+}
+
 prepare_build_config() {
     local machine
     machine=$1
@@ -164,6 +174,11 @@ prepare_build_config() {
     else
         echo "Could not find build-conf for $board board."
         return 1
+    fi
+
+    if has_component mender-container-modules \
+                    && [[ -f $WORKSPACE/meta-mender/meta-mender-extended/recipes-extended/images/mender-extended-image-full-cmdline.bb ]]; then
+        add_virtualization
     fi
 
     # Checked out open source components:
@@ -582,6 +597,10 @@ build_and_test_client() {
             if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
                 images_to_build+=" mender-image-full-cmdline-rofs-commercial"
             fi
+            if has_component mender-container-modules \
+                    && [[ -f $WORKSPACE/meta-mender/meta-mender-extended/recipes-extended/images/mender-extended-image-full-cmdline.bb ]]; then
+                images_to_build+=" mender-extended-image-full-cmdline"
+            fi
         fi
 
         # Build once with clean_build_config enabled and keep a copy.
@@ -611,6 +630,15 @@ build_and_test_client() {
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                 $machine_name \
                 -t mendersoftware/mender-client-qemu:pr
+
+            if grep mender-extended-image-full-cmdline <<<"$images_to_build"; then
+                filename="clean-mender-extended-image-full-cmdline-${machine_name}.${extension}"
+                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
+                    -i mender-extended-image-full-cmdline \
+                    $machine_name \
+                    -t mendersoftware/mender-client-qemu-extended:pr
+            fi
 
             if grep mender-image-full-cmdline-rofs <<<"$images_to_build"; then
                 filename="clean-mender-image-full-cmdline-rofs-${machine_name}.${extension}"
