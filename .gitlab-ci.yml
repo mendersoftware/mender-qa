@@ -27,6 +27,10 @@ variables:
     value: "master"
     description: |-
       Version of mender-flash
+  MENDER_CONTAINER_MODULES_REV:
+    value: "main"
+    description: |-
+      Version of mender-container-modules
 
   # Mender Gateway LTS
   MENDER_GATEWAY_REV:

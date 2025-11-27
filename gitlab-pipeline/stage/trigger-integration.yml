@@ -26,6 +26,11 @@
     MENDER_QEMU_ROFS_COMMERCIAL_IMAGE: mender-qa
     MENDER_QEMU_ROFS_COMMERCIAL_TAG: ${CI_PIPELINE_ID}-mender-qemu-rofs-commercial
 
+    MENDER_CLIENT_QEMU_EXTENDED_IMAGE: mender-qa
+    MENDER_CLIENT_QEMU_EXTENDED_TAG: ${CI_PIPELINE_ID}-mender-client-qemu-extended
+
+    MENDER_CONTAINER_MODULES_VERSION: ${MENDER_CONTAINER_MODULES_REV}
+
     MENDER_GATEWAY_TAG: ${MENDER_GATEWAY_REV}
 
     RUN_TESTS_FULL_INTEGRATION: "true"
@@ -56,7 +61,8 @@ trigger:integration-tests:
           $MENDER_CONFIGURE_MODULE_REV == "latest" &&
           $MONITOR_CLIENT_REV == "latest" &&
           $MENDER_BINARY_DELTA_VERSION == "latest" &&
-          $MENDER_FLASH_REV == "latest"
+          $MENDER_FLASH_REV == "latest" &&
+          $MENDER_CONTAINER_MODULES_REV == "latest"
       when: never
     - if: $RUN_INTEGRATION_TESTS == "true"
   needs:
