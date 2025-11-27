@@ -163,6 +163,16 @@ add_virtualization() {
     bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-extended
 }
 
+remove_virtualization() {
+    echo "Removing virtualization layers"
+
+    # Remove vitualization layers
+    bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-extended
+    bitbake-layers remove-layer $WORKSPACE/meta-virtualization
+    bitbake-layers remove-layer $WORKSPACE/meta-openembedded/meta-filesystems
+    bitbake-layers remove-layer $WORKSPACE/meta-openembedded/meta-networking
+}
+
 prepare_build_config() {
     local machine
     machine=$1
@@ -174,11 +184,6 @@ prepare_build_config() {
     else
         echo "Could not find build-conf for $board board."
         return 1
-    fi
-
-    if has_component mender-container-modules \
-                    && [[ -f $WORKSPACE/meta-mender/meta-mender-extended/recipes-extended/images/mender-extended-image-full-cmdline.bb ]]; then
-        add_virtualization
     fi
 
     # Checked out open source components:
@@ -587,6 +592,8 @@ build_and_test_client() {
         # Base image
         local images_to_build=$image_name
 
+        local needs_virtualization=false
+
         if is_building_extra_images_for_board "$board_name" \
                 && [[ $image_name == core-image-full-cmdline ]]; then
             images_to_build+=" mender-image-full-cmdline-rofs"
@@ -598,13 +605,18 @@ build_and_test_client() {
                 images_to_build+=" mender-image-full-cmdline-rofs-commercial"
             fi
             if has_component mender-container-modules \
-                    && [[ -f $WORKSPACE/meta-mender/meta-mender-extended/recipes-extended/images/mender-extended-image-full-cmdline.bb ]]; then
+                            && [[ -f $WORKSPACE/meta-mender/meta-mender-extended/recipes-extended/images/mender-extended-image-full-cmdline.bb ]]; then
+                # Only add virtualization if we're building mender-extended-image-full-cmdline
+                needs_virtualization=true
                 images_to_build+=" mender-extended-image-full-cmdline"
             fi
         fi
 
         # Build once with clean_build_config enabled and keep a copy.
         bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
+        if $needs_virtualization; then
+                add_virtualization
+        fi
         clean_build_config
         run_bitbake $images_to_build
         if ${BUILD_DOCKER_IMAGES:-false}; then
@@ -670,6 +682,9 @@ build_and_test_client() {
         fi
 
         bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-commercial
+        if $needs_virtualization; then
+            remove_virtualization
+        fi
 
         mkdir -p $WORKSPACE/$board_name
         cp -vL $BUILDDIR/tmp/deploy/images/$machine_name/$image_name-$device_type.* $WORKSPACE/$board_name
