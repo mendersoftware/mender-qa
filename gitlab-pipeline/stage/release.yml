@@ -103,7 +103,7 @@ release:mender-monitor:automatic:
     # TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
     - |
       version=mender-${INTEGRATION_REV}
-      images="mender-client-docker-addons mender-client-qemu mender-client-qemu-rofs"
+      images="mender-client-docker-addons mender-client-qemu mender-client-qemu-rofs mender-client-qemu-extended"
       for image in $images; do
           docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
           tagged_image=docker.io/mendersoftware/${image}:${version}
