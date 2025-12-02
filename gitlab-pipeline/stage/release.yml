@@ -103,13 +103,23 @@ release:mender-monitor:automatic:
     # TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
     - |
       version=mender-${INTEGRATION_REV}
-      images="mender-client-docker-addons mender-client-qemu mender-client-qemu-rofs mender-client-qemu-extended"
+      images="mender-client-docker-addons mender-client-qemu mender-client-qemu-rofs"
       for image in $images; do
           docker pull ${GITLAB_REGISTRY_PREFIX}-${image}
           tagged_image=docker.io/mendersoftware/${image}:${version}
           docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${tagged_image}
           docker push ${tagged_image}
       done
+
+      image="mender-client-qemu-extended"
+      if docker pull ${GITLAB_REGISTRY_PREFIX}-${image}; then
+          tagged_image=docker.io/mendersoftware/${image}:${version}
+          docker tag ${GITLAB_REGISTRY_PREFIX}-${image} ${tagged_image}
+          docker push ${tagged_image}
+      else
+        echo "Skipping 'mender-client-qemu-extended'"
+        echo "The meta-mender branch does most likely not contain meta-mender-extended"
+      fi
 
       enterprise_images="mender-monitor-qemu-commercial mender-qemu-rofs-commercial"
       for image in $enterprise_images; do
