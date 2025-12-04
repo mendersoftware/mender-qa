@@ -3,6 +3,7 @@
   inherit:
     variables:
       - MENDER_GATEWAY_REV
+      - MENDER_CONTAINER_MODULES_REV
   variables:
     MENDER_CLIENT_REGISTRY: registry.gitlab.com
     MENDER_CLIENT_ENTERPRISE_REGISTRY: registry.gitlab.com
