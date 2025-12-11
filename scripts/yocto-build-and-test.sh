@@ -618,7 +618,14 @@ build_and_test_client() {
                 add_virtualization
         fi
         clean_build_config
-        run_bitbake $images_to_build
+        # QA-1421: Build images sequentially to workaround race condition in
+        # bitbake when running the wic script.
+        # This is a temporary workaround while we work on a fix.
+        # While the issue seems to have been fixed upstream, for some reason
+        # we still run into it more often than not. To be continued.
+        for img in ${images_to_build}; do
+            run_bitbake ${img}
+        done
         if ${BUILD_DOCKER_IMAGES:-false}; then
             features=`bitbake -e $image_name | egrep '^MENDER_FEATURES=' || true`
             # fall back to DISTRO_FEATURES if we found no MENDER_FEATURES
@@ -634,7 +641,10 @@ build_and_test_client() {
         restore_build_config
 
         # Rebuild without clean_build_config.
-        run_bitbake $images_to_build
+        # QA-1421: Build images sequentially, see comment above
+        for img in ${images_to_build}; do
+            run_bitbake ${img}
+        done
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
             filename="clean-${image_name}-${machine_name}.${extension}"
