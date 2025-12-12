@@ -115,7 +115,7 @@ init:workspace:
           "$MENDER_CONTAINER_MODULES_REV" != "latest" ]; then
         # QA-1177 TODO: Generate the list from docs.mender.io/releases magic JSON
         # MEN-5268 TODO: add mender-binary-delta to this list
-    -   for repo in mender mender-connect mender-configure-module monitor-client mender-flash mender-container-modules; do
+    -   for repo in mender mender-connect mender-configure-module monitor-client mender-flash mender-container-modules mender-client-subcomponents; do
     -     checkout_repo
             git@github.com:mendersoftware/$repo
             go/src/github.com/mendersoftware/$repo
