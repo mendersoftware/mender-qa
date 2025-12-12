@@ -31,6 +31,10 @@ variables:
     value: "main"
     description: |-
       Version of mender-container-modules
+  MENDER_CLIENT_SUBCOMPONENTS_REV:
+    value: "main"
+    description: |-
+      Version of mender-client-subcomponents
 
   # Mender Gateway LTS
   MENDER_GATEWAY_REV:
