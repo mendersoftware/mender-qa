@@ -112,7 +112,8 @@ init:workspace:
           "$MONITOR_CLIENT_REV" != "latest" -o
           "$MENDER_BINARY_DELTA_VERSION" != "latest" -o
           "$MENDER_FLASH_REV" != "latest" -o
-          "$MENDER_CONTAINER_MODULES_REV" != "latest" ]; then
+          "$MENDER_CONTAINER_MODULES_REV" != "latest" -o
+          "$MENDER_CLIENT_SUBCOMPONENTS_REV" != "latest" ]; then
         # QA-1177 TODO: Generate the list from docs.mender.io/releases magic JSON
         # MEN-5268 TODO: add mender-binary-delta to this list
     -   for repo in mender mender-connect mender-configure-module monitor-client mender-flash mender-container-modules mender-client-subcomponents; do
