@@ -63,7 +63,8 @@ trigger:integration-tests:
           $MONITOR_CLIENT_REV == "latest" &&
           $MENDER_BINARY_DELTA_VERSION == "latest" &&
           $MENDER_FLASH_REV == "latest" &&
-          $MENDER_CONTAINER_MODULES_REV == "latest"
+          $MENDER_CONTAINER_MODULES_REV == "latest" &&
+          $MENDER_CLIENT_SUBCOMPONENTS_REV == "latest"
       when: never
     - if: $RUN_INTEGRATION_TESTS == "true"
   needs:
