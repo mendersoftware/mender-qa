@@ -135,6 +135,9 @@ repo_to_recipe() {
     monitor-client)
         echo "mender-monitor"
         ;;
+    mender-client-subcomponents)
+        echo "mender-client-version-inventory-script"
+        ;;
     *)
         echo $1
         ;;
