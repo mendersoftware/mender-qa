@@ -70,17 +70,6 @@ Link: https://gitlab.com/Northern.tech/Mender/mender-gateway/-/pipelines?page=1&
 
 Nightly pipelines for `mender-gateway`. There are two branches to check: `master` and `2.0.x`
 
-### Weekly Mender integration tests on staging
-
-Link: https://gitlab.com/Northern.tech/Mender/integration/-/pipelines?page=1&scope=all&source=schedule
-
-Every Monday evening, at 9 PM UTC, we run the Mender integration tests targeting
-the Mender staging environment.
-
-On Tuesday morning, the person on QA duty must check the status of the pipeline and
-do a short investigation before asking for help from others in the team in
-case of failures.
-
 ### Other notable weekly pipelines
 
 Link: https://gitlab.com/Northern.tech/Mender/integration-test-runner/-/pipeline_schedules
