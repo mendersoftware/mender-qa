@@ -305,10 +305,10 @@ SRC_URI:pn-mender-gateway:append = " file:///$WORKSPACE/downloads/mender-gateway
 EOF
     fi
 
-    # For now the mender-orchestrator version is hardcoded to master as we don't yet
-    # have the logic to checkout revisions and build from source.
-    # This will be aligned with the other closed-source components in QA-1180
-    local version="master"
+    local version="$MENDER_ORCHESTRATOR_REV"
+    if [ -z "$version" -o "$version" = "latest" ]; then
+        version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-orchestrator)
+    fi
     s3cmd get s3://${S3_BUCKET_NAME}/mender-orchestrator/yocto/${version}/mender-orchestrator-${version}.tar.xz $WORKSPACE/downloads
     cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-orchestrator = "$version"
