@@ -7,9 +7,11 @@ The recommended method is using Google Cloud SDK. Alternatively you can use
 the website to launch SSH sessions with the slaves.
 
 Follow the following guide to get started:
-https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
+https://docs.cloud.google.com/sdk/docs/install-sdk
 
-Important! When selecting the region/zone, you select `northamerica-northeast1-b`
+Important!
+* When selecting project, you set it to mender-gitlab-runners
+* When selecting the region/zone, you select `northamerica-northeast1-b`
 
 ## How to debug via SSH
 
