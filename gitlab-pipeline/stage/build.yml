@@ -81,11 +81,9 @@ build:mender-monitor:package:
   image: alpine:3.12
   needs: []
   allow_failure: false
+  rules:
+    - if: $MONITOR_CLIENT_REV != "latest"
   before_script:
-    # Early exit if version is latest
-    - if [ "$MONITOR_CLIENT_REV" = "latest" ]; then
-    -   exit 0
-    - fi
     - apk add --no-cache git openssh
     # Prepare SSH keys
     - eval $(ssh-agent -s)
@@ -142,6 +140,8 @@ build:mender-gateway:package:
   needs:
     - init:workspace
   allow_failure: false
+  rules:
+    - if: $MENDER_GATEWAY_REV != "latest"
   before_script:
     # Early exit if repository is not checked out
     - apt update && apt install -yyq xz-utils
