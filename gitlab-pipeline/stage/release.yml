@@ -66,13 +66,13 @@ release:testing-boards:beagleboneblack:automatic:
 
 release:mender-monitor:manual:
   needs:
-    - build:mender-monitor:package
+    - build:mender-monitor
   when: manual
   extends: .template_release_mender-monitor
 
 release:mender-monitor:automatic:
   dependencies:
-    - build:mender-monitor:package
+    - build:mender-monitor
     - trigger:integration-tests
   only:
     variables:

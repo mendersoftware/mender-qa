@@ -7,7 +7,7 @@
     DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
-    - job: build:mender-monitor:package
+    - job: build:mender-monitor
       optional: true
     - job: build:mender-gateway:package
       optional: true
