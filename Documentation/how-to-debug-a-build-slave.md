@@ -7,9 +7,11 @@ The recommended method is using Google Cloud SDK. Alternatively you can use
 the website to launch SSH sessions with the slaves.
 
 Follow the following guide to get started:
-https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
+https://docs.cloud.google.com/sdk/docs/install-sdk
 
-Important! When selecting the region/zone, you select `northamerica-northeast1-b`
+Important!
+* When selecting project, you set it to mender-gitlab-runners
+* When selecting the region/zone, you select `northamerica-northeast1-b`
 
 ## How to debug via SSH
 
@@ -123,5 +125,5 @@ See `man sadf` for other tips (exporting to other formats, slicing by time and m
 
 * You can enable the STOP_SLAVE functionality even if you didn't enable it in
   the build parameters. Just log in after the build steps, jump into the container,
-  and create `/builds/Northern.tech/Mender/mender-qaWAIT_IN_STAGE_BUILD` (or _INIT,
+  and create `/builds/Northern.tech/Mender/mender-qa/WAIT_IN_STAGE_BUILD` (or _INIT,
   or TEST) while the build is still running.
