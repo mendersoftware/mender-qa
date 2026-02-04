@@ -9,6 +9,9 @@ include:
   - component: gitlab.com/Northern.tech/Mender/mender-binary-delta/build-mender-binary-delta@QA-1178-align
     inputs:
       name: build:mender-binary-delta
+  - component: gitlab.com/Northern.tech/Mender/monitor-client/build-mender-monitor@QA-1178-align
+    inputs:
+      name: build:mender-monitor
 
 # Template for workspace restoration
 .restore_workspace:
@@ -104,16 +107,7 @@ build:mender-monitor:
     COMPONENT_NAME: monitor-client
   rules:
     - if: $MONITOR_CLIENT_REV != "latest"
-  script:
-    - apk add --no-cache make git
-    - git fetch --tags origin
-    - make package
-    - mkdir -p ${CI_PROJECT_DIR}/stage-artifacts
-    - mv mender-monitor-*.tar.gz ${CI_PROJECT_DIR}/stage-artifacts
-    - ls -lh ${CI_PROJECT_DIR}/stage-artifacts/
-  artifacts:
-    paths:
-      - stage-artifacts
+
 build:mender-binary-delta:
   extends: .restore_workspace
   variables:
