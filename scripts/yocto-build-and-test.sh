@@ -70,7 +70,8 @@ modify_artifact() {
     # and beaglebone, for example), and the only way we can find out is to
     # inspect the artifact that Yocto built, since the job info itself does
     # not provide this info.
-    device_types="$(mender-artifact read $old_artifact | sed -rne "/^ *Compatible devices:/ {
+    # mender-artifact >= 5.0 says "Compatible types" instead of "devices"
+    device_types="$(mender-artifact read $old_artifact | sed -rne "/^ *Compatible (devices|types):/ {
         s/^[^[]*\\[//;
         s/][^]]*$//;
         s/ +/ -t /g;
