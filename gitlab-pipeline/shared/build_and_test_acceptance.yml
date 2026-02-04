@@ -7,8 +7,12 @@
     DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
-    - build:mender-monitor:package
-    - build:mender-gateway:package
+    - job: build:mender-monitor
+      optional: true
+    - job: build:mender-gateway:package
+      optional: true
+    - job: build:mender-orchestrator
+      optional: true
     - job: build:mender-binary-delta
       optional: true
   before_script:
