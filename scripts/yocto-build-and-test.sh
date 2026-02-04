@@ -241,11 +241,19 @@ EOF
     # -> otherwise fetch from S3 bucket
 
     if has_component mender-binary-delta; then
-        # MEN-5268 TODO: locate the local package instead
-        echo "mender-binary-delta cannot (yet) be integrated from master."
-        exit 1
+        local mender_binary_delta_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 2  -name "mender-binary-delta-*.tar.xz" | head -n1 | xargs basename)
+        tar -C /tmp -xf $WORKSPACE/stage-artifacts/x86_64/$mender_binary_delta_filename ${mender_binary_delta_filename%.tar.xz}/x86_64/mender-binary-delta
+        local mender_binary_delta_version=$(/tmp/${mender_binary_delta_filename%.tar.xz}/x86_64/mender-binary-delta --version | head -n 1 | egrep -o '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
+        rm /tmp/${mender_binary_delta_filename%.tar.xz}/x86_64/mender-binary-delta
+        if [ -z "$mender_binary_delta_version" ]; then
+            mender_binary_delta_version="master-git%"
+        fi
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-binary-delta = "$mender_binary_delta_version"
+SRC_URI:pn-mender-binary-delta = "file:///$WORKSPACE/stage-artifacts/x86_64/$mender_binary_delta_filename"
+EOF
     else
-        local version="$MENDER_BINARY_DELTA_VERSION"
+        local version="$MENDER_BINARY_DELTA_REV"
         if [ -z "$version" -o "$version" = "latest" ]; then
             version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-binary-delta)
         fi
