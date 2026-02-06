@@ -121,3 +121,10 @@ build:mender-gateway:package:
     COMPONENT_NAME: mender-gateway
   rules:
     - if: $MENDER_GATEWAY_REV != "latest"
+
+build:mender-orchestrator:
+  extends: .restore_workspace
+  variables:
+    COMPONENT_NAME: mender-orchestrator
+  rules:
+    - if: $MENDER_ORCHESTRATOR_REV != "latest"

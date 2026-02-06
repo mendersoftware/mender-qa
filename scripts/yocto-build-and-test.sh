@@ -54,6 +54,28 @@ has_component() {
     return $?
 }
 
+# Helper function to configure closed-source components from tarball
+# Usage: use_closed_source_tarball <component-name> <recipe-name>
+use_closed_source_tarball() {
+    local component_name=$1
+    local recipe_name=${2:-$1}
+    local filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 2 -name "${component_name}-*.tar.xz" | head -n1)
+    local basename=$(basename ${filename%.tar.xz})
+
+    tar -C /tmp -xf $filename $basename/x86_64/$component_name
+    local version=$(/tmp/$basename/x86_64/$component_name --version | head -n 1 | egrep -o '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
+    rm /tmp/$basename/x86_64/$component_name
+
+    if [ -z "$version" ]; then
+        version="master-git%"
+    fi
+
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-${recipe_name} = "$version"
+SRC_URI:pn-${recipe_name} = "file:///$filename"
+EOF
+}
+
 modify_ext4() {
     echo -n "artifact_name=$2" > /tmp/artifactfile
     debugfs -w -R "rm /etc/mender/artifact_info" $1
@@ -241,17 +263,7 @@ EOF
     # -> otherwise fetch from S3 bucket
 
     if has_component mender-binary-delta; then
-        local mender_binary_delta_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 2  -name "mender-binary-delta-*.tar.xz" | head -n1 | xargs basename)
-        tar -C /tmp -xf $WORKSPACE/stage-artifacts/x86_64/$mender_binary_delta_filename ${mender_binary_delta_filename%.tar.xz}/x86_64/mender-binary-delta
-        local mender_binary_delta_version=$(/tmp/${mender_binary_delta_filename%.tar.xz}/x86_64/mender-binary-delta --version | head -n 1 | egrep -o '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
-        rm /tmp/${mender_binary_delta_filename%.tar.xz}/x86_64/mender-binary-delta
-        if [ -z "$mender_binary_delta_version" ]; then
-            mender_binary_delta_version="master-git%"
-        fi
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-binary-delta = "$mender_binary_delta_version"
-SRC_URI:pn-mender-binary-delta = "file:///$WORKSPACE/stage-artifacts/x86_64/$mender_binary_delta_filename"
-EOF
+        use_closed_source_tarball mender-binary-delta
     else
         local version="$MENDER_BINARY_DELTA_REV"
         if [ -z "$version" -o "$version" = "latest" ]; then
@@ -287,18 +299,10 @@ EOF
     fi
 
     if has_component mender-gateway; then
-        local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
-        tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-        local mender_gateway_version=$(/tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway --version | head -n 1 | egrep -o '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
-        rm /tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-        if [ -z "$mender_gateway_version" ]; then
-            mender_gateway_version="master-git%"
-        fi
-        local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-examples-*.tar" | head -n1 | xargs basename)
+        use_closed_source_tarball mender-gateway
+        local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 2  -name "mender-gateway-examples-*.tar" | head -n1)
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-gateway = "$mender_gateway_version"
-SRC_URI:pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/$mender_gateway_filename"
-SRC_URI:pn-mender-gateway:append = " file:///$WORKSPACE/stage-artifacts/$mender_gateway_examples_filename"
+SRC_URI:pn-mender-gateway:append = " file:///$mender_gateway_examples_filename"
 EOF
     else
         local version="$MENDER_GATEWAY_REV"
@@ -315,17 +319,7 @@ EOF
     fi
 
     if has_component mender-orchestrator; then
-        local mender_orchestrator_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 2  -name "mender-orchestrator-*.tar.xz" | head -n1 | xargs basename)
-        tar -C /tmp -xf $WORKSPACE/stage-artifacts/x86_64/$mender_orchestrator_filename ${mender_orchestrator_filename%.tar.xz}/x86_64/mender-orchestrator
-        local mender_orchestrator_version=$(/tmp/${mender_orchestrator_filename%.tar.xz}/x86_64/mender-orchestrator --version | head -n 1 | egrep -o '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
-        rm /tmp/${mender_orchestrator_filename%.tar.xz}/x86_64/mender-orchestrator
-        if [ -z "$mender_orchestrator_version" ]; then
-            mender_orchestrator_version="master-git%"
-        fi
-        cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-orchestrator = "$mender_orchestrator_version"
-SRC_URI:pn-mender-orchestrator = "file:///$WORKSPACE/stage-artifacts/x86_64/$mender_orchestrator_filename"
-EOF
+        use_closed_source_tarball mender-orchestrator
         cat >> $BUILDDIR/conf/local.conf <<EOF
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS:remove = "do_patch"
