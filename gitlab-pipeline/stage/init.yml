@@ -41,7 +41,7 @@ init:workspace:
 
         clone_url=$1
         clone_path=$2
-        clone_rev=${3:-master}
+        clone_rev=$3
 
         repo_id=$(basename $clone_url .git | tr [a-z-] [A-Z_])
 
@@ -50,6 +50,12 @@ init:workspace:
         (
           cd $clone_path &&
           git remote add origin $clone_url &&
+
+          # Get default branch
+          if [ -z "$clone_rev" ]; then
+            clone_rev=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
+          fi
+
           git fetch -u -f origin ${clone_rev}:pr &&
           git checkout pr ||
           git checkout -f -b pr ${clone_rev}
