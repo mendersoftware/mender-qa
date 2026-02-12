@@ -20,6 +20,15 @@ include:
         - *workspace_restore
       rules:
         - if: $MENDER_GATEWAY_REV != "latest"
+  # mender-binary-delta
+  - component: gitlab.com/Northern.tech/Mender/mender-binary-delta/build-mender-binary-delta@master
+    inputs:
+      job_name: build:mender-binary-delta
+      before_script:
+        - *workspace_restore
+      architectures:
+        - x86_64
+        - arm
 
 build:client:docker:
   tags:
