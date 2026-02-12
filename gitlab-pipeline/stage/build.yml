@@ -13,7 +13,7 @@
 
 include:
   # mender-gateway
-  - component: gitlab.com/Northern.tech/Mender/mender-gateway/build-mender-gateway@master
+  - component: gitlab.com/Northern.tech/Mender/mender-gateway/build-mender-gateway@QA-1178-align
     inputs:
       job_name: build:mender-gateway
       before_script:
@@ -21,7 +21,7 @@ include:
       rules:
         - if: $MENDER_GATEWAY_REV != "latest"
   # mender-orchestrator
-  - component: gitlab.com/Northern.tech/Mender/mender-orchestrator/build-mender-orchestrator@master
+  - component: gitlab.com/Northern.tech/Mender/mender-orchestrator/build-mender-orchestrator@QA-1178-align
     inputs:
       job_name: build:mender-orchestrator
       architectures:
@@ -31,7 +31,7 @@ include:
       rules:
         - if: $MENDER_ORCHESTRATOR_REV != "latest"
   # mender-binary-delta
-  - component: gitlab.com/Northern.tech/Mender/mender-binary-delta/build-mender-binary-delta@master
+  - component: gitlab.com/Northern.tech/Mender/mender-binary-delta/build-mender-binary-delta@QA-1178-align
     inputs:
       job_name: build:mender-binary-delta
       before_script:
@@ -40,7 +40,7 @@ include:
         - x86_64
         - arm
   # mender-monitor
-  - component: gitlab.com/Northern.tech/Mender/monitor-client/build-mender-monitor@master
+  - component: gitlab.com/Northern.tech/Mender/monitor-client/build-mender-monitor@QA-1178-align
     inputs:
       job_name: build:mender-monitor
       before_script:
