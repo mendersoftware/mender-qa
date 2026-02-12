@@ -41,6 +41,12 @@ variables:
     description: |-
       Version of mender-gateway
 
+  # Mender Orchestrator LTS
+  MENDER_ORCHESTRATOR_REV:
+    value: "latest"
+    description: |-
+      Version of mender-orchestrator
+
   # Yocto repositories
   META_MENDER_REV:
     value: "master"
