@@ -279,11 +279,9 @@ EOF
     # -> otherwise fetch from S3 bucket
 
     if has_component mender-binary-delta; then
-        # MEN-5268 TODO: locate the local package instead
-        echo "mender-binary-delta cannot (yet) be integrated from master."
-        exit 1
+        use_closed_source_tarball mender-binary-delta
     else
-        local version="$MENDER_BINARY_DELTA_VERSION"
+        local version="$MENDER_BINARY_DELTA_REV"
         if [ -z "$version" -o "$version" = "latest" ]; then
             version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-binary-delta)
         fi

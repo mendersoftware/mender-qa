@@ -18,11 +18,10 @@ variables:
     value: "master"
     description: |-
       Version of monitor-client
-  # MEN-5268 TODO: Support fetching and testing mender-binary-delta master
-  MENDER_BINARY_DELTA_VERSION:
-    value: "latest"
+  MENDER_BINARY_DELTA_REV:
+    value: "master"
     description: |-
-      Version of mender-binary-delta to be fetched from S3. It must be a tag or "latest"
+      Version of mender-binary-delta to be fetched from S3. It must be a tag, branch or "latest"
   MENDER_FLASH_REV:
     value: "master"
     description: |-

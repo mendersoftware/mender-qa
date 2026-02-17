@@ -15,6 +15,19 @@ include:
         - *workspace_restore
       rules:
         - if: $MENDER_GATEWAY_REV != "latest"
+  # mender-binary-delta
+  - component: gitlab.com/Northern.tech/Mender/mender-binary-delta/build-mender-binary-delta@master
+    inputs:
+      job_name: build:mender-binary-delta
+      before_script:
+        - *workspace_restore
+      architectures:
+        - x86_64
+        - arm
+      rules:
+        # mender-binary-delta is not an independent component (subcomponent of Mender Client LTS).
+        # We build it as long as neither the mender-binary-delta nor the mender revision is set to latest
+        - if: $MENDER_BINARY_DELTA_REV != "latest" || $MENDER_REV != "latest"
 
 build:client:docker:
   tags:
