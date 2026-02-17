@@ -15,6 +15,17 @@ include:
         - *workspace_restore
       rules:
         - if: $MENDER_GATEWAY_REV != "latest"
+  # mender-orchestrator
+  - component: gitlab.com/Northern.tech/Mender/mender-orchestrator/build-mender-orchestrator@main
+    inputs:
+      job_name: build:mender-orchestrator
+      architectures:
+        - x86_64
+        - arm
+      before_script:
+        - *workspace_restore
+      rules:
+        - if: $MENDER_ORCHESTRATOR_REV != "latest"
   # mender-binary-delta
   - component: gitlab.com/Northern.tech/Mender/mender-binary-delta/build-mender-binary-delta@master
     inputs:

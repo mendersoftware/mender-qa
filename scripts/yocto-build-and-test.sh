@@ -334,21 +334,29 @@ SRC_URI:pn-mender-gateway:append = " file:///$WORKSPACE/downloads/mender-gateway
 EOF
     fi
 
-    # For now the mender-orchestrator version is hardcoded to master as we don't yet
-    # have the logic to checkout revisions and build from source.
-    # This will be aligned with the other closed-source components in QA-1180
-    local version="master"
-    s3cmd get s3://${S3_BUCKET_NAME}/mender-orchestrator/yocto/${version}/mender-orchestrator-${version}.tar.xz $WORKSPACE/downloads
-    cat >> $BUILDDIR/conf/local.conf <<EOF
+    if has_component mender-orchestrator; then
+        use_closed_source_tarball mender-orchestrator
+        cat >> $BUILDDIR/conf/local.conf <<EOF
+# When using externalsrc from CI, we still want to apply patches
+SRCTREECOVEREDTASKS:remove = "do_patch"
+EOF
+    else
+        local version="$MENDER_ORCHESTRATOR_REV"
+        if [ -z "$version" -o "$version" = "latest" ]; then
+            version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-orchestrator)
+        fi
+        s3cmd get s3://${S3_BUCKET_NAME}/mender-orchestrator/yocto/${version}/mender-orchestrator-${version}.tar.xz $WORKSPACE/downloads
+        cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-orchestrator = "$version"
 SRC_URI:pn-mender-orchestrator = "file:///$WORKSPACE/downloads/mender-orchestrator-${version}.tar.xz"
 EOF
-
-    cat >> $BUILDDIR/conf/local.conf <<EOF
+        cat >> $BUILDDIR/conf/local.conf <<EOF
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS:remove = "do_patch"
-
 EOF
+
+    fi
+
     # For now the mender-orchestrator-support version is hardcoded to main as we don't yet
     # have the logic to checkout revisions.
     # This will be aligned with the other closed-source components in QA-1180

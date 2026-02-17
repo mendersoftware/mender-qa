@@ -138,6 +138,14 @@ init:workspace:
           $MENDER_GATEWAY_REV
     - fi
 
+    # Mender Orchestrator LTS
+    - if [ "$MENDER_ORCHESTRATOR_REV" != "latest" ]; then
+    -   checkout_repo
+          git@github.com:mendersoftware/mender-orchestrator
+          go/src/github.com/mendersoftware/mender-orchestrator
+          $MENDER_ORCHESTRATOR_REV
+    - fi
+
     # Independent (yocto) components
     - if [ "$MENDER_ARTIFACT_REV" != "latest" ]; then
     -   checkout_repo
