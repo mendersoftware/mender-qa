@@ -54,6 +54,44 @@ has_component() {
     return $?
 }
 
+# Function to use closed-source components from tarball
+use_closed_source_tarball() {
+    local component_name=$1
+    local arch=$(bitbake -e | grep '^TARGET_ARCH=' | cut -d'"' -f2)
+
+    # Find arch-specific tarball first (binary-delta, orchestrator)
+    local filename=$(find $WORKSPACE/stage-artifacts/${component_name}/${arch}/ -maxdepth 1 -name "${component_name}-*.tar.xz" 2>/dev/null | head -n1)
+
+    # Fallback to component directory without arch (gateway, monitor)
+    [ -z "$filename" ] && filename=$(find $WORKSPACE/stage-artifacts/${component_name}/ -maxdepth 1 -name "${component_name}-*.tar.xz" -o -name "${component_name}-*.tar.gz" 2>/dev/null | head -n1)
+
+    local tmpdir=$(mktemp -d)
+    tar -C $tmpdir -xf $filename --strip-components=1
+    local binary_path=$tmpdir/$arch/$component_name
+
+    local version=$($binary_path --version | head -n 1 | grep -oE '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
+    # Version is not a tag, use `preferred_version`
+    if [ -z "$version" ]; then
+        case "$component_name" in
+            # These repos still use master as the default branch.
+            monitor-client | mender-binary-delta | mender-gateway | mender-orchestrator )
+                version="master-git%"
+                ;;
+            *)
+                # All other closed-source repositories not listed above uses main
+                version="main-git%"
+                ;;
+        esac
+    fi
+
+    rm -rf $tmpdir
+
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-${component_name} = "$version"
+SRC_URI:pn-${component_name} = "file:///$filename"
+EOF
+}
+
 modify_ext4() {
     echo -n "artifact_name=$2" > /tmp/artifactfile
     debugfs -w -R "rm /etc/mender/artifact_info" $1
@@ -279,18 +317,10 @@ EOF
     fi
 
     if has_component mender-gateway; then
-        local mender_gateway_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-*.tar.xz" | head -n1 | xargs basename)
-        tar -C /tmp -xf $WORKSPACE/stage-artifacts/$mender_gateway_filename ./${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-        local mender_gateway_version=$(/tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway --version | head -n 1 | egrep -o '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
-        rm /tmp/${mender_gateway_filename%.tar.xz}/x86_64/mender-gateway
-        if [ -z "$mender_gateway_version" ]; then
-            mender_gateway_version="master-git%"
-        fi
-        local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-gateway-examples-*.tar" | head -n1 | xargs basename)
+        use_closed_source_tarball mender-gateway
+        local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 2  -name "mender-gateway-examples-*.tar" | head -n1)
         cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-gateway = "$mender_gateway_version"
-SRC_URI:pn-mender-gateway = "file:///$WORKSPACE/stage-artifacts/$mender_gateway_filename"
-SRC_URI:pn-mender-gateway:append = " file:///$WORKSPACE/stage-artifacts/$mender_gateway_examples_filename"
+SRC_URI:pn-mender-gateway:append = " file:///$mender_gateway_examples_filename"
 EOF
     else
         local version="$MENDER_GATEWAY_REV"
