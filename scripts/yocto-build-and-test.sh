@@ -293,13 +293,13 @@ EOF
     fi
 
     if has_component monitor-client; then
-        local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1 | xargs basename)
-        local mender_monitor_version=$(tar -Oxf $WORKSPACE/stage-artifacts/$mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
+        local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/mender-monitor/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1)
+        local mender_monitor_version=$(tar -Oxf $mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
         if [ -z "$mender_monitor_version" ]; then
             mender_monitor_version="master-git%"
         fi
     cat >> $BUILDDIR/conf/local.conf <<EOF
-SRC_URI:pn-mender-monitor = "file:///$WORKSPACE/stage-artifacts/$mender_monitor_filename"
+SRC_URI:pn-mender-monitor = "file:///$mender_monitor_filename"
 PREFERRED_VERSION:pn-mender-monitor = "$mender_monitor_version"
 EOF
     else
