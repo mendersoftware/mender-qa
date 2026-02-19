@@ -1,7 +1,11 @@
 variables:
 
-  # Mender Client LTS. Subcomponents listed here:
-  # https://docs.mender.io/release-information/supported-releases#mender-client-subcomponents
+  # Mender Client LTS. Subcomponents and Update Modules listed here:
+  # https://docs.mender.io/release-information/supported-releases#mender-client
+  MENDER_CLIENT_SUBCOMPONENTS_REV:
+    value: "main"
+    description: |-
+      Version of mender-client-subcomponents
   MENDER_REV:
     value: "master"
     description: |-
@@ -10,30 +14,26 @@ variables:
     value: "master"
     description: |-
       Version of mender-connect
-  MENDER_CONFIGURE_MODULE_REV:
-    value: "master"
-    description: |-
-      Version of mender-configure-module
   MONITOR_CLIENT_REV:
     value: "master"
     description: |-
       Version of monitor-client
-  MENDER_BINARY_DELTA_REV:
-    value: "master"
-    description: |-
-      Version of mender-binary-delta to be fetched from S3. It must be a tag, branch or "latest"
   MENDER_FLASH_REV:
     value: "master"
     description: |-
       Version of mender-flash
+  MENDER_CONFIGURE_MODULE_REV:
+    value: "master"
+    description: |-
+      Version of mender-configure-module
+  MENDER_BINARY_DELTA_VERSION:
+    value: "master"
+    description: |-
+      Version of mender-binary-delta to be fetched from S3. It must be a tag or "latest"
   MENDER_CONTAINER_MODULES_REV:
     value: "main"
     description: |-
       Version of mender-container-modules
-  MENDER_CLIENT_SUBCOMPONENTS_REV:
-    value: "main"
-    description: |-
-      Version of mender-client-subcomponents
 
   # Mender Gateway LTS
   MENDER_GATEWAY_REV:
