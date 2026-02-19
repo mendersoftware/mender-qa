@@ -99,6 +99,9 @@ variables:
   # Build Virtual Device(s)
   BUILD_CLIENT:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build client for integration tests. False means use prebuilt client from upstream
 
@@ -109,62 +112,107 @@ variables:
   # Client Acceptance tests
   BUILD_QEMUX86_64_UEFI_GRUB:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration QEMUX86_64_UEFI_GRUB. Applicable for client acceptance tests
   TEST_QEMUX86_64_UEFI_GRUB:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to test configuration QEMUX86_64_UEFI_GRUB. Applicable for client acceptance tests
   BUILD_QEMUX86_64_BIOS_GRUB:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration QEMUX86_64_BIOS_GRUB. Applicable for client acceptance tests
   TEST_QEMUX86_64_BIOS_GRUB:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to test configuration QEMUX86_64_BIOS_GRUB. Applicable for client acceptance tests
   BUILD_QEMUX86_64_BIOS_GRUB_GPT:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration QEMUX86_64_BIOS_GRUB_GPT. Applicable for client acceptance tests
   TEST_QEMUX86_64_BIOS_GRUB_GPT:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to test configuration QEMUX86_64_BIOS_GRUB_GPT. Applicable for client acceptance tests
   BUILD_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration VEXPRESS_QEMU_UBOOT_UEFI_GRUB. Applicable for client acceptance tests
   TEST_VEXPRESS_QEMU_UBOOT_UEFI_GRUB:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to test configuration VEXPRESS_QEMU_UBOOT_UEFI_GRUB. Applicable for client acceptance tests
   BUILD_VEXPRESS_QEMU:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration VEXPRESS_QEMU. Applicable for client acceptance tests
   TEST_VEXPRESS_QEMU:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to test configuration VEXPRESS_QEMU. Applicable for client acceptance tests
   BUILD_VEXPRESS_QEMU_FLASH:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration VEXPRESS_QEMU_FLASH. Applicable for client acceptance tests
   TEST_VEXPRESS_QEMU_FLASH:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to TEST_ configuration VEXPRESS_QEMU_FLASH. Applicable for client acceptance tests
   BUILD_BEAGLEBONEBLACK:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration BEAGLEBONEBLACK. Applicable for client acceptance tests
   BUILD_RASPBERRYPI3:
     value: "false"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration RASPBERRYPI3. Applicable for client acceptance tests
   BUILD_RASPBERRYPI4:
     value: "false"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to build configuration RASPBERRYPI4. Applicable for client acceptance tests
   SPECIFIC_ACCEPTANCE_TEST:
@@ -185,30 +233,48 @@ variables:
       Version of mender-dist-packages
   BUILD_MENDER_DIST_PACKAGES:
     value: "false"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to trigger child pipeline mender-dist-packages
   TEST_MENDER_DIST_PACKAGES:
     value: "false"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to run tests in child pipeline mender-dist-packages
   RUN_INTEGRATION_TESTS:
     value: "true"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to run tests trigger child pipeline for integration tests
 
   # Publication
   PUBLISH_DOCKER_CLIENT_IMAGES:
     value: "false"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flat to publish Docker client images
   PUBLISH_RELEASE_AUTOMATIC:
     value: "false"
+    options:
+      - "true"
+      - "false"
     description: |-
       Flag to publish all deliverables automatically. Publishes Docker images and binaries
 
   # Nightly build marker
   NIGHTLY_BUILD:
     value: "false"
+    options:
+      - "true"
+      - "false"
     description: |-
       Marker to identify nightly builds
 
