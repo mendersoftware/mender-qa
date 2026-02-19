@@ -119,10 +119,9 @@ init:workspace:
           "$MENDER_BINARY_DELTA_VERSION" != "latest" -o
           "$MENDER_FLASH_REV" != "latest" -o
           "$MENDER_CONTAINER_MODULES_REV" != "latest" -o
+          "$MENDER_BINARY_DELTA_REV" != "latest" -o
           "$MENDER_CLIENT_SUBCOMPONENTS_REV" != "latest" ]; then
-        # QA-1177 TODO: Generate the list from docs.mender.io/releases magic JSON
-        # MEN-5268 TODO: add mender-binary-delta to this list
-    -   for repo in mender mender-connect mender-configure-module monitor-client mender-flash mender-container-modules mender-client-subcomponents; do
+    -   for repo in mender mender-connect mender-configure-module monitor-client mender-flash mender-container-modules mender-binary-delta mender-client-subcomponents; do
     -     checkout_repo
             git@github.com:mendersoftware/$repo
             go/src/github.com/mendersoftware/$repo
@@ -136,6 +135,14 @@ init:workspace:
           git@github.com:mendersoftware/mender-gateway
           go/src/github.com/mendersoftware/mender-gateway
           $MENDER_GATEWAY_REV
+    - fi
+
+    # Mender Orchestrator LTS
+    - if [ "$MENDER_ORCHESTRATOR_REV" != "latest" ]; then
+    -   checkout_repo
+          git@github.com:mendersoftware/mender-orchestrator
+          go/src/github.com/mendersoftware/mender-orchestrator
+          $MENDER_ORCHESTRATOR_REV
     - fi
 
     # Independent (yocto) components

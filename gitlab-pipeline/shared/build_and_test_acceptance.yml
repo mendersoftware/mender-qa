@@ -7,8 +7,14 @@
     DOCKER_BUILDKIT: 1
   needs:
     - init:workspace
-    - build:mender-monitor:package
-    - build:mender-gateway:package
+    - job: build:mender-monitor
+      optional: true
+    - job: build:mender-gateway
+      optional: true
+    - job: build:mender-orchestrator
+      optional: true
+    - job: build:mender-binary-delta
+      optional: true
   before_script:
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
