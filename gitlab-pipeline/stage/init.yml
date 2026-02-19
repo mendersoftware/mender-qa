@@ -121,7 +121,6 @@ init:workspace:
           "$MENDER_CONTAINER_MODULES_REV" != "latest" -o
           "$MENDER_BINARY_DELTA_REV" != "latest" -o
           "$MENDER_CLIENT_SUBCOMPONENTS_REV" != "latest" ]; then
-        # QA-1177 TODO: Generate the list from docs.mender.io/releases magic JSON
     -   for repo in mender mender-connect mender-configure-module monitor-client mender-flash mender-container-modules mender-binary-delta mender-client-subcomponents; do
     -     checkout_repo
             git@github.com:mendersoftware/$repo
