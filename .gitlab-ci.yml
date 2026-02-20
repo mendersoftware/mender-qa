@@ -102,6 +102,10 @@ variables:
     description: |-
       Flag to build client for integration tests. False means use prebuilt client from upstream
 
+  VIRTUAL_DEVICE_APP_UPDATES_PLATFORMS:
+    value: "linux/amd64,linux/arm64"
+    description: "Platforms for the Virtual Device for application updates. Comma-separated list of targets os/arch[/<version>]"
+
   # Client Acceptance tests
   BUILD_QEMUX86_64_UEFI_GRUB:
     value: "true"
