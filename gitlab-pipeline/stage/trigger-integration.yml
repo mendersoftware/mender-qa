@@ -57,14 +57,14 @@ trigger:integration-tests:
   extends: .template:trigger:integration-tests
   rules:
     - if: |
+          $MENDER_CLIENT_SUBCOMPONENTS_REV == "latest" &&
           $MENDER_REV == "latest" &&
           $MENDER_CONNECT_REV == "latest" &&
-          $MENDER_CONFIGURE_MODULE_REV == "latest" &&
           $MONITOR_CLIENT_REV == "latest" &&
-          $MENDER_BINARY_DELTA_VERSION == "latest" &&
           $MENDER_FLASH_REV == "latest" &&
-          $MENDER_CONTAINER_MODULES_REV == "latest" &&
-          $MENDER_CLIENT_SUBCOMPONENTS_REV == "latest"
+          $MENDER_CONFIGURE_MODULE_REV == "latest" &&
+          $MENDER_BINARY_DELTA_VERSION == "latest" &&
+          $MENDER_CONTAINER_MODULES_REV == "latest"
       when: never
     - if: $RUN_INTEGRATION_TESTS == "true"
   needs:
