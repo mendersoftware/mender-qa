@@ -1,42 +1,38 @@
 #
-# Release jobs are based on a common template and come in two flavors:
+# Release jobs are based on a base CI job and come in two flavors:
 # - automatic: we use "dependencies" to make sure all previous stages completed
 # - and manual: we use "needs" to give the release coordinator the control, for example
 #   to publish artifacts in order to early start manual tests or to do it despite errors
 #   in previous stages. With great power comes great responsibility.
 #
 
-.template_release_board_artifacts:
+.release:testing-boards:beagleboneblack:
   tags:
     - mender-qa-worker-generic-light
-  # Jobs including this template must define PUBLISH_BOARD_NAME and set up dependencies
   stage: release
   image: debian:12
   before_script:
     - apt update && apt install -yyq awscli
   script:
-    # Publish boards artifacts and sdimg (when not qemu board).
-    - aws s3 cp stage-artifacts/${PUBLISH_BOARD_NAME}_release_1_${MENDER_REV}.mender
-        s3://mender/${MENDER_REV}/${PUBLISH_BOARD_NAME}/${PUBLISH_BOARD_NAME}_release_1_${MENDER_REV}.mender
+    # Publish Mender artifact
+    - aws s3 cp stage-artifacts/beagleboneblack_release_1_${MENDER_REV}.mender
+        s3://mender/${MENDER_REV}/beagleboneblack/beagleboneblack_release_1_${MENDER_REV}.mender
     - aws s3api put-object-acl --acl public-read --bucket mender
-        --key ${MENDER_REV}/${PUBLISH_BOARD_NAME}/${PUBLISH_BOARD_NAME}_release_1_${MENDER_REV}.mender
-    - if ! echo $PUBLISH_BOARD_NAME | grep -q qemu; then
-    -   aws s3 cp stage-artifacts/mender-${PUBLISH_BOARD_NAME}_${MENDER_REV}.sdimg.gz
-          s3://mender/${MENDER_REV}/${PUBLISH_BOARD_NAME}/mender-${PUBLISH_BOARD_NAME}_${MENDER_REV}.sdimg.gz;
-    -   aws s3api put-object-acl --acl public-read --bucket mender
-          --key ${MENDER_REV}/${PUBLISH_BOARD_NAME}/mender-${PUBLISH_BOARD_NAME}_${MENDER_REV}.sdimg.gz
-    - fi
+        --key ${MENDER_REV}/beagleboneblack/beagleboneblack_release_1_${MENDER_REV}.mender
+    # And disk image
+    - aws s3 cp stage-artifacts/mender-beagleboneblack_${MENDER_REV}.sdimg.gz
+        s3://mender/${MENDER_REV}/beagleboneblack/mender-beagleboneblack_${MENDER_REV}.sdimg.gz
+    - aws s3api put-object-acl --acl public-read --bucket mender
+        --key ${MENDER_REV}/beagleboneblack/mender-beagleboneblack_${MENDER_REV}.sdimg.gz
 
 release:testing-boards:beagleboneblack:manual:
-  variables:
-    PUBLISH_BOARD_NAME: beagleboneblack
   needs:
     - build:acceptance:beagleboneblack
   when: manual
   only:
     variables:
       - $BUILD_BEAGLEBONEBLACK == "true"
-  extends: .template_release_board_artifacts
+  extends: .release:testing-boards:beagleboneblack
 
 release:testing-boards:beagleboneblack:automatic:
   variables:
@@ -47,9 +43,9 @@ release:testing-boards:beagleboneblack:automatic:
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_BEAGLEBONEBLACK == "true"
-  extends: .template_release_board_artifacts
+  extends: .release:testing-boards:beagleboneblack
 
-.template_release_mender-monitor:
+.release:mender-monitor:
   tags:
     - mender-qa-worker-generic-light
   stage: release
@@ -68,7 +64,7 @@ release:mender-monitor:manual:
   needs:
     - build:mender-monitor
   when: manual
-  extends: .template_release_mender-monitor
+  extends: .release:mender-monitor
 
 release:mender-monitor:automatic:
   dependencies:
@@ -77,9 +73,9 @@ release:mender-monitor:automatic:
   only:
     variables:
       - $PUBLISH_RELEASE_AUTOMATIC == "true"
-  extends: .template_release_mender-monitor
+  extends: .release:mender-monitor
 
-.template_release_docker_images:client-only:
+.release:virtual-client:
   tags:
     - hetzner-amd-beefy
   stage: release
@@ -129,10 +125,8 @@ release:virtual-client:manual:
   rules:
     - if: $BUILD_CLIENT == "true"
   when: manual
-  extends: .template_release_docker_images:client-only
+  extends: .release:virtual-client
 
-# This job allows mender repo to publish the related Docker client images on
-# merges to master or release branches.
 release:virtual-client:automatic:
   dependencies:
     - build:client:qemu
@@ -140,4 +134,4 @@ release:virtual-client:automatic:
     - trigger:integration-tests
   rules:
     - if: $PUBLISH_DOCKER_CLIENT_IMAGES == "true" && $BUILD_CLIENT == "true"
-  extends: .template_release_docker_images:client-only
+  extends: .release:virtual-client

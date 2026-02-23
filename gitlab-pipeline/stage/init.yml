@@ -112,15 +112,14 @@ init:workspace:
 
     # Mender Client LTS
     - if [
+          "$MENDER_CLIENT_SUBCOMPONENTS_REV" != "latest" -o
           "$MENDER_REV" != "latest" -o
           "$MENDER_CONNECT_REV" != "latest" -o
-          "$MENDER_CONFIGURE_MODULE_REV" != "latest" -o
           "$MONITOR_CLIENT_REV" != "latest" -o
-          "$MENDER_BINARY_DELTA_VERSION" != "latest" -o
           "$MENDER_FLASH_REV" != "latest" -o
-          "$MENDER_CONTAINER_MODULES_REV" != "latest" -o
+          "$MENDER_CONFIGURE_MODULE_REV" != "latest" -o
           "$MENDER_BINARY_DELTA_REV" != "latest" -o
-          "$MENDER_CLIENT_SUBCOMPONENTS_REV" != "latest" ]; then
+          "$MENDER_CONTAINER_MODULES_REV" != "latest" ]; then
     -   for repo in mender mender-connect mender-configure-module monitor-client mender-flash mender-container-modules mender-binary-delta mender-client-subcomponents; do
     -     checkout_repo
             git@github.com:mendersoftware/$repo
