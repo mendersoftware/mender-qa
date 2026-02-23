@@ -74,7 +74,7 @@ use_closed_source_tarball() {
     if [ -z "$version" ]; then
         case "$component_name" in
             # These repos still use master as the default branch.
-            monitor-client | mender-binary-delta | mender-gateway | mender-orchestrator )
+            monitor-client | mender-binary-delta | mender-gateway )
                 version="master-git%"
                 ;;
             *)
