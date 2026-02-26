@@ -5,13 +5,20 @@ This is a person in the team responsible for:
 
 * Monotiring the health of the Build System
 * Doing early investigation on issues
-* Report problems to the team
+* Report problems to the team (post status to #mender-qa Slack channel and discuss issues during internal team meeting)
 
 ## Mender QA rotation calendar
 
-Link: https://calendar.google.com/calendar/embed?src=northern.tech_m6aop2it00n2jnpiut2j40n39k%40group.calendar.google.com&ctz=Europe%2FOslo
+Client team: https://northerntech.atlassian.net/compass/operations/1aec3540-3768-4f3d-b728-d1f3e7e4412f/on-call
+Server team: https://northerntech.atlassian.net/compass/operations/6aef3ccd-778c-4691-9450-664b3b323b74/on-call
 
-This is the Google calendar that shows who takes this role when.
+This is the Atlassian Compass Operations calendar showing who takes which QA rotation and when.
+
+## Team Assigned Repositories 
+
+As a rule of thmb each team is responsible for their work (e.g. Server team is responsible for all Server components
+and the Client team is responsible for all the Client components). As per curent agreement the Client team is 
+responsible for `integration tests` and Mender Gateway. 
 
 ## Responsibilities
 
@@ -22,8 +29,9 @@ Link: https://qastatus.mender.io/stats
 The unstable tests should be known to the person on QA duty so that it can be detected when
 test failures are genuine or spurious.
 
-By the end of the QA duty period, all failed tests in nightly builds (link above)
-should either be fixed or reported in JIRA tasks to follow-up in the next period.
+**By the end of the QA duty period, all failed tests in nightly builds (link above)
+should either be fixed or discussed during the internal team meeting. Once we see the tests are failing 
+consistently we will report those in JIRA (QA project) to follow-up in the next Sprint.**
 
 ### Nightly Mender QA build (client only)
 
@@ -44,7 +52,7 @@ Link: https://gitlab.com/Northern.tech/Mender/mender-server/-/pipelines?page=1&s
 
 Link: https://gitlab.com/Northern.tech/Mender/mender-server-enterprise/-/pipelines?page=1&scope=all&source=schedule
 
-Nightly tests over the mender-server monorepo. These include the whole spectrum from unit tests to E2E tests.
+Nightly tests over the mender-server monorepo. These include the whole spectrum from unit tests to e2e tests.
 
 The second pipeline is for the Enterprise version but essentially features the same jobs.
 
@@ -83,8 +91,6 @@ Link: https://gitlab.com/Northern.tech/Mender/monitor-client/-/pipeline_schedule
 Link: https://qastatus.mender.io/build-status
 
 All should be green. If a pipeline is broken, ping the corresponding team.
-
-Note that `integration staging` is currently broken, you can skip that one.
 
 They get build after every merge to master on the corresponding repository, and
 on weekly basis every Tuesday evening, at 9 PM UTC.
