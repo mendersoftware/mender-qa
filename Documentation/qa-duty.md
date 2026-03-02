@@ -10,6 +10,7 @@ This is a person in the team responsible for:
 ## Mender QA rotation calendar
 
 Client team: https://northerntech.atlassian.net/compass/operations/1aec3540-3768-4f3d-b728-d1f3e7e4412f/on-call
+
 Server team: https://northerntech.atlassian.net/compass/operations/6aef3ccd-778c-4691-9450-664b3b323b74/on-call
 
 This is the Atlassian Compass Operations calendar showing who takes which QA rotation and when.
@@ -18,7 +19,7 @@ This is the Atlassian Compass Operations calendar showing who takes which QA rot
 
 As a rule of thmb each team is responsible for their work (e.g. Server team is responsible for all Server components
 and the Client team is responsible for all the Client components). As per curent agreement the Client team is 
-responsible for `integration tests` and Mender Gateway. 
+responsible for `integration` repository and Mender Gateway.
 
 ## Responsibilities
 
