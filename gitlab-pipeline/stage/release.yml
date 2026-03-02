@@ -128,7 +128,7 @@ release:mender-monitor:automatic:
           regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
       done
 
-release:virtual-client:manual:
+release:legacy-5.0.x:virtual-client:manual:
   needs:
     - build:client:qemu
     - build:client:docker
@@ -145,6 +145,17 @@ release:virtual-client:manual:
     # TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
     VIRTUAL_CLIENT_VERSION: "mender-${INTEGRATION_REV}"
 
+release:virtual-client:manual:
+  needs:
+    - build:client:qemu
+    - build:client:docker
+  rules:
+    - if: $BUILD_CLIENT == "true"
+  when: manual
+  extends: .release:virtual-client
+  variables:
+    VIRTUAL_CLIENT_VERSION: "client-${MENDER_CLIENT_SUBCOMPONENTS_REV}"
+
 release:virtual-client:automatic:
   dependencies:
     - build:client:qemu
@@ -154,10 +165,4 @@ release:virtual-client:automatic:
     - if: $PUBLISH_DOCKER_CLIENT_IMAGES == "true" && $BUILD_CLIENT == "true"
   extends: .release:virtual-client
   variables:
-    # Historical note,
-    # The version here used to be determined by the release_tool, which could distinguish between
-    # git repo version and container image version. Today this is kind of messy, as we moved out
-    # the backend to a separate repo but we haven't done deep changes in the release process for
-    # the rest, and "--version-of" option gives bogus results.
-    # TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
-    VIRTUAL_CLIENT_VERSION: "mender-${INTEGRATION_REV}"
+    VIRTUAL_CLIENT_VERSION: "client-${MENDER_CLIENT_SUBCOMPONENTS_REV}"
