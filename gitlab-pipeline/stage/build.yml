@@ -3,6 +3,7 @@
 .workspace_restore: &workspace_restore |
   apt-get update -yyq && apt-get install -yyq xz-utils
   WORKSPACE=$(realpath ${CI_PROJECT_DIR}/..)
+  rm -rf ${WORKSPACE}/go/src/github.com/mendersoftware/${COMPONENT_NAME}
   tar -xf workspace.tar.xz -C ${WORKSPACE} ./go/src/github.com/mendersoftware/${COMPONENT_NAME}
   cd ${WORKSPACE}/go/src/github.com/mendersoftware/${COMPONENT_NAME}
 
