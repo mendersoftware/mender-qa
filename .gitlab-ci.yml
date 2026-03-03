@@ -26,10 +26,10 @@ variables:
     value: "master"
     description: |-
       Version of mender-configure-module
-  MENDER_BINARY_DELTA_VERSION:
+  MENDER_BINARY_DELTA_REV:
     value: "master"
     description: |-
-      Version of mender-binary-delta to be fetched from S3. It must be a tag or "latest"
+      Version of mender-binary-delta
   MENDER_CONTAINER_MODULES_REV:
     value: "main"
     description: |-
