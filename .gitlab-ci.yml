@@ -260,7 +260,7 @@ variables:
       - "true"
       - "false"
     description: |-
-      Flat to publish Docker client images
+      Flag to publish Docker client images
   PUBLISH_RELEASE_AUTOMATIC:
     value: "false"
     options:

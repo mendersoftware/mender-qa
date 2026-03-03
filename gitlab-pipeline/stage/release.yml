@@ -99,29 +99,25 @@ release:mender-monitor:automatic:
   services:
     - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
+  variables:
+    # Final CI jobs extending this base job shall define VIRTUAL_CLIENT_VERSION
+    VIRTUAL_CLIENT_VERSION: "none"
   before_script:
     # Check correct dind setup
     - docker version
     # Login for private repos
     - *docker_login_registries
   script:
-    # Load, tag and push mender-client-* images
-    # Historical note,
-    # The version here used to be determined by the release_tool, which could distinguish between
-    # git repo version and container image version. Today this is kind of messy, as we moved out
-    # the backend to a separate repo but we haven't done deep changes in the release process for
-    # the rest, and "--version-of" option gives bogus results.
-    # TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
+    # Load, tag and push Mender Client images
     - |
-      version=mender-${INTEGRATION_REV}
       images="mender-client-docker-addons mender-client-qemu mender-client-qemu-rofs"
       for image in $images; do
-          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} docker.io/mendersoftware/${image}:${version}
+          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} docker.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
       done
 
       image="mender-client-qemu-extended"
       if docker pull ${GITLAB_REGISTRY_PREFIX}-${image}; then
-          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} docker.io/mendersoftware/${image}:${version}
+          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} docker.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
       else
         echo "Skipping 'mender-client-qemu-extended'"
         echo "The meta-mender branch does most likely not contain meta-mender-extended"
@@ -129,8 +125,25 @@ release:mender-monitor:automatic:
 
       enterprise_images="mender-monitor-qemu-commercial mender-qemu-rofs-commercial"
       for image in $enterprise_images; do
-          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${version}
+          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
       done
+
+release:legacy-5.0.x:virtual-client:manual:
+  needs:
+    - build:client:qemu
+    - build:client:docker
+  rules:
+    - if: $BUILD_CLIENT == "true"
+  when: manual
+  extends: .release:virtual-client
+  variables:
+    # Historical note,
+    # The version here used to be determined by the release_tool, which could distinguish between
+    # git repo version and container image version. Today this is kind of messy, as we moved out
+    # the backend to a separate repo but we haven't done deep changes in the release process for
+    # the rest, and "--version-of" option gives bogus results.
+    # TLDR; hardcode to mender-${INTEGRATION_REV} version for the Virtual Devices images
+    VIRTUAL_CLIENT_VERSION: "mender-${INTEGRATION_REV}"
 
 release:virtual-client:manual:
   needs:
@@ -140,6 +153,8 @@ release:virtual-client:manual:
     - if: $BUILD_CLIENT == "true"
   when: manual
   extends: .release:virtual-client
+  variables:
+    VIRTUAL_CLIENT_VERSION: "client-${MENDER_CLIENT_SUBCOMPONENTS_REV}"
 
 release:virtual-client:automatic:
   dependencies:
@@ -149,3 +164,5 @@ release:virtual-client:automatic:
   rules:
     - if: $PUBLISH_DOCKER_CLIENT_IMAGES == "true" && $BUILD_CLIENT == "true"
   extends: .release:virtual-client
+  variables:
+    VIRTUAL_CLIENT_VERSION: "client-${MENDER_CLIENT_SUBCOMPONENTS_REV}"
