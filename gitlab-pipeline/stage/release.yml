@@ -58,7 +58,7 @@ release:testing-boards:beagleboneblack:automatic:
   script:
     - echo "=== mender-monitor $MONITOR_CLIENT_REV ==="
     - echo "Publishing $MONITOR_CLIENT_REV version to s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$MONITOR_CLIENT_REV/"
-    - aws s3 cp stage-artifacts/mender-monitor-*.tar.gz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$MONITOR_CLIENT_REV/
+    - aws s3 cp stage-artifacts/mender-monitor/mender-monitor-*.tar.gz s3://$S3_BUCKET_NAME/$S3_BUCKET_PATH/$MONITOR_CLIENT_REV/
 
 release:mender-monitor:manual:
   needs:
