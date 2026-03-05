@@ -28,7 +28,7 @@
     - aws s3api put-object-acl --acl public-read --bucket mender
         --key ${BBB_RELEASE_VERSION}/beagleboneblack/mender-beagleboneblack_${BBB_RELEASE_VERSION}.sdimg.gz
 
-release:testing-boards:beagleboneblack:manual:
+release:legacy-5.0.x:testing-boards:beagleboneblack:manual:
   needs:
     - build:acceptance:beagleboneblack
   when: manual
@@ -38,6 +38,17 @@ release:testing-boards:beagleboneblack:manual:
   extends: .release:testing-boards:beagleboneblack
   variables:
     BBB_RELEASE_VERSION: "${MENDER_REV}"
+
+release:testing-boards:beagleboneblack:manual:
+  needs:
+    - build:acceptance:beagleboneblack
+  when: manual
+  only:
+    variables:
+      - $BUILD_BEAGLEBONEBLACK == "true"
+  extends: .release:testing-boards:beagleboneblack
+  variables:
+    BBB_RELEASE_VERSION: "${MENDER_CLIENT_SUBCOMPONENTS_REV}"
 
 release:testing-boards:beagleboneblack:automatic:
   variables:
@@ -50,7 +61,7 @@ release:testing-boards:beagleboneblack:automatic:
       - $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_BEAGLEBONEBLACK == "true"
   extends: .release:testing-boards:beagleboneblack
   variables:
-    BBB_RELEASE_VERSION: "${MENDER_REV}"
+    BBB_RELEASE_VERSION: "${MENDER_CLIENT_SUBCOMPONENTS_REV}"
 
 .release:mender-monitor:
   tags:
