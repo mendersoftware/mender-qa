@@ -818,7 +818,7 @@ build_and_test_client() {
         if [ -e "$WORKSPACE/$board_name/$image_name-$device_type.ext4" ]; then
 
             # Prepare deliveries: modified fs, release_1 artifact, and compressed sdimg for hw boards
-            local client_version="$MENDER_REV"
+            local client_version="$MENDER_CLIENT_SUBCOMPONENTS_REV"
             if [[ "$client_version" =~ ^pull/[0-9]+/head$ ]]; then
                 client_version="pr"
             fi
