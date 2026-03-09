@@ -15,15 +15,15 @@
     - apt update && apt install -yyq awscli
   script:
     # Publish Mender artifact
-    - aws s3 cp stage-artifacts/beagleboneblack_release_1_${MENDER_REV}.mender
-        s3://mender/${MENDER_REV}/beagleboneblack/beagleboneblack_release_1_${MENDER_REV}.mender
+    - aws s3 cp stage-artifacts/beagleboneblack_release_1_${MENDER_CLIENT_SUBCOMPONENTS_REV}.mender
+        s3://mender/${MENDER_CLIENT_SUBCOMPONENTS_REV}/beagleboneblack/beagleboneblack_release_1_${MENDER_CLIENT_SUBCOMPONENTS_REV}.mender
     - aws s3api put-object-acl --acl public-read --bucket mender
-        --key ${MENDER_REV}/beagleboneblack/beagleboneblack_release_1_${MENDER_REV}.mender
+        --key ${MENDER_CLIENT_SUBCOMPONENTS_REV}/beagleboneblack/beagleboneblack_release_1_${MENDER_CLIENT_SUBCOMPONENTS_REV}.mender
     # And disk image
-    - aws s3 cp stage-artifacts/mender-beagleboneblack_${MENDER_REV}.sdimg.gz
-        s3://mender/${MENDER_REV}/beagleboneblack/mender-beagleboneblack_${MENDER_REV}.sdimg.gz
+    - aws s3 cp stage-artifacts/mender-beagleboneblack_${MENDER_CLIENT_SUBCOMPONENTS_REV}.sdimg.gz
+        s3://mender/${MENDER_CLIENT_SUBCOMPONENTS_REV}/beagleboneblack/mender-beagleboneblack_${MENDER_CLIENT_SUBCOMPONENTS_REV}.sdimg.gz
     - aws s3api put-object-acl --acl public-read --bucket mender
-        --key ${MENDER_REV}/beagleboneblack/mender-beagleboneblack_${MENDER_REV}.sdimg.gz
+        --key ${MENDER_CLIENT_SUBCOMPONENTS_REV}/beagleboneblack/mender-beagleboneblack_${MENDER_CLIENT_SUBCOMPONENTS_REV}.sdimg.gz
 
 release:testing-boards:beagleboneblack:manual:
   needs:
