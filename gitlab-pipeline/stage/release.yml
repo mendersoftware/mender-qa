@@ -163,6 +163,7 @@ release:virtual-client:automatic:
     - trigger:integration-tests
   rules:
     - if: $PUBLISH_DOCKER_CLIENT_IMAGES == "true" && $BUILD_CLIENT == "true"
+    - if: $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_CLIENT == "true"
   extends: .release:virtual-client
   variables:
     VIRTUAL_CLIENT_VERSION: "client-${MENDER_CLIENT_SUBCOMPONENTS_REV}"
