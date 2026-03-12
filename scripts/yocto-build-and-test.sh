@@ -49,8 +49,18 @@ is_building_extra_images_for_board() {
     return $ret
 }
 
-has_component() {
+has_local_checkout() {
     test -d $WORKSPACE/go/src/github.com/mendersoftware/$1
+    return $?
+}
+
+has_recipe() {
+    local recipe_name=$1
+    # Look for recipe in meta-mender-core and meta-mender-commercial
+    find $WORKSPACE/meta-mender/meta-mender-core/recipes-mender \
+         $WORKSPACE/meta-mender/meta-mender-commercial/recipes-mender \
+         $WORKSPACE/meta-mender/meta-mender-commercial/conditional \
+         -maxdepth 2 -type d -name "$recipe_name" 2>/dev/null | grep -q .
     return $?
 }
 
@@ -275,86 +285,95 @@ EOF
     done
 
     # Closed source components:
+    # -> if recipe exists, check if checked out locally
     # -> if checked out, locate the package
     # -> otherwise fetch from S3 bucket
 
-    if has_component mender-binary-delta; then
-        use_closed_source_tarball mender-binary-delta
-    else
-        local version="$MENDER_BINARY_DELTA_REV"
-        if [ -z "$version" -o "$version" = "latest" ]; then
-            version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-binary-delta)
-        fi
-        s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/mender-binary-delta-${version}.tar.xz $WORKSPACE/downloads
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+    if has_recipe mender-binary-delta; then
+        if has_local_checkout mender-binary-delta; then
+            use_closed_source_tarball mender-binary-delta
+        else
+            local version="$MENDER_BINARY_DELTA_REV"
+            if [ -z "$version" -o "$version" = "latest" ]; then
+                version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-binary-delta)
+            fi
+            s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/mender-binary-delta-${version}.tar.xz $WORKSPACE/downloads
+            cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-binary-delta = "$version"
 SRC_URI:pn-mender-binary-delta = "file:///$WORKSPACE/downloads/mender-binary-delta-${version}.tar.xz"
 EOF
+        fi
     fi
 
-    if has_component monitor-client; then
-        local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/mender-monitor/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1)
-        local mender_monitor_version=$(tar -Oxf $mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
-        if [ -z "$mender_monitor_version" ]; then
-            mender_monitor_version="master-git%"
-        fi
-    cat >> $BUILDDIR/conf/local.conf <<EOF
+    if has_recipe mender-monitor; then
+        if has_local_checkout monitor-client; then
+            local mender_monitor_filename=$(find $WORKSPACE/stage-artifacts/mender-monitor/ -maxdepth 1  -name "mender-monitor-*.tar.gz" | head -n1)
+            local mender_monitor_version=$(tar -Oxf $mender_monitor_filename ./mender-monitor/.version | egrep -o '[0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?')
+            if [ -z "$mender_monitor_version" ]; then
+                mender_monitor_version="master-git%"
+            fi
+        cat >> $BUILDDIR/conf/local.conf <<EOF
 SRC_URI:pn-mender-monitor = "file:///$mender_monitor_filename"
 PREFERRED_VERSION:pn-mender-monitor = "$mender_monitor_version"
 EOF
-    else
-        local version="$MONITOR_CLIENT_REV"
-        if [ -z "$version" -o "$version" = "latest" ]; then
-            version=$(get_latest_recipe_version meta-mender-commercial/conditional/mender-monitor)
-        fi
-        s3cmd get s3://${S3_BUCKET_NAME}/mender-monitor/yocto/${version}/mender-monitor-${version}.tar.gz $WORKSPACE/downloads
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+        else
+            local version="$MONITOR_CLIENT_REV"
+            if [ -z "$version" -o "$version" = "latest" ]; then
+                version=$(get_latest_recipe_version meta-mender-commercial/conditional/mender-monitor)
+            fi
+            s3cmd get s3://${S3_BUCKET_NAME}/mender-monitor/yocto/${version}/mender-monitor-${version}.tar.gz $WORKSPACE/downloads
+            cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-monitor = "$version"
 SRC_URI:pn-mender-monitor = "file:///$WORKSPACE/downloads/mender-monitor-${version}.tar.gz"
 EOF
+        fi
     fi
 
-    if has_component mender-gateway; then
-        use_closed_source_tarball mender-gateway
-        local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 2  -name "mender-gateway-examples-*.tar" | head -n1)
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+    if has_recipe mender-gateway; then
+        if has_local_checkout mender-gateway; then
+            use_closed_source_tarball mender-gateway
+            local mender_gateway_examples_filename=$(find $WORKSPACE/stage-artifacts/ -maxdepth 2  -name "mender-gateway-examples-*.tar" | head -n1)
+            cat >> $BUILDDIR/conf/local.conf <<EOF
 SRC_URI:pn-mender-gateway:append = " file:///$mender_gateway_examples_filename"
 EOF
-    else
-        local version="$MENDER_GATEWAY_REV"
-        if [ -z "$version" -o "$version" = "latest" ]; then
-            version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-gateway)
-        fi
-        s3cmd get s3://${S3_BUCKET_NAME}/mender-gateway/yocto/${version}/mender-gateway-${version}.tar.xz $WORKSPACE/downloads
-        s3cmd get s3://${S3_BUCKET_NAME}/mender-gateway/examples/${version}/mender-gateway-examples-${version}.tar $WORKSPACE/downloads
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+        else
+            local version="$MENDER_GATEWAY_REV"
+            if [ -z "$version" -o "$version" = "latest" ]; then
+                version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-gateway)
+            fi
+            s3cmd get s3://${S3_BUCKET_NAME}/mender-gateway/yocto/${version}/mender-gateway-${version}.tar.xz $WORKSPACE/downloads
+            s3cmd get s3://${S3_BUCKET_NAME}/mender-gateway/examples/${version}/mender-gateway-examples-${version}.tar $WORKSPACE/downloads
+            cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-gateway = "$version"
 SRC_URI:pn-mender-gateway = "file:///$WORKSPACE/downloads/mender-gateway-${version}.tar.xz"
 SRC_URI:pn-mender-gateway:append = " file:///$WORKSPACE/downloads/mender-gateway-examples-${version}.tar"
 EOF
+        fi
     fi
 
-    if has_component mender-orchestrator; then
-        use_closed_source_tarball mender-orchestrator
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+    if has_recipe mender-orchestrator; then
+        if has_local_checkout mender-orchestrator; then
+            use_closed_source_tarball mender-orchestrator
+            cat >> $BUILDDIR/conf/local.conf <<EOF
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS:remove = "do_patch"
 EOF
-    else
-        local version="$MENDER_ORCHESTRATOR_REV"
-        if [ -z "$version" -o "$version" = "latest" ]; then
-            version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-orchestrator)
-        fi
-        s3cmd get s3://${S3_BUCKET_NAME}/mender-orchestrator/yocto/${version}/mender-orchestrator-${version}.tar.xz $WORKSPACE/downloads
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+        else
+            local version="$MENDER_ORCHESTRATOR_REV"
+            if [ -z "$version" -o "$version" = "latest" ]; then
+                version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-orchestrator)
+            fi
+            s3cmd get s3://${S3_BUCKET_NAME}/mender-orchestrator/yocto/${version}/mender-orchestrator-${version}.tar.xz $WORKSPACE/downloads
+            cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-orchestrator = "$version"
 SRC_URI:pn-mender-orchestrator = "file:///$WORKSPACE/downloads/mender-orchestrator-${version}.tar.xz"
 EOF
-        cat >> $BUILDDIR/conf/local.conf <<EOF
+            cat >> $BUILDDIR/conf/local.conf <<EOF
 # When using externalsrc from CI, we still want to apply patches
 SRCTREECOVEREDTASKS:remove = "do_patch"
 EOF
 
+        fi
     fi
 
     # For now the mender-orchestrator-support version is hardcoded to main as we don't yet
@@ -637,14 +656,14 @@ build_and_test_client() {
         if is_building_extra_images_for_board "$board_name" \
                 && [[ $image_name == core-image-full-cmdline ]]; then
             images_to_build+=" mender-image-full-cmdline-rofs"
-            if has_component monitor-client \
+            if has_local_checkout monitor-client \
                     && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
                 images_to_build+=" mender-monitor-image-full-cmdline"
             fi
             if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
                 images_to_build+=" mender-image-full-cmdline-rofs-commercial"
             fi
-            if has_component mender-container-modules \
+            if has_local_checkout mender-container-modules \
                             && [[ -f $WORKSPACE/meta-mender/meta-mender-extended/recipes-extended/images/mender-extended-image-full-cmdline.bb ]]; then
                 # Only add virtualization if we're building mender-extended-image-full-cmdline
                 needs_virtualization=true
