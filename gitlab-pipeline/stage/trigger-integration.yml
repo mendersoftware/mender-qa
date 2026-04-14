@@ -45,7 +45,7 @@ trigger:generate-gitlab-integration-rev:
   # Convert INTEGRATION_REV on format `pull/0000/head` to `pr_0000` to specify which gitlab branch to trigger
   - |
     GITLAB_INTEGRATION_REV=$INTEGRATION_REV
-    if [[ "$INTEGRATION_REV" =~ ^pull/([0-9]+)/head$ ]]; then
+    if [[ "$INTEGRATION_REV" =~ ^pull/([0-9]+)/(head|merge)$ ]]; then
       GITLAB_INTEGRATION_REV="pr_${BASH_REMATCH[1]}"
     fi
   - echo "GITLAB_INTEGRATION_REV=$GITLAB_INTEGRATION_REV" >> gitlab_integration_rev.env

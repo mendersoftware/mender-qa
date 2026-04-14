@@ -256,7 +256,7 @@ prepare_build_config() {
         # -> if PR, use master-git%
         # -> otherwise env ver + git% (maser-git, 5.0.x-git, etc)
         local yocto_version="$env_version-git%"
-        if [[ "$env_version" =~ ^pull/[0-9]+/head$ ]]; then
+        if [[ "$env_version" =~ ^pull/[0-9]+/(head|merge)$ ]]; then
             yocto_version="master-git%"
         fi
         local on_exact_tag=$(test "$env_version" != "master" && \
@@ -838,7 +838,7 @@ build_and_test_client() {
 
             # Prepare deliveries: modified fs, release_1 artifact, and compressed sdimg for hw boards
             local client_version="$MENDER_CLIENT_SUBCOMPONENTS_REV"
-            if [[ "$client_version" =~ ^pull/[0-9]+/head$ ]]; then
+            if [[ "$client_version" =~ ^pull/[0-9]+/(head|merge)$ ]]; then
                 client_version="pr"
             fi
             cp $WORKSPACE/$board_name/$image_name-$device_type.ext4 $WORKSPACE/$board_name/$image_name-$device_type-release_1.ext4
