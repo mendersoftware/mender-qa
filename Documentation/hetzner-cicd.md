@@ -22,7 +22,7 @@ in Hetzner hosts, both bare-metal and VMs.
 * Connection string:
   ```bash
   eval `ssh-agent` && \
-  pass show mender/cicd/hetznercloud/gitlab-hetzner-ax41-runner-ssh_key-priv.pem | ssh-add - && \
+  pass show mender/cicd/hetznercloud/ssh_key-02-priv.pem | ssh-add - && \
   ssh root@49.12.169.71
   ```
 
@@ -32,7 +32,7 @@ in Hetzner hosts, both bare-metal and VMs.
 * Connection string:
   ```bash
   eval `ssh-agent` && \
-  pass show mender/cicd/hetznercloud/gitlab-hetzner-ax41-runner-ssh_key-priv.pem | ssh-add - && ssh root@65.108.231.138
+  pass show mender/cicd/hetznercloud/ssh_key-02-priv.pem | ssh-add - && ssh root@65.108.231.138
   ```
 
 ### Hetzner CAX21
@@ -42,7 +42,7 @@ in Hetzner hosts, both bare-metal and VMs.
 * Connection string:
   ```bash
   eval `ssh-agent` && \
-  pass show mender/cicd/hetznercloud/ssh_key-01-priv.pem | ssh-add - && \
+  pass show mender/cicd/hetznercloud/ssh_key-02-priv.pem | ssh-add - && \
   ssh -J root@49.13.211.148 root@192.168.84.3
   ```
 
@@ -53,7 +53,7 @@ in Hetzner hosts, both bare-metal and VMs.
 * Connection string:
   ```bash
   eval `ssh-agent` && \
-  pass show mender/cicd/hetznercloud/ssh_key-01-priv.pem | ssh-add - && \
+  pass show mender/cicd/hetznercloud/ssh_key-02-priv.pem | ssh-add - && \
   ssh root@5.75.240.59 -p 4242
   ```
 
@@ -67,7 +67,7 @@ in Hetzner hosts, both bare-metal and VMs.
 * Connection string:
   ```bash
   eval `ssh-agent` && \
-  pass show mender/cicd/hetznercloud/gitlab-hetzner-ax41-runner-ssh_key-priv.pem | ssh-add - && ssh root@5.9.120.171
+  pass show mender/cicd/hetznercloud/ssh_key-02-priv.pem | ssh-add - && ssh root@5.9.120.171
   ```
 
 
