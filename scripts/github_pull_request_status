@@ -15,7 +15,7 @@ EOF
 # branch. It is recorded in the "CI_*" variables though.
 if [ "$CI_PROJECT_NAME" = "mender-qa" ]; then
     if echo "$CI_COMMIT_REF_NAME" | egrep '^pr_[0-9]+$'; then
-        export MENDER_QA_REV="pull/$(echo "$CI_COMMIT_REF_NAME" | egrep -o '[0-9]+')/head"
+        export MENDER_QA_REV="pull/$(echo "$CI_COMMIT_REF_NAME" | egrep -o '[0-9]+')/merge"
     else
         export MENDER_QA_REV="$CI_COMMIT_REF_NAME"
     fi
@@ -33,7 +33,7 @@ for key in $(env | sed -e 's/=.*//'); do
         # Skip GitLab/Docker duplicated environment vars, i.e. MENDER_REV has a DOCKER_ENV_MENDER_REV
         continue
     fi
-    if ! eval echo \$$key | egrep -q "^pull/[0-9]+/head$"; then
+    if ! eval echo \$$key | egrep -q "^pull/[0-9]+/(head|merge)$"; then
         # Not a pull request, skip.
         continue
     fi
