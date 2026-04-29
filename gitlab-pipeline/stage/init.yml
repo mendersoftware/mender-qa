@@ -83,18 +83,32 @@ init:workspace:
           echo "$(eval echo \$$(echo $1 | tr [a-z-] [A-Z_])_REV)"
       }
 
-    # Clean WORKSPACE and clone poky in the root
+    # Clean WORKSPACE and clone Yocto core repos
     - find ${WORKSPACE}
       -mindepth 1
       -maxdepth 1
       -not -name $(basename ${CI_PROJECT_DIR})
       -exec rm -rf '{}' ';'
     - cd ${WORKSPACE}
-    - git init . && git remote add origin https://github.com/mendersoftware/poky
-    - git fetch && git checkout -f origin/${POKY_REV}
-    - (
-    -   echo "POKY_REV_GIT_SHA=$(git rev-parse HEAD)" >> ${CI_PROJECT_DIR}/build_revisions.env
-    - )
+
+    # Map Yocto codenames to pinned release tags for the split repos
+    # (openembedded-core, bitbake, meta-yocto). These repos share the
+    # yocto-X.Y.Z tag scheme. Bump the tag here when upgrading.
+    - |
+      yocto_codename_to_tag() {
+        case $1 in
+          scarthgap) echo "yocto-5.0.17" ;;
+          kirkstone) echo "yocto-4.0.34" ;;
+          *) echo "$1" ;;
+        esac
+      }
+    - OPENEMBEDDED_CORE_REV=$(yocto_codename_to_tag "$OPENEMBEDDED_CORE_REV")
+    - BITBAKE_REV=$(yocto_codename_to_tag "$BITBAKE_REV")
+    - META_YOCTO_REV=$(yocto_codename_to_tag "$META_YOCTO_REV")
+
+    - checkout_repo https://git.openembedded.org/openembedded-core openembedded-core $OPENEMBEDDED_CORE_REV
+    - checkout_repo https://git.openembedded.org/bitbake openembedded-core/bitbake $BITBAKE_REV
+    - checkout_repo https://git.yoctoproject.org/meta-yocto meta-yocto $META_YOCTO_REV
 
     # Add MENDER_QA_REV, which is special, since it is this repository.
     - if echo "$CI_COMMIT_REF_NAME" | egrep '^pr_[0-9]+$'; then

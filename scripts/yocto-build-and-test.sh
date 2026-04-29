@@ -641,7 +641,7 @@ build_and_test_client() {
             exit 1
         fi
 
-        source oe-init-build-env build-$board_name
+        source openembedded-core/oe-init-build-env build-$board_name
         cd ../
 
         prepare_build_config $machine_name $board_name
