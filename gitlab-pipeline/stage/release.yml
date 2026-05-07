@@ -95,7 +95,7 @@ release:mender-monitor:automatic:
   tags:
     - hetzner-amd-beefy
   stage: release
-  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers/docker-multiplatform-buildx:master"
   services:
     - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
