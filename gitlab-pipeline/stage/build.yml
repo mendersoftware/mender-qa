@@ -66,7 +66,7 @@ build:client:docker:
   needs:
     - init:workspace
   allow_failure: false
-  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers/docker-multiplatform-buildx:master"
   services:
     - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
