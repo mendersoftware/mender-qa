@@ -1,0 +1,208 @@
+// renovate.json5 - Mender dependency update configuration
+// Start from this file and delete the sections that do not apply to your repo.
+// See Documentation/dependency-updates.md for the full process.
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Three presets every Mender repo uses:
+  // config:recommended - sensible defaults out of the box.
+  // :gitSignOff - adds Signed-off-by to every commit (required by the DCO check).
+  // :rebaseStalePrs - keeps open PRs up to date when the base branch changes, so they
+  //   do not sit around accumulating conflicts until someone force-closes them.
+  "extends": [
+    "config:recommended",
+    ":gitSignOff",
+    ":rebaseStalePrs"
+  ],
+
+  // Reviewer assignment: Renovate reads the repo CODEOWNERS file and requests reviews
+  // from the matching owners based on which files each PR touches.
+  // Keep the dependency file entries in CODEOWNERS (go.mod, Dockerfile*, package.json,
+  // etc.) - they apply to manually opened PRs too, not only Renovate ones.
+  // Remove the explicit "reviewers" field if CODEOWNERS already covers your team, to
+  // avoid duplicate review requests. Keep it as a fallback if CODEOWNERS is absent.
+  "reviewersFromCodeOwners": true,
+  // "reviewers": ["team:backend-dependabot-reviewers"],
+
+  // Commit message format: chore(deps): <description>
+  // This matches the existing Dependabot convention in the codebase and keeps
+  // dependency bumps out of the product changelog. CI file updates use ci:
+  // instead - see the packageRules override below.
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+
+  // PRs open overnight between Monday and Tuesday (22:00-06:00 UTC) - fallback for
+  // weeks with no merges. Team finds them Tuesday morning.
+  // The .pre CI stage is the primary trigger on every pipeline on master/main.
+  // Security vulnerability PRs bypass this entirely and open whenever the advisory lands.
+  "schedule": ["after 10pm on Monday", "before 6am on Tuesday"],
+
+  // Without these, Renovate opens every pending update at once on first run.
+  // 2 per hour means a backlog of 20 updates drains over a day, not in minutes.
+  // 5 concurrent open PRs is usually enough without clogging the review queue.
+  // For repos with multiple maintenance branches, raise prConcurrentLimit to 10.
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+
+  // List every branch that should receive dependency update PRs.
+  // Renovate does not infer maintenance branches from git - you have to name them.
+  // Remove branches that are no longer maintained.
+  "baseBranches": [
+    "master",
+    "4.0.x",
+    "4.1.x"
+  ],
+
+  // Security updates open immediately (ignoring the weekly schedule) and automerge
+  // when CI is green. These should not wait until Tuesday.
+  // Everything else requires human review - automerge is disabled for regular updates.
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"],
+    "automerge": true,
+    "automergeType": "pr",
+    "labels": ["security"]
+  },
+
+  // Custom managers for Mender-internal version pins.
+  // Standard package managers do not see versions buried in CI variables or Dockerfile
+  // ARGs. Keep only the block(s) that match where the version is pinned in THIS repo.
+  "customManagers": [
+
+    // Use this if MENDER_ARTIFACT_VERSION is a Dockerfile ARG:
+    //   ARG MENDER_ARTIFACT_VERSION=3.11.2
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/Dockerfile/"],
+      "matchStrings": [
+        "MENDER_ARTIFACT_VERSION=\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?"
+      ],
+      "depNameTemplate": "mendersoftware/mender-artifact",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "versioningTemplate": "semver"
+    },
+
+    // Use this if MENDER_ARTIFACT_VERSION is a .gitlab-ci.yml variable block:
+    //   MENDER_ARTIFACT_VERSION:
+    //     value: "3.11.2"
+    // The [\\s\\S]*? is necessary to match across multiple lines in the YAML block.
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/.gitlab-ci.yml/"],
+      "matchStrings": [
+        "MENDER_ARTIFACT_VERSION:[\\s\\S]*?value:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?"
+      ],
+      "depNameTemplate": "mendersoftware/mender-artifact",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "versioningTemplate": "semver"
+    },
+
+    // Use this if the repo pins DOCKER_VERSION as a CI variable:
+    //   DOCKER_VERSION:
+    //     value: "27.3.1"
+    // Delete this block if no DOCKER_VERSION variable exists in .gitlab-ci.yml.
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/.gitlab-ci.yml/"],
+      "matchStrings": [
+        "DOCKER_VERSION:[\\s\\S]*?value:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?"
+      ],
+      "depNameTemplate": "docker",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ],
+
+  "packageRules": [
+
+    // CI file updates get commit type "ci" instead of "chore".
+    // Keeps gitlabci image bumps in the ci: changelog section, not deps.
+    {
+      "matchManagers": ["gitlabci", "gitlabci-include"],
+      "semanticCommitType": "ci",
+      "semanticCommitScope": ""  // clears the top-level "deps" scope - produces "ci:" not "ci(deps):"
+    },
+
+    // Go modules: one PR for everything.
+    // Go transitive deps often need to move together, and reviewing 15 individual
+    // module-bump PRs is not useful.
+    {
+      "matchManagers": ["gomod"],
+      "groupName": "golang-dependencies",
+      "groupSlug": "golang-dependencies"
+    },
+
+    // Docker base images: separate PRs by default.
+    // A builder image update and a runtime image update are different decisions.
+    // If the repo has many similar service Dockerfiles (e.g. mender-server with 9
+    // services), uncomment the block below to group them instead.
+    //
+    // {
+    //   "matchManagers": ["dockerfile"],
+    //   "groupName": "docker-base-images",
+    //   "groupSlug": "docker-base-images"
+    // },
+
+    // Python: one PR for all pip deps.
+    {
+      "matchManagers": ["pip_requirements", "pipenv", "poetry"],
+      "groupName": "python-dependencies",
+      "groupSlug": "python-dependencies"
+    },
+
+    // npm: three groups, matching the existing Dependabot policy.
+    // MUI gets its own group - major MUI upgrades are disruptive enough to review
+    // separately. The existing Dependabot config already isolated them for the same
+    // reason.
+    // Delete all four blocks if this repo has no npm dependencies.
+    {
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "excludePackageNames": ["/^@playwright/", "/^playwright/"],
+      "groupName": "npm-dev-dependencies"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["dependencies"],
+      "excludePackageNames": ["/^@emotion/", "/^@mui/"],
+      "groupName": "npm-prod-dependencies"
+    },
+    {
+      "matchPackageNames": ["/^@emotion/", "/^@mui/"],
+      "groupName": "npm-mui"
+    },
+    {
+      "matchPackageNames": ["/^@playwright/", "/^playwright/"],
+      "groupName": "playwright"
+    },
+
+    // Submodule versions are managed by the release tooling. Leave them alone.
+    {
+      "matchManagers": ["git-submodules"],
+      "enabled": false
+    },
+
+    // Some versions are intentionally frozen for backwards-compatibility test jobs.
+    // Uncomment and adapt if the repo has a pinned version that should never move.
+    //
+    // {
+    //   "matchFileNames": [".gitlab-ci.yml"],
+    //   "matchPackageNames": ["golang"],
+    //   "matchDatasources": ["docker"],
+    //   "matchCurrentValue": "1.17.13-bullseye",
+    //   "enabled": false
+    // },
+
+    // No major version bumps on maintenance branches.
+    // A major upgrade on 4.0.x needs an explicit backport decision, not an automated PR.
+    // The regex catches any branch named like X.Y.x.
+    {
+      "matchBaseBranches": ["/^\\d+\\.\\d+\\.x$/"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}
