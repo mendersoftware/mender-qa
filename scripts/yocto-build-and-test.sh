@@ -122,8 +122,8 @@ modify_artifact() {
     device_types="$(mender-artifact read $old_artifact | sed -rne "/^ *Compatible (devices|types):/ {
         s/^[^[]*\\[//;
         s/][^]]*$//;
-        s/ +/ -t /g;
-        s/^/-t /;
+        s/ +/ -c /g;
+        s/^/-c /;
         p;
     }")"
 
