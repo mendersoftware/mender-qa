@@ -52,20 +52,32 @@ variables:
     value: "master"
     description: |-
       Version of meta-mender
-  POKY_REV:
+  YOCTO_REV:
     value: "scarthgap"
     description: |-
-      Version of poky
+      Yocto release branch. Default for openembedded-core, bitbake, meta-yocto.
+  OPENEMBEDDED_CORE_REV:
+    value: ${YOCTO_REV}
+    description: |-
+      Version of openembedded-core
+  BITBAKE_REV:
+    value: ${YOCTO_REV}
+    description: |-
+      Version of bitbake
+  META_YOCTO_REV:
+    value: ${YOCTO_REV}
+    description: |-
+      Version of meta-yocto
   META_OPENEMBEDDED_REV:
-    value: ${POKY_REV}
+    value: ${YOCTO_REV}
     description: |-
       Version of meta-openembedded
   META_VIRTUALIZATION_REV:
-    value: ${POKY_REV}
+    value: ${YOCTO_REV}
     description: |-
       Version of meta-virtualization
   META_RASPBERRYPI_REV:
-    value: ${POKY_REV}
+    value: ${YOCTO_REV}
     description: |-
       Version of meta-raspberrypi. Only applicable for kirkstone or older
 
