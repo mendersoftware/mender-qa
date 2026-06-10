@@ -32,7 +32,7 @@ limited to:
 * Error code semantics - what a given code *means* must never change: a `409` always signals a conflict, a `500` always signals an unhandled failure (see [Permitted refinements](#permitted-refinements))
 * Any other guarantee a client would treat as part of a stable API
 
-It **is** ok to add anything you need, as long as it is backward compatible.
+It **is ok** to add anything you need, as long as it is backward compatible.
 This includes:
 
 * New endpoints
