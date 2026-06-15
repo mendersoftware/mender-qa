@@ -53,7 +53,7 @@ variables:
     description: |-
       Version of meta-mender
   YOCTO_REV:
-    value: "scarthgap"
+    value: "wrynose"
     description: |-
       Yocto release branch. Default for openembedded-core, bitbake, meta-yocto.
   OPENEMBEDDED_CORE_REV:
