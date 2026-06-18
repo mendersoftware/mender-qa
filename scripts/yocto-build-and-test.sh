@@ -76,8 +76,8 @@ use_closed_source_tarball() {
     [ -z "$filename" ] && filename=$(find $WORKSPACE/stage-artifacts/${component_name}/ -maxdepth 1 -name "${component_name}-*.tar.xz" -o -name "${component_name}-*.tar.gz" 2>/dev/null | head -n1)
 
     local tmpdir=$(mktemp -d)
-    tar -C $tmpdir -xf $filename --strip-components=1
-    local binary_path=$tmpdir/$arch/$component_name
+    tar -C $tmpdir -xf $filename
+    local binary_path=$(find $tmpdir -type f -path "*/$arch/$component_name" | head -n1)
 
     local version=$($binary_path --version | head -n 1 | grep -oE '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
     # Version is not a tag, use `preferred_version`
