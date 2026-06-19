@@ -306,8 +306,9 @@ variables:
 
 include:
   - local: "/gitlab-pipeline/internal-variables.yml"
-  - project: "Northern.tech/Mender/mendertesting"
-    file: ".gitlab-ci-check-commits-signoffs.yml"
+  - component: gitlab.com/Northern.tech/Mender/mendertesting/commit-lint@master
+  - project: Northern.tech/Mender/mendertesting
+    file: qa-common/retry.yml
   - local: "/gitlab-pipeline/shared/build_and_test_acceptance.yml"
   - local: "/gitlab-pipeline/stage/pre.yml"
   - local: "/gitlab-pipeline/stage/init.yml"
