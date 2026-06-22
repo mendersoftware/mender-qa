@@ -41,6 +41,7 @@ trigger:generate-gitlab-integration-rev:
   rules:
     - if: $RUN_INTEGRATION_TESTS == "true"
   needs: []
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/debian:13
   script:
   # Convert INTEGRATION_REV on format `pull/0000/head` to `pr_0000` to specify which gitlab branch to trigger
   - |
