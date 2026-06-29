@@ -229,7 +229,7 @@ sudo tee /etc/gitlab-runner/mender-runner-template-config.toml << EOF
   executor = "docker+machine"
   [runners.docker]
     tls_verify = false
-    image = "ubuntu:22.04"
+    image = "ubuntu:24.04"
     privileged = true
     disable_entrypoint_overwrite = true
     oom_kill_disable = false
