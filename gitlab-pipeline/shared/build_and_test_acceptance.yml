@@ -14,7 +14,7 @@
 .template_build_test_acc:
   tags:
     - mender-qa-worker-client-acceptance-tests
-  image: registry.gitlab.com/northern.tech/mender/mender-test-containers/mender-client-acceptance-testing:master
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers/mender-client-acceptance-testing:2662224977
   variables:
     DOCKER_BUILDKIT: 1
   id_tokens:
