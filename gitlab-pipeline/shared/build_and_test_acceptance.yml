@@ -1,10 +1,25 @@
 
+.aws-oidc-auth: &aws-oidc-auth
+  - >
+    export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s"
+    $(aws sts assume-role-with-web-identity
+    --role-arn ${AWS_S3_READONLY_ROLE_ARN}
+    --role-session-name "GitLabRunner-${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+    --web-identity-token ${AWS_OIDC_TOKEN}
+    --duration-seconds 900
+    --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
+    --output text))
+  - aws sts get-caller-identity
+
 .template_build_test_acc:
   tags:
     - mender-qa-worker-client-acceptance-tests
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/mender-client-acceptance-testing:master
   variables:
     DOCKER_BUILDKIT: 1
+  id_tokens:
+    AWS_OIDC_TOKEN:
+      aud: https://gitlab.com
   needs:
     - init:workspace
     - job: build:mender-monitor
@@ -19,7 +34,6 @@
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
     - service sysstat start && sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
-    - apt update && apt install -yyq xz-utils
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Export required yocto-build script variables
@@ -58,6 +72,18 @@
 
     - chown -R mender:mender ${WORKSPACE}
     - export HOME="/home/mender"
+    # s3cmd (used by yocto-build-and-test.sh) doesn't read AWS_* env vars, it needs ~/.s3cfg
+    - *aws-oidc-auth
+    - |
+      cat > /home/mender/.s3cfg <<S3CFG
+      [default]
+      access_key = ${AWS_ACCESS_KEY_ID}
+      secret_key = ${AWS_SECRET_ACCESS_KEY}
+      access_token = ${AWS_SESSION_TOKEN}
+      use_https = True
+      S3CFG
+    - chown mender:mender /home/mender/.s3cfg
+    - chmod 600 /home/mender/.s3cfg
     - sudo -E -u mender ${WORKSPACE}/mender-qa/scripts/yocto-build-and-test.sh
 
     # Always keep this at the end of the script stage

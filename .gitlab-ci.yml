@@ -304,6 +304,9 @@ variables:
     description: |-
       Marker to make the CI machines wait in stage TEST for remote debugging
 
+  AWS_S3_PUBLISH_ROLE_ARN: "arn:aws:iam::175683096866:role/nt-mender-qa-s3-release-publishing"
+  AWS_S3_READONLY_ROLE_ARN: "arn:aws:iam::175683096866:role/nt-cicd-mender-binary-delta-ro"
+
 include:
   - local: "/gitlab-pipeline/internal-variables.yml"
   - component: gitlab.com/Northern.tech/Mender/mendertesting/commit-lint@master
