@@ -48,7 +48,7 @@
   // List every branch that should receive dependency update PRs.
   // Renovate does not infer maintenance branches from git - you have to name them.
   // Remove branches that are no longer maintained.
-  "baseBranches": [
+  "baseBranchPatterns": [
     "master",
     "4.0.x",
     "4.1.x"

@@ -77,7 +77,7 @@ Each repository needs a `renovate.json5` at the root. Start from `renovate.json5
 in the mender-qa repository. Three things you must adapt:
 
 - `reviewers` - the GitHub team that owns this repo (see the table below)
-- `baseBranches` - every branch that should get updates, including maintenance branches
+- `baseBranchPatterns` - every branch that should get updates, including maintenance branches
 - `customManagers` - keep only the blocks that match what this repo actually pins
 
 | Team slug | Repositories |
@@ -162,7 +162,7 @@ that has a `DOCKER_VERSION` variable in `.gitlab-ci.yml`.
    files (`go.mod`, `Dockerfile*`, `package.json`, etc.) assigned to the correct team -
    Renovate reads CODEOWNERS to assign reviewers, and those entries also protect the
    files in manually opened PRs
-3. Set `baseBranches` to include all active branches
+3. Set `baseBranchPatterns` to include all active branches
 4. Delete custom manager blocks that do not apply to this repo
 5. Delete `packageRules` entries for ecosystems the repo does not use
 6. Add the Renovate runner job via the `mendertesting` shared template
