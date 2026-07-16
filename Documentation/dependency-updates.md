@@ -121,7 +121,7 @@ batch-merge on a Friday afternoon.
 
 ### Commit messages
 
-Every dependency update commit follows the pattern `chore(deps): <description>`. CI file
+Every dependency update commit follows the pattern `fix(deps): <description>`. CI file
 updates use `ci:` instead. This keeps dependency bumps out of the product changelog
 and prevents them from triggering unintended releases through release-please.
 
