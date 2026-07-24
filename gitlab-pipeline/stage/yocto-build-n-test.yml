@@ -23,11 +23,11 @@ build:client:qemu:
     - docker push --quiet ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu"
     - docker tag mendersoftware/mender-client-qemu-rofs:pr ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-rofs
     - docker push --quiet ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-rofs && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-rofs"
-    - if [[ -d $WORKSPACE/go/src/github.com/mendersoftware/monitor-client ]] && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
+    - if [[ -d $WORKSPACE/go/src/github.com/mendersoftware/monitor-client ]] && [[ -f $WORKSPACE/meta-mender/meta-mender-demo/mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
     -   docker tag registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr ${GITLAB_REGISTRY_PREFIX}-mender-monitor-qemu-commercial
     -   docker push --quiet ${GITLAB_REGISTRY_PREFIX}-mender-monitor-qemu-commercial && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-monitor-qemu-commercial"
     - fi
-    - if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
+    - if [[ -f $WORKSPACE/meta-mender/meta-mender-demo/mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
     -   docker tag registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial
     -   docker push --quiet ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial"
     - fi
