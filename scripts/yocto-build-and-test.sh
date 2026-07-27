@@ -649,10 +649,10 @@ build_and_test_client() {
                 && [[ $image_name == core-image-full-cmdline ]]; then
             images_to_build+=" mender-image-full-cmdline-rofs"
             if has_local_checkout monitor-client \
-                    && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
+                    && [[ -f $WORKSPACE/meta-mender/meta-mender-demo/mender-commercial/recipes-extended/images/mender-monitor-image-full-cmdline.bb ]]; then
                 images_to_build+=" mender-monitor-image-full-cmdline"
             fi
-            if [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
+            if [[ -f $WORKSPACE/meta-mender/meta-mender-demo/mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
                 images_to_build+=" mender-image-full-cmdline-rofs-commercial"
             fi
             if has_local_checkout mender-container-modules \
