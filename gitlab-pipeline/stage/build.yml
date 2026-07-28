@@ -40,6 +40,17 @@ include:
         # mender-binary-delta is not an independent component (subcomponent of Mender Client LTS).
         # We build it as long as neither the mender-binary-delta nor the mender revision is set to latest
         - if: $MENDER_BINARY_DELTA_REV != "latest" || $MENDER_REV != "latest"
+  # mender-delta-container-modules
+  - component: gitlab.com/Northern.tech/Mender/mender-delta-container-modules/build-delta-docker-compose@main
+    inputs:
+      job_name: build:delta-docker-compose
+      before_script:
+        - *workspace_restore
+      architectures:
+        - x86_64
+        - arm
+      rules:
+        - if: $MENDER_DELTA_CONTAINER_MODULES_REV != "latest"
   # mender-monitor
   - component: gitlab.com/Northern.tech/Mender/monitor-client/build-mender-monitor@master
     inputs:

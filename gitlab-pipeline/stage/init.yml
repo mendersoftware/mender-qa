@@ -153,6 +153,14 @@ init:workspace:
           $MENDER_ORCHESTRATOR_REV
     - fi
 
+    # Mender Delta Container Modules
+    - if [ "$MENDER_DELTA_CONTAINER_MODULES_REV" != "latest" ]; then
+    -   checkout_repo
+          https://github.com/mendersoftware/mender-delta-container-modules.git
+          go/src/github.com/mendersoftware/mender-delta-container-modules
+          $MENDER_DELTA_CONTAINER_MODULES_REV
+    - fi
+
     # Independent (yocto) components
     - if [ "$MENDER_ARTIFACT_REV" != "latest" ]; then
     -   checkout_repo

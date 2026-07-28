@@ -34,6 +34,10 @@ variables:
     value: "main"
     description: |-
       Version of mender-container-modules
+  MENDER_DELTA_CONTAINER_MODULES_REV:
+    value: "main"
+    description: |-
+      Version of mender-delta-container-modules
 
   # Mender Gateway LTS
   MENDER_GATEWAY_REV:
