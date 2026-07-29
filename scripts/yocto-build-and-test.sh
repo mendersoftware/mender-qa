@@ -196,7 +196,7 @@ repo_to_recipe() {
 # Repo is closed source (installs prebuilt tarball)
 is_closed_source() {
     case "$1" in
-    mender-binary-delta|monitor-client|mender-gateway)
+    mender-binary-delta|monitor-client|mender-gateway|mender-delta-container-modules)
         return 0
         ;;
     *)
@@ -383,6 +383,34 @@ EOF
     cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-orchestrator-support = "$version"
 EOF
+
+    if has_recipe mender-delta-container-modules; then
+        if has_local_checkout mender-delta-container-modules; then
+            # Not going through use_closed_source_tarball: the tarball prefix
+            # (delta-docker-compose) differs from the PN, and the update module
+            # is a shell script with no version string to probe.
+            local arch=$(bitbake -e | grep '^TARGET_ARCH=' | cut -d'"' -f2)
+            local filename=$(find $WORKSPACE/stage-artifacts/mender-delta-container-modules/${arch}/ -maxdepth 1 -name "delta-docker-compose-*.tar.xz" 2>/dev/null | head -n1)
+            cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-delta-container-modules = "main-git%"
+SRC_URI:pn-mender-delta-container-modules = "file:///$filename"
+EOF
+        else
+            local version="$MENDER_DELTA_CONTAINER_MODULES_REV"
+            if [ -z "$version" -o "$version" = "latest" ]; then
+                version=main
+            fi
+            local preferred_version="$version"
+            if [ "$version" = "main" ]; then
+                preferred_version="main-git%"
+            fi
+            s3cmd get s3://${S3_BUCKET_NAME}/mender-delta-container-modules/yocto/${version}/delta-docker-compose-${version}.tar.xz $WORKSPACE/downloads
+            cat >> $BUILDDIR/conf/local.conf <<EOF
+PREFERRED_VERSION:pn-mender-delta-container-modules = "$preferred_version"
+SRC_URI:pn-mender-delta-container-modules = "file:///$WORKSPACE/downloads/delta-docker-compose-${version}.tar.xz"
+EOF
+        fi
+    fi
 
     # Use network cache if present, if not, use local cache.
     if [ -d /mnt/sstate-cache ]; then
