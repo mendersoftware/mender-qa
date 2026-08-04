@@ -294,6 +294,11 @@ variables:
     description: |-
       Marker to identify nightly builds
 
+  # Workaround for https://github.com/moby/buildkit/issues/7007
+  BUILDX_NO_DEFAULT_ATTESTATIONS:
+    value: "true"
+    description: "Publish docker images without attestations"
+
   # Debugging options
   WAIT_IN_STAGE_INIT:
     value: ""
