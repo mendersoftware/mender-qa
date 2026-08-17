@@ -96,7 +96,7 @@ init:workspace:
       yocto_codename_to_tag() {
         case $1 in
           wrynose) echo "yocto-6.0" ;;
-          scarthgap) echo "yocto-5.0.17" ;;
+          scarthgap) echo "yocto-5.0.19" ;;
           *) echo "$1" ;;
         esac
       }
