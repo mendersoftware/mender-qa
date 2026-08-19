@@ -16,7 +16,9 @@ It replaced GitHub Dependabot.
 
 Renovate opens pull requests when new versions of dependencies are available. You configure
 it per-repository with a `renovate.json5` file at the repo root. A GitLab CI job in the
-`.pre` stage runs it on every pipeline on the default branch, plus weekly as a fallback.
+`.pre` stage runs it, but only on scheduled pipelines and manual web runs - not on pushes.
+The repo's GitLab pipeline schedule is therefore what decides when Renovate runs, and a
+repo without one will never run it.
 
 ## How Renovate works
 
@@ -61,10 +63,13 @@ jobs:
           token: ${{ secrets.RENOVATE_TOKEN }}
 ```
 
-The job runs in the `.pre` stage so it fires as soon as the commit lands, before any
-other stage runs. Renovate reads dependency files, not build artifacts, so it does not
-need to wait for CI to complete. The scheduled pipeline is a fallback for weeks with no
-merges.
+The job runs in the `.pre` stage, so on a scheduled pipeline it starts before any other
+stage. Renovate reads dependency files, not build artifacts, so it does not need to wait
+for CI to complete.
+
+The scheduled pipeline is the only automatic trigger, not a fallback. Note the job's rule
+matches *any* scheduled pipeline, so a repo with unrelated nightly schedules will run
+Renovate on those too.
 
 ### Triggering Renovate manually
 
@@ -121,7 +126,7 @@ batch-merge on a Friday afternoon.
 
 ### Commit messages
 
-Every dependency update commit follows the pattern `chore(deps): <description>`. CI file
+Every dependency update commit follows the pattern `fix(deps): <description>`. CI file
 updates use `ci:` instead. This keeps dependency bumps out of the product changelog
 and prevents them from triggering unintended releases through release-please.
 
@@ -166,7 +171,10 @@ that has a `DOCKER_VERSION` variable in `.gitlab-ci.yml`.
 4. Delete custom manager blocks that do not apply to this repo
 5. Delete `packageRules` entries for ecosystems the repo does not use
 6. Add the Renovate runner job via the `mendertesting` shared template
-7. Add a weekly scheduled pipeline with cron `0 1 * * 2` (Tuesday 01:00 UTC) as a fallback
+7. Add a weekly scheduled pipeline. This is the only automatic trigger, not a fallback -
+   without it Renovate never runs. Pick a slot that does not collide with another repo's;
+   the schedules are spread across the weekend so the runners are not all calling GitHub
+   at once
 8. Do not add `.github/dependabot.yml` - Renovate covers everything it did
 
 First run takes a few minutes. Check the Dependency Dashboard issue after it completes
