@@ -46,9 +46,6 @@ include:
       job_name: build:delta-docker-compose
       before_script:
         - *workspace_restore
-      architectures:
-        - x86_64
-        - arm
       rules:
         - if: $MENDER_DELTA_CONTAINER_MODULES_REV != "latest"
   # mender-monitor
