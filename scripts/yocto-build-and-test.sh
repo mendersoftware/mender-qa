@@ -196,7 +196,7 @@ repo_to_recipe() {
 # Repo is closed source (installs prebuilt tarball)
 is_closed_source() {
     case "$1" in
-    mender-binary-delta|monitor-client|mender-gateway|mender-delta-container-modules)
+    mender-binary-delta|monitor-client|mender-gateway|mender-delta-container-modules|mender-orchestrator)
         return 0
         ;;
     *)
