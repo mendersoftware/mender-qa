@@ -389,8 +389,7 @@ EOF
             # Not going through use_closed_source_tarball: the tarball prefix
             # (delta-docker-compose) differs from the PN, and the update module
             # is a shell script with no version string to probe.
-            local arch=$(bitbake -e | grep '^TARGET_ARCH=' | cut -d'"' -f2)
-            local filename=$(find $WORKSPACE/stage-artifacts/mender-delta-container-modules/${arch}/ -maxdepth 1 -name "delta-docker-compose-*.tar.xz" 2>/dev/null | head -n1)
+            local filename=$(find $WORKSPACE/stage-artifacts/mender-delta-container-modules/ -maxdepth 1 -name "delta-docker-compose-*.tar.xz" 2>/dev/null | head -n1)
             cat >> $BUILDDIR/conf/local.conf <<EOF
 PREFERRED_VERSION:pn-mender-delta-container-modules = "main-git%"
 SRC_URI:pn-mender-delta-container-modules = "file:///$filename"
