@@ -43,6 +43,7 @@ include:
   # mender-delta-container-modules
   - component: gitlab.com/Northern.tech/Mender/mender-delta-container-modules/build-delta-docker-compose@main
     inputs:
+      version: main
       job_name: build:delta-docker-compose
       before_script:
         - *workspace_restore
