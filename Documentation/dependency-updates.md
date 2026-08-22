@@ -16,11 +16,13 @@ It replaced GitHub Dependabot.
 
 Renovate opens pull requests when new versions of dependencies are available. You configure
 it per-repository with a `renovate.json5` file at the repo root. A GitLab CI job in the
-`.pre` stage runs it on every pipeline on the default branch, plus weekly as a fallback.
+`.pre` stage runs it - only on scheduled pipelines, or a manual on-demand run. It no longer
+runs on regular merge pipelines.
 
 ## How Renovate works
 
-1. A GitLab/Github pipeline triggers the `renovate` job (on merge to master/main, or weekly)
+1. A GitLab CI/CD scheduled pipeline triggers the `renovate` job on a protected branch
+   (or someone triggers it manually from the GitLab web UI)
 2. Renovate clones the target GitHub repository
 3. It reads `renovate.json5` (or falls back to defaults if the file is absent)
 4. For each tracked dependency, it checks for newer versions
@@ -35,13 +37,23 @@ disabled for your repo.
 
 ## Running Renovate in a GitLab pipeline
 
-Renovate runs via the `mendertesting` shared template:
+Renovate runs via the `mendertesting` shared template. The component's job is restricted
+to scheduled pipelines, plus a manual run kept available for on-demand use:
 
 ```yaml
 # In .gitlab-ci.yml
+include:
   - component: gitlab.com/Northern.tech/Mender/mendertesting/renovate@master
     inputs:
       stage: ".pre"
+
+# Override the component job's rules - restrict to scheduled pipelines, plus a manual
+# on-demand run (see "Triggering Renovate manually" below). No run on regular merges.
+renovate:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_REF_PROTECTED == "true"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
+      when: manual
 ```
 
 **Note:"** the [Github counterpart](https://github.com/renovatebot/github-action) is:
@@ -61,10 +73,9 @@ jobs:
           token: ${{ secrets.RENOVATE_TOKEN }}
 ```
 
-The job runs in the `.pre` stage so it fires as soon as the commit lands, before any
-other stage runs. Renovate reads dependency files, not build artifacts, so it does not
-need to wait for CI to complete. The scheduled pipeline is a fallback for weeks with no
-merges.
+The job still runs in the `.pre` stage, ahead of anything else in the pipeline, but the
+pipeline itself only exists because it was scheduled or manually triggered - a regular
+merge to the default branch doesn't start a Renovate run.
 
 ### Triggering Renovate manually
 
@@ -91,12 +102,13 @@ in the mender-qa repository. Three things you must adapt:
 
 ### Schedule
 
-Renovate runs after every merge to the default branch. It also runs once a week
-overnight between Monday and Tuesday (22:00-06:00 UTC) for repos that go a full week
-without merges. PRs are ready when the team arrives Tuesday morning.
+Renovate only runs on the GitLab CI/CD scheduled pipeline, tailored on every 
+repository.
 
-Security vulnerability PRs open immediately, any day, any time - they do not wait for
-either trigger.
+Security vulnerability PRs aren't opened immediately - they surface at the next
+scheduled run, same as everything else. If you receive a GitHub Dependabot vulnerability
+alert and don't want to wait, trigger a manual web pipeline run instead (see "Triggering
+Renovate manually" above).
 
 ### What to expect
 
@@ -110,8 +122,9 @@ Check the Dependency Dashboard once a week during QA duty. Review and merge depe
 PRs within the sprint. If a security vulnerability PR shows up, treat it as a priority -
 it should not wait for the next sprint cycle.
 
-PRs that drift out of date get rebased automatically. If a PR has been open 30+ days and
-keeps conflicting, close it. Renovate will reopen it on the next run with a clean base.
+Renovate only rebases a PR when it actually conflicts with the base branch - a PR that is
+merely behind, with no conflict, is left alone. If a PR has been open 30+ days and keeps
+conflicting, close it. Renovate will reopen it on the next run with a clean base.
 
 ### Major version updates
 
@@ -165,8 +178,10 @@ that has a `DOCKER_VERSION` variable in `.gitlab-ci.yml`.
 3. Set `baseBranchPatterns` to include all active branches
 4. Delete custom manager blocks that do not apply to this repo
 5. Delete `packageRules` entries for ecosystems the repo does not use
-6. Add the Renovate runner job via the `mendertesting` shared template
-7. Add a weekly scheduled pipeline with cron `0 1 * * 2` (Tuesday 01:00 UTC) as a fallback
+6. Add the Renovate runner job via the `mendertesting` shared template, with the `rules`
+   override shown above - scheduled pipelines and manual web runs only, no merge trigger
+7. Add a GitLab CI/CD Scheduled Pipeline with cron `0 1 * * 2` (Tuesday 01:00 UTC) on the
+   protected default branch - this is now the only automatic trigger, not a fallback
 8. Do not add `.github/dependabot.yml` - Renovate covers everything it did
 
 First run takes a few minutes. Check the Dependency Dashboard issue after it completes
@@ -177,7 +192,8 @@ to confirm all expected ecosystems were detected.
 **No PRs after the first run**
 Look at the Dependency Dashboard issue. Renovate creates it on the first run and lists
 everything it found. If the issue exists but no PRs opened, you hit the concurrent PR
-limit - remaining updates will open over the next few hourly cycles.
+limit - remaining updates open on the next scheduled run, or trigger a manual run to
+catch up sooner.
 
 **A PR keeps rebasing in a loop**
 Something on the target branch is conflicting with the update. Merge or close whatever
@@ -194,3 +210,10 @@ Renovate will recreate it on the next run.
 **A PR opened for a version you want to ignore**
 Add a `matchPackageNames` + `"enabled": false` rule in `packageRules`, or use
 `"ignoreVersions"` for a specific version string.
+
+**Don't re-enable a run on every merge to main**
+This was tried before. Running Renovate on every merge pipeline stressed both the GitLab
+runners and the GitHub API rate limits, and produced multiple job failures across
+repositories. That is why the trigger is schedule-only (plus manual on-demand runs) - do
+not add the merge trigger back without addressing the runner load and rate-limit problem
+first.
