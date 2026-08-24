@@ -10,6 +10,29 @@ request_body=$(cat <<EOF
 EOF
 )
 
+# Sets api_code, api_body (file), api_remaining and api_retry_after. The caller
+# removes api_body.
+api_call() {
+    api_body="$(mktemp)"
+    api_hdr="$(mktemp)"
+    api_code="$(curl -sS -o "$api_body" -D "$api_hdr" -w '%{http_code}' \
+                  -H "Authorization: bearer $GITHUB_BOT_TOKEN_REPO_STATUS" "$@")"
+    api_remaining="$(sed -n 's/^[Xx]-[Rr]ate[Ll]imit-[Rr]emaining: *\([0-9]*\).*/\1/p' "$api_hdr" | tail -1)"
+    api_retry_after="$(sed -n 's/^[Rr]etry-[Aa]fter: *\([0-9]*\).*/\1/p' "$api_hdr" | tail -1)"
+    rm -f "$api_hdr"
+}
+
+api_throttled() {
+    case "$api_code" in
+        403|429)
+            [ "$api_remaining" = "0" ] || [ -n "$api_retry_after" ]
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 # Special case for mender-qa running in Gitlab: It builds a specific branch, not
 # by setting the MENDER_QA_REV variables, but by simply checking out that
 # branch. It is recorded in the "CI_*" variables though.
@@ -39,6 +62,7 @@ for key in $(env | sed -e 's/=.*//'); do
     fi
 
     repo=$(echo ${key%_REV} | tr '[A-Z_]' '[a-z-]')
+    sha_endpoint=""
     if [ -n "$(eval echo \$${key}_GIT_SHA)" ]; then
         # GitLab script defines env variables with _GIT_SHA suffix for the PR commit under test
         git_commit="$(eval echo \$${key}_GIT_SHA)"
@@ -46,12 +70,21 @@ for key in $(env | sed -e 's/=.*//'); do
         # Use Github API to fetch commit SHAs
         eval sha_endpoint=https://api.github.com/repos/mendersoftware/$repo/status/\$${key}
         echo "Querying API: $sha_endpoint"
-        response="$(curl -fH "Authorization: bearer $GITHUB_BOT_TOKEN_REPO_STATUS" $sha_endpoint)"
-        if [ $? -ne 0 ]; then
+        api_call "$sha_endpoint"
+        if [ "$api_code" != "200" ]; then
+            if api_throttled; then
+                echo "msg=github_sha_lookup result=rate_limited repo=$repo code=$api_code remaining=${api_remaining:-0} retry_after=${api_retry_after:-0}" 1>&2
+            else
+                echo "msg=github_sha_lookup result=failed repo=$repo code=$api_code" 1>&2
+                cat "$api_body" 1>&2
+            fi
+            rm -f "$api_body"
             continue
         fi
-        git_commit="$(echo "$response" | jq -r '.sha')"
-        if [ $? -ne 0 ]; then
+        git_commit="$(jq -r '.sha' < "$api_body")"
+        rm -f "$api_body"
+        if [ -z "$git_commit" ] || [ "$git_commit" = "null" ]; then
+            echo "msg=github_sha_lookup result=no_sha repo=$repo" 1>&2
             continue
         fi
     fi
@@ -68,9 +101,25 @@ for key in $(env | sed -e 's/=.*//'); do
     echo "$request_body"
     echo
 
-    curl -H "Authorization: bearer $GITHUB_BOT_TOKEN_REPO_STATUS" \
-         -d "$request_body" \
-         "$pr_status_endpoint"
+    api_call -d "$request_body" "$pr_status_endpoint"
+    case "$api_code" in
+        2??)
+            if [ -n "$api_remaining" ]; then
+                echo "msg=github_status_update result=ok repo=$repo remaining=$api_remaining"
+            fi
+            ;;
+        *)
+            if api_throttled; then
+                echo "msg=github_status_update result=rate_limited repo=$repo code=$api_code remaining=${api_remaining:-0} retry_after=${api_retry_after:-0}" 1>&2
+            elif grep -q "This SHA and context has reached the maximum number of statuses" "$api_body"; then
+                :
+            else
+                echo "msg=github_status_update result=failed repo=$repo code=$api_code" 1>&2
+                cat "$api_body" 1>&2
+            fi
+            ;;
+    esac
+    rm -f "$api_body"
 done
 
 IFS=' '
