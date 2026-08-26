@@ -687,6 +687,13 @@ build_and_test_client() {
                 # Only add virtualization if we're building mender-extended-image-full-cmdline
                 needs_virtualization=true
                 images_to_build+=" mender-extended-image-full-cmdline"
+                # Commercial extended image = extended image + proprietary
+                # delta-docker-compose module. Nested here so it is only added
+                # when the (open source) extended image is also being built.
+                if has_local_checkout mender-delta-container-modules \
+                        && [[ -f $WORKSPACE/meta-mender/meta-mender-commercial/conditional/mender-extended-image-full-cmdline-commercial/mender-extended-image-full-cmdline-commercial.bb ]]; then
+                    images_to_build+=" mender-extended-image-full-cmdline-commercial"
+                fi
             fi
         fi
 
@@ -738,6 +745,15 @@ build_and_test_client() {
                     -i mender-extended-image-full-cmdline \
                     $machine_name \
                     -t mendersoftware/mender-client-qemu-extended:pr
+            fi
+
+            if grep mender-extended-image-full-cmdline-commercial <<<"$images_to_build"; then
+                filename="clean-mender-extended-image-full-cmdline-commercial-${machine_name}.${extension}"
+                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
+                    -i mender-extended-image-full-cmdline-commercial \
+                    $machine_name \
+                    -t registry.mender.io/mendersoftware/mender-client-qemu-extended-commercial:pr
             fi
 
             if grep mender-image-full-cmdline-rofs <<<"$images_to_build"; then
