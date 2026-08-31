@@ -41,7 +41,7 @@ include:
         # We build it as long as neither the mender-binary-delta nor the mender revision is set to latest
         - if: $MENDER_BINARY_DELTA_REV != "latest" || $MENDER_REV != "latest"
   # mender-delta-container-modules
-  - component: gitlab.com/Northern.tech/Mender/mender-delta-container-modules/build-delta-docker-compose@main
+  - component: gitlab.com/Northern.tech/Mender/mender-delta-container-modules/build-delta-docker-compose@1662c630cefe6eb36b12670c3c7a91fd00140a0f
     inputs:
       job_name: build:delta-docker-compose
       before_script:
