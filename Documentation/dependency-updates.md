@@ -62,6 +62,31 @@ protected `main` branch. To try something without opening PRs, add the variable
 `RENOVATE_EXTRA_FLAGS` set to `--dry-run=full` - Renovate then logs what it would do and
 writes nothing.
 
+The manual run creates the pipeline with the jobs in a manual state, so press play on the
+one for the organisation you care about.
+
+### Running it for one repository
+
+Same thing, but narrow the scope with a filter:
+
+```
+RENOVATE_EXTRA_FLAGS = --autodiscover-filter=mendersoftware/mender-cli
+```
+
+The other organisation's job will find nothing and pass. Combine both flags if you want a
+look without opening anything:
+
+```
+RENOVATE_EXTRA_FLAGS = --autodiscover-filter=mendersoftware/mender-cli --dry-run=full
+```
+
+A command line flag wins over the environment, so this overrides the filter the job sets
+for itself. Check the `Autodiscovered repositories` line in the log to confirm only the repo
+you asked for is listed.
+
+The repo still needs a `renovate.json5`. Without one it is skipped and the run goes green
+anyway, so an empty log is worth a second look before assuming Renovate is broken.
+
 ## Per-repository configuration
 
 Each repository needs a `renovate.json5` at the root. Start from `renovate.json5.sample`
