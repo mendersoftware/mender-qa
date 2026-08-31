@@ -15,15 +15,17 @@ Mender repositories use [Renovate](https://docs.renovatebot.com/) for dependency
 It replaced GitHub Dependabot.
 
 Renovate opens pull requests when new versions of dependencies are available. You configure
-it per-repository with a `renovate.json5` file at the repo root. A GitLab CI job in the
-`.pre` stage runs it, but only on scheduled pipelines and manual web runs - not on pushes.
-The repo's GitLab pipeline schedule is therefore what decides when Renovate runs, and a
-repo without one will never run it.
+it per-repository with a `renovate.json5` file at the repo root.
+
+Renovate itself runs from one central project, `NorthernTechHQ/renovate-ring`, not from a job
+in each repository. The ring walks every repo in the organisation once a week and reads each
+one's `renovate.json5` live from GitHub. A repo opts in by having that file and opts out by
+not having it.
 
 ## How Renovate works
 
-1. A GitLab/Github pipeline triggers the `renovate` job (on merge to master/main, or weekly)
-2. Renovate clones the target GitHub repository
+1. The weekly scheduled pipeline in `renovate-ring` starts one job per GitHub organisation
+2. Renovate discovers the repositories in that organisation and clones each one
 3. It reads `renovate.json5` (or falls back to defaults if the file is absent)
 4. For each tracked dependency, it checks for newer versions
 5. If a newer version is available, it opens or updates a PR with the version bump
@@ -35,46 +37,30 @@ skip. The Dependecy issues are optionals, you can check it before wondering
 where your update went, but you can rely on single PRs only if GH Issues are 
 disabled for your repo.
 
-## Running Renovate in a GitLab pipeline
+## Where Renovate runs
 
-Renovate runs via the `mendertesting` shared template:
+Everything runs from `NorthernTechHQ/renovate-ring`. That project holds two files:
 
-```yaml
-# In .gitlab-ci.yml
-  - component: gitlab.com/Northern.tech/Mender/mendertesting/renovate@master
-    inputs:
-      stage: ".pre"
-```
+- `.gitlab-ci.yml` - one job per GitHub organisation, on a weekly schedule
+- `renovate-global.json5` - bot side settings that apply to every repository
 
-**Note:"** the [Github counterpart](https://github.com/renovatebot/github-action) is:
-```
-....
-jobs:
-  renovate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6.0.3
-      - name: Self-hosted Renovate
-        uses: renovatebot/github-action@v46.1.16
-        with:
-          docker-cmd-file: .github/renovate-entrypoint.sh
-          docker-user: root
-          token: ${{ secrets.RENOVATE_TOKEN }}
-```
+Individual repositories need no CI job and no pipeline schedule. The `mendertesting/renovate`
+component that used to provide this has been removed everywhere.
 
-The job runs in the `.pre` stage, so on a scheduled pipeline it starts before any other
-stage. Renovate reads dependency files, not build artifacts, so it does not need to wait
-for CI to complete.
+Two settings in the global config are worth knowing:
 
-The scheduled pipeline is the only automatic trigger, not a fallback. Note the job's rule
-matches *any* scheduled pipeline, so a repo with unrelated nightly schedules will run
-Renovate on those too.
+- `requireConfig: "required"` - a repo with no `renovate.json5` is skipped entirely
+- `autodiscoverFilter` - which organisations are in scope, set per job
+
+Adding an organisation to the filter does nothing on its own. Repos in it still have to opt
+in with a config file.
 
 ### Triggering Renovate manually
 
-Go to GitLab CI/CD > Pipelines > Run pipeline from the protected `main|master` 
-branch, set `FORCE_RENOVATE_RUN` to `true`, run
+Go to the `renovate-ring` project in GitLab, CI/CD > Pipelines > Run pipeline from the
+protected `main` branch. To try something without opening PRs, add the variable
+`RENOVATE_EXTRA_FLAGS` set to `--dry-run=full` - Renovate then logs what it would do and
+writes nothing.
 
 ## Per-repository configuration
 
@@ -96,12 +82,15 @@ in the mender-qa repository. Three things you must adapt:
 
 ### Schedule
 
-Renovate runs after every merge to the default branch. It also runs once a week
-overnight between Monday and Tuesday (22:00-06:00 UTC) for repos that go a full week
-without merges. PRs are ready when the team arrives Tuesday morning.
+Renovate runs once a week, Sunday at 20:00 UTC, from the `renovate-ring` project. It does
+not run on merges and there is no per-repository schedule any more. PRs are ready when the
+team arrives Monday morning.
 
-Security vulnerability PRs open immediately, any day, any time - they do not wait for
-either trigger.
+A full pass over both organisations takes about an hour, most of it spent on a handful of
+large repositories.
+
+Security vulnerability PRs bypass the `prHourlyLimit` and `prConcurrentLimit` caps, so a run
+can open more of them than the limits suggest.
 
 ### What to expect
 
@@ -170,15 +159,13 @@ that has a `DOCKER_VERSION` variable in `.gitlab-ci.yml`.
 3. Set `baseBranchPatterns` to include all active branches
 4. Delete custom manager blocks that do not apply to this repo
 5. Delete `packageRules` entries for ecosystems the repo does not use
-6. Add the Renovate runner job via the `mendertesting` shared template
-7. Add a weekly scheduled pipeline. This is the only automatic trigger, not a fallback -
-   without it Renovate never runs. Pick a slot that does not collide with another repo's;
-   the schedules are spread across the weekend so the runners are not all calling GitHub
-   at once
-8. Do not add `.github/dependabot.yml` - Renovate covers everything it did
+6. Do not add `.github/dependabot.yml` - Renovate covers everything it did
 
-First run takes a few minutes. Check the Dependency Dashboard issue after it completes
-to confirm all expected ecosystems were detected.
+That is the whole onboarding. No CI job and no pipeline schedule: the ring picks the repo up
+on its next weekly run because the config file is now there.
+
+Check the Dependency Dashboard issue after that run to confirm all expected ecosystems were
+detected. To see the result sooner, trigger a manual run from `renovate-ring`.
 
 ## Troubleshooting
 
@@ -196,8 +183,12 @@ Test the regex at regex101.com using the `multiline` and `dotall` flags. The `[\
 pattern handles multi-line YAML blocks - without it the match will fail silently.
 
 **The Dependency Dashboard issue is missing**
-Trigger a manual run with `FORCE_RENOVATE_RUN=true`. If it was closed by someone,
+Trigger a manual run from the `renovate-ring` project. If it was closed by someone,
 Renovate will recreate it on the next run.
+
+**A repo gets no PRs and has no Dependency Dashboard**
+Check it has a `renovate.json5` on the default branch. `requireConfig` is `required`, so a
+repo without one is skipped silently - it will not appear as an error anywhere.
 
 **A PR opened for a version you want to ignore**
 Add a `matchPackageNames` + `"enabled": false` rule in `packageRules`, or use
