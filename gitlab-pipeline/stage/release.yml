@@ -141,6 +141,16 @@ release:mender-monitor:automatic:
         echo "The meta-mender branch does most likely not contain meta-mender-extended"
       fi
 
+      # Commercial variant of the extended image (extended + delta-docker-compose
+      # module); published to the enterprise registry.
+      image="mender-client-qemu-extended-commercial"
+      if docker pull ${GITLAB_REGISTRY_PREFIX}-${image}; then
+          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
+      else
+        echo "Skipping 'mender-client-qemu-extended-commercial'"
+        echo "The meta-mender branch does most likely not contain the commercial extended image"
+      fi
+
       enterprise_images="mender-monitor-qemu-commercial mender-qemu-rofs-commercial"
       for image in $enterprise_images; do
           regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
