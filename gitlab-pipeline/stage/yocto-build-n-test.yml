@@ -31,6 +31,10 @@ build:client:qemu:
     -   docker tag registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial
     -   docker push --quiet ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-qemu-rofs-commercial"
     - fi
+    - if [[ -f $WORKSPACE/meta-mender/meta-mender-demo/mender-commercial/recipes-extended/images/mender-orchestrator-image-full-cmdline.bb ]]; then
+    -   docker tag registry.mender.io/mendersoftware/mender-orchestrator-qemu-commercial:pr ${GITLAB_REGISTRY_PREFIX}-mender-orchestrator-qemu-commercial
+    -   docker push --quiet ${GITLAB_REGISTRY_PREFIX}-mender-orchestrator-qemu-commercial && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-orchestrator-qemu-commercial"
+    - fi
     - if [[ -d $WORKSPACE/go/src/github.com/mendersoftware/mender-container-modules ]] && [[ -f $WORKSPACE/meta-mender/meta-mender-extended/recipes-extended/images/mender-extended-image-full-cmdline.bb ]]; then
     -   docker tag mendersoftware/mender-client-qemu-extended:pr ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-extended
     -   docker push --quiet ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-extended && echo "Pushed ${GITLAB_REGISTRY_PREFIX}-mender-client-qemu-extended"

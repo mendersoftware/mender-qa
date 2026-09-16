@@ -682,6 +682,11 @@ build_and_test_client() {
             if [[ -f $WORKSPACE/meta-mender/meta-mender-demo/mender-commercial/recipes-extended/images/mender-image-full-cmdline-rofs-commercial.bb ]]; then
                 images_to_build+=" mender-image-full-cmdline-rofs-commercial"
             fi
+            # mender-orchestrator ships as a prebuilt armhf binary + it only claims to be a qemux86-64 system
+            if [[ $machine_name == qemux86-64 ]] \
+                    && [[ -f $WORKSPACE/meta-mender/meta-mender-demo/mender-commercial/recipes-extended/images/mender-orchestrator-image-full-cmdline.bb ]]; then
+                images_to_build+=" mender-orchestrator-image-full-cmdline"
+            fi
             if has_local_checkout mender-container-modules \
                             && [[ -f $WORKSPACE/meta-mender/meta-mender-extended/recipes-extended/images/mender-extended-image-full-cmdline.bb ]]; then
                 # Only add virtualization if we're building mender-extended-image-full-cmdline
@@ -782,6 +787,15 @@ build_and_test_client() {
                     -i mender-image-full-cmdline-rofs-commercial \
                     $machine_name \
                     -t registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr
+            fi
+
+            if grep mender-orchestrator-image-full-cmdline <<<"$images_to_build"; then
+                filename="clean-mender-orchestrator-image-full-cmdline-${machine_name}.${extension}"
+                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
+                    -i mender-orchestrator-image-full-cmdline \
+                    $machine_name \
+                    -t registry.mender.io/mendersoftware/mender-orchestrator-qemu-commercial:pr
             fi
         fi
 

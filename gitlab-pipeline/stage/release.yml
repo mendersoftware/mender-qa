@@ -156,6 +156,16 @@ release:mender-monitor:automatic:
           regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
       done
 
+      # Virtual device with mender-orchestrator preinstalled; published to the
+      # enterprise registry.
+      image="mender-orchestrator-qemu-commercial"
+      if docker pull ${GITLAB_REGISTRY_PREFIX}-${image}; then
+          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
+      else
+        echo "Skipping '${image}'"
+        echo "The meta-mender branch does most likely not contain the orchestrator image"
+      fi
+
 release:legacy-5.0.x:virtual-client:manual:
   needs:
     - build:client:qemu
