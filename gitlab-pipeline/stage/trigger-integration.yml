@@ -76,6 +76,7 @@ trigger:integration-tests:
   needs:
     - trigger:generate-gitlab-integration-rev
     - build:client:qemu
+    - build:client:docker
   when: always
   trigger:
     project: Northern.tech/Mender/integration
