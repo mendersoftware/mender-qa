@@ -52,7 +52,7 @@ init:workspace:
             clone_rev=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
           fi
 
-          git fetch -u -f origin ${clone_rev}:pr &&
+          git fetch --depth 1 -u -f origin ${clone_rev}:pr &&
           git checkout pr ||
           git checkout -f -b pr ${clone_rev}
         ) || return 1
