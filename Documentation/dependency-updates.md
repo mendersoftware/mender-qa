@@ -57,8 +57,8 @@ in with a config file.
 
 ### Triggering Renovate manually
 
-Go to the `renovate-ring` project in GitLab, CI/CD > Pipelines > Run pipeline from the
-protected `main` branch. To try something without opening PRs, add the variable
+Go to [`renovate-ring` pipelines](https://gitlab.com/Northern.tech/Mender/renovate-ring/-/pipelines/new)
+in GitLab and run a pipeline from the protected `main` branch. To try something without opening PRs, add the variable
 `RENOVATE_EXTRA_FLAGS` set to `--dry-run=full` - Renovate then logs what it would do and
 writes nothing.
 
