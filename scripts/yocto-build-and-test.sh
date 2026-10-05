@@ -79,7 +79,11 @@ use_closed_source_tarball() {
     tar -C $tmpdir -xf $filename
     local binary_path=$(find $tmpdir -type f -path "*/$arch/$component_name" | head -n1)
 
-    local version=$($binary_path --version | head -n 1 | grep -oE '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
+    local version=$($binary_path --version 2>/dev/null | head -n 1 | grep -oE '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)')
+    if [ -z "$version" ]; then
+        # Can't run it (e.g. arm binary on the x86 runner): take the tag from the tarball name
+        version=$(basename "$filename" | grep -oE '([0-9]+\.[0-9]+\.[0-9b]+(-build[0-9]+)?)' || true)
+    fi
     # Version is not a tag, use `preferred_version`
     if [ -z "$version" ]; then
         case "$component_name" in
