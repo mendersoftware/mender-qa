@@ -80,7 +80,6 @@ trigger:integration-tests:
     - trigger:generate-gitlab-integration-rev
     - build:client:qemu
     - build:client:docker
-  when: always
   trigger:
     project: Northern.tech/Mender/integration
     branch: $GITLAB_INTEGRATION_REV
