@@ -26,12 +26,12 @@
   "reviewersFromCodeOwners": true,
   // "reviewers": ["team:backend-dependabot-reviewers"],
 
-  // Commit message format: chore(deps): <description>
+  // Commit message format: fix(deps): <description>
   // This matches the existing Dependabot convention in the codebase and keeps
   // dependency bumps out of the product changelog. CI file updates use ci:
   // instead - see the packageRules override below.
   "semanticCommits": "enabled",
-  "semanticCommitType": "chore",
+  "semanticCommitType": "fix",
   "semanticCommitScope": "deps",
 
   // Deliberately no "schedule" here. The GitLab pipeline schedule decides when
@@ -119,6 +119,18 @@
   ],
 
   "packageRules": [
+
+    // config:recommended pulls in :semanticPrefixFixDepsChoreOthers, which defaults
+    // semanticCommitType to "chore" for any dep whose manager doesn't tag it with an
+    // npm/pip-style "dependencies"/"require" depType - that's every terraform, docker
+    // and kubernetes dep. Without this override, those PRs silently open as
+    // chore(deps) even though semanticCommitType above says "fix". This rule must
+    // come BEFORE the gitlabci override below - packageRules apply in order and the
+    // last match wins, so gitlabci keeps its own "ci" type.
+    {
+      "matchPackageNames": ["*"],
+      "semanticCommitType": "fix"
+    },
 
     // CI file updates get commit type "ci" instead of "chore".
     // Keeps gitlabci image bumps in the ci: changelog section, not deps.
