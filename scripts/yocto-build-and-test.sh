@@ -67,13 +67,14 @@ has_recipe() {
 # Function to use closed-source components from tarball
 use_closed_source_tarball() {
     local component_name=$1
+    local tarball_prefix=${2:-$component_name}
     local arch=$(bitbake -e | grep '^TARGET_ARCH=' | cut -d'"' -f2)
 
     # Find arch-specific tarball first (binary-delta, orchestrator)
-    local filename=$(find $WORKSPACE/stage-artifacts/${component_name}/${arch}/ -maxdepth 1 -name "${component_name}-*.tar.xz" 2>/dev/null | head -n1)
+    local filename=$(find $WORKSPACE/stage-artifacts/${component_name}/${arch}/ -maxdepth 1 -name "${tarball_prefix}-*.tar.xz" 2>/dev/null | head -n1)
 
     # Fallback to component directory without arch (gateway, monitor)
-    [ -z "$filename" ] && filename=$(find $WORKSPACE/stage-artifacts/${component_name}/ -maxdepth 1 -name "${component_name}-*.tar.xz" -o -name "${component_name}-*.tar.gz" 2>/dev/null | head -n1)
+    [ -z "$filename" ] && filename=$(find $WORKSPACE/stage-artifacts/${component_name}/ -maxdepth 1 -name "${tarball_prefix}-*.tar.xz" -o -name "${tarball_prefix}-*.tar.gz" 2>/dev/null | head -n1)
 
     local tmpdir=$(mktemp -d)
     tar -C $tmpdir -xf $filename
@@ -395,26 +396,15 @@ EOF
 
     if has_recipe mender-delta-container-modules; then
         if has_local_checkout mender-delta-container-modules; then
-            # Not going through use_closed_source_tarball: the tarball prefix
-            # (delta-docker-compose) differs from the PN, and the update module
-            # is a shell script with no version string to probe.
-            local filename=$(find $WORKSPACE/stage-artifacts/mender-delta-container-modules/ -maxdepth 1 -name "delta-docker-compose-*.tar.xz" 2>/dev/null | head -n1)
-            cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-delta-container-modules = "main-git%"
-SRC_URI:pn-mender-delta-container-modules = "file:///$filename"
-EOF
+            use_closed_source_tarball mender-delta-container-modules delta-docker-compose
         else
             local version="$MENDER_DELTA_CONTAINER_MODULES_REV"
             if [ -z "$version" -o "$version" = "latest" ]; then
                 version=main
             fi
-            local preferred_version="$version"
-            if [ "$version" = "main" ]; then
-                preferred_version="main-git%"
-            fi
             s3cmd get s3://${S3_BUCKET_NAME}/mender-delta-container-modules/yocto/${version}/delta-docker-compose-${version}.tar.xz $WORKSPACE/downloads
             cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-delta-container-modules = "$preferred_version"
+PREFERRED_VERSION:pn-mender-delta-container-modules = "$version"
 SRC_URI:pn-mender-delta-container-modules = "file:///$WORKSPACE/downloads/delta-docker-compose-${version}.tar.xz"
 EOF
         fi
