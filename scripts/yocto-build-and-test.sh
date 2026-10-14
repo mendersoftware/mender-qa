@@ -67,13 +67,14 @@ has_recipe() {
 # Function to use closed-source components from tarball
 use_closed_source_tarball() {
     local component_name=$1
+    local tarball_prefix=${2:-$component_name}
     local arch=$(bitbake -e | grep '^TARGET_ARCH=' | cut -d'"' -f2)
 
     # Find arch-specific tarball first (binary-delta, orchestrator)
-    local filename=$(find $WORKSPACE/stage-artifacts/${component_name}/${arch}/ -maxdepth 1 -name "${component_name}-*.tar.xz" 2>/dev/null | head -n1)
+    local filename=$(find $WORKSPACE/stage-artifacts/${component_name}/${arch}/ -maxdepth 1 -name "${tarball_prefix}-*.tar.xz" 2>/dev/null | head -n1)
 
     # Fallback to component directory without arch (gateway, monitor)
-    [ -z "$filename" ] && filename=$(find $WORKSPACE/stage-artifacts/${component_name}/ -maxdepth 1 -name "${component_name}-*.tar.xz" -o -name "${component_name}-*.tar.gz" 2>/dev/null | head -n1)
+    [ -z "$filename" ] && filename=$(find $WORKSPACE/stage-artifacts/${component_name}/ -maxdepth 1 -name "${tarball_prefix}-*.tar.xz" -o -name "${tarball_prefix}-*.tar.gz" 2>/dev/null | head -n1)
 
     local tmpdir=$(mktemp -d)
     tar -C $tmpdir -xf $filename
@@ -294,8 +295,10 @@ EOF
     # -> otherwise fetch from S3 bucket
 
     if has_recipe mender-binary-delta; then
+        local delta_tarball
         if has_local_checkout mender-binary-delta; then
             use_closed_source_tarball mender-binary-delta
+            delta_tarball=$(find $WORKSPACE/stage-artifacts/mender-binary-delta/x86_64/ -maxdepth 1 -name "mender-binary-delta-*.tar.xz" | head -n1)
         else
             local version="$MENDER_BINARY_DELTA_REV"
             if [ -z "$version" -o "$version" = "latest" ]; then
@@ -306,7 +309,10 @@ EOF
 PREFERRED_VERSION:pn-mender-binary-delta = "$version"
 SRC_URI:pn-mender-binary-delta = "file:///$WORKSPACE/downloads/mender-binary-delta-${version}.tar.xz"
 EOF
+            delta_tarball=$WORKSPACE/downloads/mender-binary-delta-${version}.tar.xz
         fi
+        # The delta acceptance tests need the generator on PATH
+        tar -xJf $delta_tarball -C $WORKSPACE/bin --strip-components=2 --wildcards '*/x86_64/mender-binary-delta-generator'
     fi
 
     if has_recipe mender-monitor; then
@@ -390,26 +396,15 @@ EOF
 
     if has_recipe mender-delta-container-modules; then
         if has_local_checkout mender-delta-container-modules; then
-            # Not going through use_closed_source_tarball: the tarball prefix
-            # (delta-docker-compose) differs from the PN, and the update module
-            # is a shell script with no version string to probe.
-            local filename=$(find $WORKSPACE/stage-artifacts/mender-delta-container-modules/ -maxdepth 1 -name "delta-docker-compose-*.tar.xz" 2>/dev/null | head -n1)
-            cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-delta-container-modules = "main-git%"
-SRC_URI:pn-mender-delta-container-modules = "file:///$filename"
-EOF
+            use_closed_source_tarball mender-delta-container-modules delta-docker-compose
         else
             local version="$MENDER_DELTA_CONTAINER_MODULES_REV"
             if [ -z "$version" -o "$version" = "latest" ]; then
                 version=main
             fi
-            local preferred_version="$version"
-            if [ "$version" = "main" ]; then
-                preferred_version="main-git%"
-            fi
             s3cmd get s3://${S3_BUCKET_NAME}/mender-delta-container-modules/yocto/${version}/delta-docker-compose-${version}.tar.xz $WORKSPACE/downloads
             cat >> $BUILDDIR/conf/local.conf <<EOF
-PREFERRED_VERSION:pn-mender-delta-container-modules = "$preferred_version"
+PREFERRED_VERSION:pn-mender-delta-container-modules = "$version"
 SRC_URI:pn-mender-delta-container-modules = "file:///$WORKSPACE/downloads/delta-docker-compose-${version}.tar.xz"
 EOF
         fi
@@ -549,16 +544,8 @@ init_environment() {
 
     # Directory for pre-built S3 packages
     mkdir -p $WORKSPACE/downloads
-
-    # Get mender-binary-delta generator
-    # MEN-5268 TODO: move somewhere else (acceptance tests?)
-    if [ -d $WORKSPACE/meta-mender/meta-mender-commercial ]; then
-        local version=$(get_latest_recipe_version meta-mender-commercial/recipes-mender/mender-binary-delta)
-        mkdir -p $WORKSPACE/bin
-        s3cmd get s3://${S3_BUCKET_NAME}/mender-binary-delta/${version}/x86_64/mender-binary-delta-generator $WORKSPACE/bin
-        chmod +x $WORKSPACE/bin/mender-binary-delta-generator
-        export PATH=$PATH:$WORKSPACE/bin
-    fi
+    mkdir -p $WORKSPACE/bin
+    export PATH=$PATH:$WORKSPACE/bin
 }
 
 # Check whether the given board name is a hardware board or not.
