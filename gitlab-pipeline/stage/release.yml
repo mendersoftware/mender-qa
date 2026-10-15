@@ -156,16 +156,6 @@ release:mender-monitor:automatic:
           regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
       done
 
-      # Virtual device with mender-orchestrator preinstalled; published to the
-      # enterprise registry.
-      image="mender-orchestrator-qemu-commercial"
-      if docker pull ${GITLAB_REGISTRY_PREFIX}-${image}; then
-          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${VIRTUAL_CLIENT_VERSION}
-      else
-        echo "Skipping '${image}'"
-        echo "The meta-mender branch does most likely not contain the orchestrator image"
-      fi
-
 release:legacy-5.0.x:virtual-client:manual:
   needs:
     - build:client:qemu
@@ -205,3 +195,34 @@ release:virtual-client:automatic:
   extends: .release:virtual-client
   variables:
     VIRTUAL_CLIENT_VERSION: "client-${MENDER_CLIENT_SUBCOMPONENTS_REV}"
+
+.release:orchestrator-virtual-client:
+  extends: .release:virtual-client
+  script:
+    - |
+      # Virtual device with mender-orchestrator preinstalled; published to the
+      # enterprise registry.
+      image="mender-orchestrator-qemu-commercial"
+      if docker pull ${GITLAB_REGISTRY_PREFIX}-${image}; then
+          regctl image copy ${GITLAB_REGISTRY_PREFIX}-${image} registry.mender.io/mendersoftware/${image}:${MENDER_ORCHESTRATOR_REV}
+      else
+        echo "Skipping '${image}'"
+        echo "The meta-mender branch does most likely not contain the orchestrator image"
+      fi
+
+release:orchestrator-virtual-client:manual:
+  needs:
+    - build:client:qemu
+  rules:
+    - if: $BUILD_CLIENT == "true" && $MENDER_ORCHESTRATOR_REV != "latest"
+  when: manual
+  extends: .release:orchestrator-virtual-client
+
+release:orchestrator-virtual-client:automatic:
+  dependencies:
+    - build:client:qemu
+    - trigger:integration-tests
+  rules:
+    - if: $PUBLISH_DOCKER_CLIENT_IMAGES == "true" && $BUILD_CLIENT == "true" && $MENDER_ORCHESTRATOR_REV != "latest"
+    - if: $PUBLISH_RELEASE_AUTOMATIC == "true" && $BUILD_CLIENT == "true" && $MENDER_ORCHESTRATOR_REV != "latest"
+  extends: .release:orchestrator-virtual-client
