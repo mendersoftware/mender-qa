@@ -805,6 +805,12 @@ build_and_test_client() {
             fi
         fi
 
+        # Docker-only builds are done here. The rest prepares the images for
+        # testing and the release artifacts, which aren't kept by those jobs.
+        if ${BUILD_DOCKER_IMAGES:-false} && ! is_testing_board $board_name; then
+            exit 0
+        fi
+
         bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-commercial
         if $needs_virtualization; then
             remove_virtualization
