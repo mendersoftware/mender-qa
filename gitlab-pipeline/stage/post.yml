@@ -1,7 +1,5 @@
 
 mender-qa:success:
-  tags:
-    - hetzner-amd-beefy
   stage: .post
   dependencies: []
   when: on_success
@@ -13,8 +11,6 @@ mender-qa:success:
     - $CI_PROJECT_DIR/scripts/github_pull_request_status success "mender-qa pipeline passed" $CI_PIPELINE_URL ci/mender-qa
 
 mender-qa:failure:
-  tags:
-    - hetzner-amd-beefy
   stage: .post
   dependencies: []
   when: on_failure
