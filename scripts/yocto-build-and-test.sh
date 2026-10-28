@@ -736,15 +736,16 @@ build_and_test_client() {
         fi
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
+            # Passing DISK_IMG saves build-docker two bitbake -e calls per image
             filename="clean-${image_name}-${machine_name}.${extension}"
-            $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+            DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                 $machine_name \
                 -t mendersoftware/mender-client-qemu:pr
 
             if grep mender-extended-image-full-cmdline <<<"$images_to_build"; then
                 filename="clean-mender-extended-image-full-cmdline-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-extended-image-full-cmdline \
                     $machine_name \
@@ -753,7 +754,7 @@ build_and_test_client() {
 
             if grep mender-extended-image-full-cmdline-commercial <<<"$images_to_build"; then
                 filename="clean-mender-extended-image-full-cmdline-commercial-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-extended-image-full-cmdline-commercial \
                     $machine_name \
@@ -762,7 +763,7 @@ build_and_test_client() {
 
             if grep mender-image-full-cmdline-rofs <<<"$images_to_build"; then
                 filename="clean-mender-image-full-cmdline-rofs-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-image-full-cmdline-rofs \
                     $machine_name \
@@ -771,7 +772,7 @@ build_and_test_client() {
 
             if grep mender-monitor-image-full-cmdline <<<"$images_to_build"; then
                 filename="clean-mender-monitor-image-full-cmdline-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-monitor-image-full-cmdline \
                     $machine_name \
@@ -781,7 +782,7 @@ build_and_test_client() {
             if grep mender-image-full-cmdline-rofs-commercial <<<"$images_to_build"; then
                 filename="clean-mender-image-full-cmdline-rofs-commercial-${machine_name}.${extension}"
 
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-image-full-cmdline-rofs-commercial \
                     $machine_name \
@@ -790,7 +791,7 @@ build_and_test_client() {
 
             if grep mender-orchestrator-image-full-cmdline <<<"$images_to_build"; then
                 filename="clean-mender-orchestrator-image-full-cmdline-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-orchestrator-image-full-cmdline \
                     $machine_name \
