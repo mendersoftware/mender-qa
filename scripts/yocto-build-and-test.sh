@@ -155,6 +155,21 @@ run_bitbake() {
     return $ret
 }
 
+run_bitbake_images() {
+    # Since Yocto 5.3 pseudo only tracks PSEUDO_INCLUDE_PATHS, which avoids
+    # the QA-1421 race, so the images can be built in parallel.
+    if grep -q '^PSEUDO_INCLUDE_PATHS' $WORKSPACE/openembedded-core/meta/conf/bitbake.conf; then
+        run_bitbake "$@"
+    else
+        # Legacy: scarthgap and older. QA-1421: building images in parallel
+        # races in pseudo ("path mismatch" abort when running wic), so build
+        # them sequentially. Remove when we stop building scarthgap.
+        for img in "$@"; do
+            run_bitbake $img
+        done
+    fi
+}
+
 prepare_and_set_PATH() {
     bitbake -c prepare_recipe_sysroot mender-test-dependencies
     eval `bitbake -e mender-test-dependencies | grep '^export PATH='`:$PATH
@@ -699,14 +714,7 @@ build_and_test_client() {
                 add_virtualization
         fi
         clean_build_config
-        # QA-1421: Build images sequentially to workaround race condition in
-        # bitbake when running the wic script.
-        # This is a temporary workaround while we work on a fix.
-        # While the issue seems to have been fixed upstream, for some reason
-        # we still run into it more often than not. To be continued.
-        for img in ${images_to_build}; do
-            run_bitbake ${img}
-        done
+        run_bitbake_images ${images_to_build}
         if ${BUILD_DOCKER_IMAGES:-false}; then
             features=`bitbake -e $image_name | egrep '^MENDER_FEATURES=' || true`
             # fall back to DISTRO_FEATURES if we found no MENDER_FEATURES
@@ -723,11 +731,8 @@ build_and_test_client() {
 
         # Rebuild without clean_build_config. Skipped when only building
         # Docker images, as those use the clean images from above.
-        # QA-1421: Build images sequentially, see comment above
         if ! ${BUILD_DOCKER_IMAGES:-false} || is_testing_board $board_name; then
-            for img in ${images_to_build}; do
-                run_bitbake ${img}
-            done
+            run_bitbake_images ${images_to_build}
         fi
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
