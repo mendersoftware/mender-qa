@@ -20,6 +20,9 @@
 
 .release:testing-boards:beagleboneblack:
   stage: release
+  except:
+    variables:
+      - $RUN_ACCEPTANCE_TESTS != "true"
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/base-debian:master
   id_tokens:
     AWS_OIDC_TOKEN:

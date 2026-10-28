@@ -15,6 +15,9 @@
   tags:
     - mender-qa-worker-client-acceptance-tests
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/mender-client-acceptance-testing:master
+  except:
+    variables:
+      - $RUN_ACCEPTANCE_TESTS != "true"
   variables:
     DOCKER_BUILDKIT: 1
   id_tokens:

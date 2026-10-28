@@ -9,6 +9,8 @@ build:client:qemu:
       - $BUILD_CLIENT == "true"
   stage: yocto:build-n-test
   extends: .template_build_test_acc
+  # Builds the virtual devices, so it runs regardless of RUN_ACCEPTANCE_TESTS
+  except: null
   services:
     - docker:dind
   variables:
