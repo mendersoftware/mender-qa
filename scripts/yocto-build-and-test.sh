@@ -495,7 +495,7 @@ copy_clean_image() {
 
     filename="${image_name}-${machine_name}.${extension}"
     # we need to compress the image otherwise we catch the payload too large 413 on publish
-    gzip -8 -c "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" \
+    pigz -8 -c "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" \
         > "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}.gz"
 }
 
