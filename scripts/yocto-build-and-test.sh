@@ -721,11 +721,14 @@ build_and_test_client() {
         fi
         restore_build_config
 
-        # Rebuild without clean_build_config.
+        # Rebuild without clean_build_config. Skipped when only building
+        # Docker images, as those use the clean images from above.
         # QA-1421: Build images sequentially, see comment above
-        for img in ${images_to_build}; do
-            run_bitbake ${img}
-        done
+        if ! ${BUILD_DOCKER_IMAGES:-false} || is_testing_board $board_name; then
+            for img in ${images_to_build}; do
+                run_bitbake ${img}
+            done
+        fi
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
             filename="clean-${image_name}-${machine_name}.${extension}"
