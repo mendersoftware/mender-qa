@@ -1,7 +1,5 @@
 
 init:workspace:
-  tags:
-    - hetzner-amd-beefy
   stage: init
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine:3.12
   script:

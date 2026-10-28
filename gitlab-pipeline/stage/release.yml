@@ -19,8 +19,6 @@
   - aws sts get-caller-identity
 
 .release:testing-boards:beagleboneblack:
-  tags:
-    - mender-qa-worker-generic-light
   stage: release
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/base-debian:master
   id_tokens:
@@ -61,8 +59,6 @@ release:testing-boards:beagleboneblack:automatic:
   extends: .release:testing-boards:beagleboneblack
 
 .release:mender-monitor:
-  tags:
-    - mender-qa-worker-generic-light
   stage: release
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/base-debian:master
   variables:
@@ -110,8 +106,6 @@ release:mender-monitor:automatic:
   docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
 .release:virtual-client:
-  tags:
-    - hetzner-amd-beefy
   stage: release
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers/docker-multiplatform-buildx:master"
   services:
@@ -121,6 +115,7 @@ release:mender-monitor:automatic:
     # Final CI jobs extending this base job shall define VIRTUAL_CLIENT_VERSION
     VIRTUAL_CLIENT_VERSION: "none"
   before_script:
+    - !reference [.qa-common-wait-for-dind, before_script]
     # Check correct dind setup
     - docker version
     # Login for private repos

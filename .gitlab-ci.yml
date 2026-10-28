@@ -321,6 +321,8 @@ include:
   - component: gitlab.com/Northern.tech/Mender/mendertesting/commit-lint@master
   - project: Northern.tech/Mender/mendertesting
     file: qa-common/retry.yml
+  - project: Northern.tech/Mender/mendertesting
+    file: qa-common/runner.yml
   - local: "/gitlab-pipeline/shared/build_and_test_acceptance.yml"
   - local: "/gitlab-pipeline/stage/pre.yml"
   - local: "/gitlab-pipeline/stage/init.yml"
@@ -332,6 +334,7 @@ include:
   - local: "/gitlab-pipeline/stage/post.yml"
 
 default:
+  tags: !reference [.qa-common-default-runner, tags]
   retry: !reference [.qa-common-default-retry, retry]
 
 stages:

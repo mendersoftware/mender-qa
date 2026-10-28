@@ -61,7 +61,7 @@ include:
 
 build:client:docker:
   tags:
-    - hetzner-amd-beefy
+    - k8s
   stage: build
   only:
     variables:
@@ -80,6 +80,7 @@ build:client:docker:
       alias: docker
   before_script:
   before_script:
+    - !reference [.qa-common-wait-for-dind, before_script]
     # Restore workspace from init stage
     - apt update && apt install -yyq xz-utils
     - xz -d workspace.tar.xz
