@@ -437,6 +437,12 @@ SSTATE_DIR = "$HOME/sstate-cache"
 EOF
     fi
 
+    # We don't use the SBOMs, and restoring the SPDX tasks from sstate takes
+    # a large part of the setscene time.
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+INHERIT:remove = "create-spdx"
+EOF
+
     cat >> $BUILDDIR/conf/local.conf <<EOF
 MENDER_ARTIFACT_NAME = "mender-image-$(date +%Y%m%d-%H%M%S)"
 EOF
