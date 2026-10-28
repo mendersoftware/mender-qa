@@ -743,12 +743,15 @@ build_and_test_client() {
         fi
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
+            docker_build_pids=()
             # Passing DISK_IMG saves build-docker two bitbake -e calls per image
             filename="clean-${image_name}-${machine_name}.${extension}"
             DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                 $machine_name \
-                -t mendersoftware/mender-client-qemu:pr
+                -t mendersoftware/mender-client-qemu:pr \
+                > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+            docker_build_pids+=($!)
 
             if grep mender-extended-image-full-cmdline <<<"$images_to_build"; then
                 filename="clean-mender-extended-image-full-cmdline-${machine_name}.${extension}"
@@ -756,7 +759,9 @@ build_and_test_client() {
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-extended-image-full-cmdline \
                     $machine_name \
-                    -t mendersoftware/mender-client-qemu-extended:pr
+                    -t mendersoftware/mender-client-qemu-extended:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-extended-image-full-cmdline-commercial <<<"$images_to_build"; then
@@ -765,7 +770,9 @@ build_and_test_client() {
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-extended-image-full-cmdline-commercial \
                     $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-client-qemu-extended-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-client-qemu-extended-commercial:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-image-full-cmdline-rofs <<<"$images_to_build"; then
@@ -774,7 +781,9 @@ build_and_test_client() {
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-image-full-cmdline-rofs \
                     $machine_name \
-                    -t mendersoftware/mender-client-qemu-rofs:pr
+                    -t mendersoftware/mender-client-qemu-rofs:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-monitor-image-full-cmdline <<<"$images_to_build"; then
@@ -783,7 +792,9 @@ build_and_test_client() {
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-monitor-image-full-cmdline \
                     $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-image-full-cmdline-rofs-commercial <<<"$images_to_build"; then
@@ -793,7 +804,9 @@ build_and_test_client() {
                     -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-image-full-cmdline-rofs-commercial \
                     $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-orchestrator-image-full-cmdline <<<"$images_to_build"; then
@@ -802,8 +815,14 @@ build_and_test_client() {
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-orchestrator-image-full-cmdline \
                     $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-orchestrator-qemu-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-orchestrator-qemu-commercial:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
+
+            for pid in "${docker_build_pids[@]}"; do
+                wait $pid || { cat "${BUILDDIR}"/build-docker-*.log; exit 1; }
+            done
         fi
 
         # Docker-only builds are done here. The rest prepares the images for
