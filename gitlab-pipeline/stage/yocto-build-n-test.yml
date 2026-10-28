@@ -121,6 +121,8 @@ test:acceptance:qemux86_64:uefi_grub:cross-platform:
     JOB_BASE_NAME: mender_qemux86_64_uefi_grub
     CROSS_PLATFORM_TESTS_ARG: "--only-cross-platform-tests"
     MANTRA_PROJECT_NAME: "client_accep_cross_platform"
+    # The uefi_grub job already builds the extra images for this board
+    BUILD_EXTRA_IMAGES: "false"
   script:
     - cd ${CI_PROJECT_DIR}
     - mkdir -p stage-artifacts

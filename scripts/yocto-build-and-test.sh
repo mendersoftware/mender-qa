@@ -45,6 +45,7 @@ is_testing_board() {
 is_building_extra_images_for_board() {
     local ret=0
     local board_name="$1"
+    ${BUILD_EXTRA_IMAGES:-true} || return 1
     ${BUILD_DOCKER_IMAGES:-false} || is_testing_board "$board_name" || ret=$?
     return $ret
 }
