@@ -38,7 +38,7 @@
   before_script:
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
-    - service sysstat start && sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
+    - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Export required yocto-build script variables
