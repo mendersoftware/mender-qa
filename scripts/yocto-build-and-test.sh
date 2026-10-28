@@ -45,6 +45,7 @@ is_testing_board() {
 is_building_extra_images_for_board() {
     local ret=0
     local board_name="$1"
+    ${BUILD_EXTRA_IMAGES:-true} || return 1
     ${BUILD_DOCKER_IMAGES:-false} || is_testing_board "$board_name" || ret=$?
     return $ret
 }
@@ -153,6 +154,21 @@ run_bitbake() {
         done
     fi
     return $ret
+}
+
+run_bitbake_images() {
+    # Since Yocto 5.3 pseudo only tracks PSEUDO_INCLUDE_PATHS, which avoids
+    # the QA-1421 race, so the images can be built in parallel.
+    if grep -q '^PSEUDO_INCLUDE_PATHS' $WORKSPACE/openembedded-core/meta/conf/bitbake.conf; then
+        run_bitbake "$@"
+    else
+        # Legacy: scarthgap and older. QA-1421: building images in parallel
+        # races in pseudo ("path mismatch" abort when running wic), so build
+        # them sequentially. Remove when we stop building scarthgap.
+        for img in "$@"; do
+            run_bitbake $img
+        done
+    fi
 }
 
 prepare_and_set_PATH() {
@@ -422,6 +438,12 @@ SSTATE_DIR = "$HOME/sstate-cache"
 EOF
     fi
 
+    # We don't use the SBOMs, and restoring the SPDX tasks from sstate takes
+    # a large part of the setscene time.
+    cat >> $BUILDDIR/conf/local.conf <<EOF
+INHERIT:remove = "create-spdx"
+EOF
+
     cat >> $BUILDDIR/conf/local.conf <<EOF
 MENDER_ARTIFACT_NAME = "mender-image-$(date +%Y%m%d-%H%M%S)"
 EOF
@@ -480,7 +502,7 @@ copy_clean_image() {
 
     filename="${image_name}-${machine_name}.${extension}"
     # we need to compress the image otherwise we catch the payload too large 413 on publish
-    gzip -8 -c "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" \
+    pigz -8 -c "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}" \
         > "${BUILDDIR}/tmp/deploy/images/${machine_name}/clean-${filename}.gz"
 }
 
@@ -699,14 +721,7 @@ build_and_test_client() {
                 add_virtualization
         fi
         clean_build_config
-        # QA-1421: Build images sequentially to workaround race condition in
-        # bitbake when running the wic script.
-        # This is a temporary workaround while we work on a fix.
-        # While the issue seems to have been fixed upstream, for some reason
-        # we still run into it more often than not. To be continued.
-        for img in ${images_to_build}; do
-            run_bitbake ${img}
-        done
+        run_bitbake_images ${images_to_build}
         if ${BUILD_DOCKER_IMAGES:-false}; then
             features=`bitbake -e $image_name | egrep '^MENDER_FEATURES=' || true`
             # fall back to DISTRO_FEATURES if we found no MENDER_FEATURES
@@ -721,73 +736,99 @@ build_and_test_client() {
         fi
         restore_build_config
 
-        # Rebuild without clean_build_config.
-        # QA-1421: Build images sequentially, see comment above
-        for img in ${images_to_build}; do
-            run_bitbake ${img}
-        done
+        # Rebuild without clean_build_config. Skipped when only building
+        # Docker images, as those use the clean images from above.
+        if ! ${BUILD_DOCKER_IMAGES:-false} || is_testing_board $board_name; then
+            run_bitbake_images ${images_to_build}
+        fi
 
         if ${BUILD_DOCKER_IMAGES:-false}; then
+            docker_build_pids=()
+            # Passing DISK_IMG saves build-docker two bitbake -e calls per image
             filename="clean-${image_name}-${machine_name}.${extension}"
-            $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+            DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                 $machine_name \
-                -t mendersoftware/mender-client-qemu:pr
+                -t mendersoftware/mender-client-qemu:pr \
+                > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+            docker_build_pids+=($!)
 
             if grep mender-extended-image-full-cmdline <<<"$images_to_build"; then
                 filename="clean-mender-extended-image-full-cmdline-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-extended-image-full-cmdline \
                     $machine_name \
-                    -t mendersoftware/mender-client-qemu-extended:pr
+                    -t mendersoftware/mender-client-qemu-extended:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-extended-image-full-cmdline-commercial <<<"$images_to_build"; then
                 filename="clean-mender-extended-image-full-cmdline-commercial-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-extended-image-full-cmdline-commercial \
                     $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-client-qemu-extended-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-client-qemu-extended-commercial:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-image-full-cmdline-rofs <<<"$images_to_build"; then
                 filename="clean-mender-image-full-cmdline-rofs-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-image-full-cmdline-rofs \
                     $machine_name \
-                    -t mendersoftware/mender-client-qemu-rofs:pr
+                    -t mendersoftware/mender-client-qemu-rofs:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-monitor-image-full-cmdline <<<"$images_to_build"; then
                 filename="clean-mender-monitor-image-full-cmdline-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-monitor-image-full-cmdline \
                     $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-monitor-qemu-commercial:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-image-full-cmdline-rofs-commercial <<<"$images_to_build"; then
                 filename="clean-mender-image-full-cmdline-rofs-commercial-${machine_name}.${extension}"
 
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                     -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-image-full-cmdline-rofs-commercial \
                     $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-qemu-rofs-commercial:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
 
             if grep mender-orchestrator-image-full-cmdline <<<"$images_to_build"; then
                 filename="clean-mender-orchestrator-image-full-cmdline-${machine_name}.${extension}"
-                $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
+                DISK_IMG=${filename#clean-} $WORKSPACE/meta-mender/meta-mender-qemu/docker/build-docker \
                 -I "${BUILDDIR}/tmp/deploy/images/${machine_name}/${filename}.gz" \
                     -i mender-orchestrator-image-full-cmdline \
                     $machine_name \
-                    -t registry.mender.io/mendersoftware/mender-orchestrator-qemu-commercial:pr
+                    -t registry.mender.io/mendersoftware/mender-orchestrator-qemu-commercial:pr \
+                    > "${BUILDDIR}/build-docker-${filename#clean-}.log" 2>&1 &
+                docker_build_pids+=($!)
             fi
+
+            for pid in "${docker_build_pids[@]}"; do
+                wait $pid || { cat "${BUILDDIR}"/build-docker-*.log; exit 1; }
+            done
+        fi
+
+        # Docker-only builds are done here. The rest prepares the images for
+        # testing and the release artifacts, which aren't kept by those jobs.
+        if ${BUILD_DOCKER_IMAGES:-false} && ! is_testing_board $board_name; then
+            exit 0
         fi
 
         bitbake-layers remove-layer $WORKSPACE/meta-mender/meta-mender-commercial

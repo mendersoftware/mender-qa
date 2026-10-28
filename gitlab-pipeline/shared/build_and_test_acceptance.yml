@@ -15,6 +15,9 @@
   tags:
     - mender-qa-worker-client-acceptance-tests
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/mender-client-acceptance-testing:master
+  except:
+    variables:
+      - $RUN_ACCEPTANCE_TESTS != "true"
   variables:
     DOCKER_BUILDKIT: 1
   id_tokens:
@@ -35,7 +38,7 @@
   before_script:
     # collect cpu, load avg, memory and io usage every 2 secs forever
     # use 'sar' from sysstat to render the result file manually
-    - service sysstat start && sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
+    - sar -P ALL 2 -o /var/log/sysstat/sysstat.log -uqrbS >/dev/null 2>&1 &
     # Default value, will later be overwritten if successful
     - echo "failure" > /JOB_RESULT.txt
     # Export required yocto-build script variables
