@@ -126,6 +126,13 @@ variables:
     description: "Platforms for the Virtual Device for application updates. Comma-separated list of targets os/arch[/<version>]"
 
   # Client Acceptance tests
+  RUN_ACCEPTANCE_TESTS:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: |-
+      Flag to run the build:acceptance:* and test:acceptance:* jobs
   BUILD_QEMUX86_64_UEFI_GRUB:
     value: "true"
     options:
