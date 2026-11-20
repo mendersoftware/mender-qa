@@ -1,0 +1,30 @@
+# installers from release tags; they verify the downloaded binaries' sha256
+K3S_VERSION = ENV.fetch("K3S_VERSION", "v1.37.2+k3s1")
+HELM_VERSION = ENV.fetch("HELM_VERSION", "v3.22.1")
+FLUX_VERSION = ENV.fetch("FLUX_VERSION", "2.10.1")
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/debian12"
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.memory = ENV.fetch("VM_MEMORY", "4096")
+    libvirt.cpus = ENV.fetch("VM_CPUS", "4")
+  end
+
+  config.vm.network "private_network", ip: ENV.fetch("VM_IP", "192.168.56.10")
+
+  config.vm.provision "shell", inline: <<~SHELL
+    #!/bin/bash
+    set -euo pipefail
+    apt-get update
+    apt-get install -y tmux
+    grep -q ' mender.local$' /etc/hosts || echo "127.0.0.1 mender.local" >> /etc/hosts
+    curl -fsSL "https://raw.githubusercontent.com/k3s-io/k3s/#{K3S_VERSION.sub("+", "%2B")}/install.sh" \\
+      | INSTALL_K3S_VERSION="#{K3S_VERSION}" sh -s - --write-kubeconfig-mode 644
+    grep -q KUBECONFIG /home/vagrant/.bashrc || echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> /home/vagrant/.bashrc
+    curl -fsSL "https://raw.githubusercontent.com/helm/helm/#{HELM_VERSION}/scripts/get-helm-3" \\
+      | DESIRED_VERSION="#{HELM_VERSION}" bash
+    curl -fsSL "https://raw.githubusercontent.com/fluxcd/flux2/v#{FLUX_VERSION}/install/flux.sh" \\
+      | FLUX_VERSION="#{FLUX_VERSION}" bash
+  SHELL
+end
