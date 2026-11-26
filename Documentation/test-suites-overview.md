@@ -139,6 +139,7 @@ Clone repositories and create the build directory:
 git clone -b scarthgap https://github.com/mendersoftware/meta-mender.git
 git clone -b scarthgap https://git.yoctoproject.org/poky
 git clone -b scarthgap https://git.openembedded.org/meta-openembedded
+git clone -b scarthgap/go https://git.yoctoproject.org/meta-lts-mixins
 mkdir -p build/conf
 ```
 Replace `scarthgap` with the Yocto series you want to use. As of now, Meta-mender
@@ -209,6 +210,7 @@ mender                /home/ubuntu/yocto-project/meta-mender/meta-mender-core   
 mender-demo           /home/ubuntu/yocto-project/meta-mender/meta-mender-demo                   10
 openembedded-layer    /home/ubuntu/yocto-project/meta-openembedded/meta-oe                      5
 meta-python           /home/ubuntu/yocto-project/meta-openembedded/meta-python                  5
+lts-go-mixin          /home/ubuntu/yocto-project/meta-lts-mixins                                6
 mender-qemu           /home/ubuntu/yocto-project/meta-mender/meta-mender-qemu                   6
 ```
 

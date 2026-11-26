@@ -717,6 +717,7 @@ build_and_test_client() {
 
         # Build once with clean_build_config enabled and keep a copy.
         bitbake-layers add-layer $WORKSPACE/meta-mender/meta-mender-commercial
+        bitbake-layers add-layer $WORKSPACE/meta-lts-mixins
         if $needs_virtualization; then
                 add_virtualization
         fi
