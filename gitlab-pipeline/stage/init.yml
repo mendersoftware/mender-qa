@@ -176,6 +176,7 @@ init:workspace:
     # Add other repositories.
     - checkout_repo https://git.openembedded.org/meta-openembedded meta-openembedded $META_OPENEMBEDDED_REV
     - checkout_repo https://git.yoctoproject.org/meta-virtualization meta-virtualization $META_VIRTUALIZATION_REV
+    - checkout_repo https://git.yoctoproject.org/meta-lts-mixins meta-lts-mixins $META_LTS_MIXINS_REV/go
     - if [ "$BUILD_RASPBERRYPI3" = true ] || [ "$BUILD_RASPBERRYPI4" = true ]; then
     -   checkout_repo https://github.com/agherzan/meta-raspberrypi.git meta-raspberrypi $META_RASPBERRYPI_REV
     - fi

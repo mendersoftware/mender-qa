@@ -80,6 +80,10 @@ variables:
     value: ${YOCTO_REV}
     description: |-
       Version of meta-virtualization
+  META_LTS_MIXINS_REV:
+    value: ${YOCTO_REV}
+    description: |-
+      Version of meta-lts-mixins. The go mixin (<version>/go branch) is checked out
   META_RASPBERRYPI_REV:
     value: ${YOCTO_REV}
     description: |-
